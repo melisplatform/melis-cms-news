@@ -1,0 +1,45 @@
+
+<br>
+<?php 
+    $id = '';
+    if (!empty($this->zoneconfig['conf']['id'])){
+        $id .= $this->newsId.'_'.$this->zoneconfig['conf']['id'];
+    }
+    if(!empty($this->newsId)):
+?>
+<div id="<?= $id ?>" data-melisKey="<?= $this->melisKey; ?>">
+	<div class="npdc-heading">
+		<h4>
+			<i class="fa fa-image"></i>
+			<?= $this->translate('tr_meliscmsnews_subheader_images')?>
+		</h4>
+		<?php if(count($this->images) != $this->limit && !empty($this->newsId)):?>						
+		<a class="btn btn-success newsAttachImage" data-newsid="<?= $this->newsId?>" data-filetype="image"><i class="fa fa-link" style="padding-right:10px;"></i><?= $this->translate('tr_meliscmsnews_attach_image')?></a>
+		<?php endif;?>
+	</div>						
+	<?php 
+	   if(count($this->images)){
+	       foreach($this->images as $image):
+	       ?>
+	       <div class="me-p-image">
+        	<img src="<?= $image['image']?>">
+        		<div class="hover-details">
+        			<div class="me-p-btn-cont">
+        				<a class="viewImageDocument" href="<?= $image['image']?>">
+        					<i class="fa fa-eye"></i>
+        				</a>				
+        				<a class="removeAttachFile" data-newsid ="<?= $image['cnews_id']?>" data-column="<?= $image['column']?>">
+        					<i class="fa fa-times"></i>
+        				</a>
+        			</div>
+        		</div>
+        	</div>
+        	<br>
+	       <?php 
+	       endforeach;
+	   }else{
+	       echo $this->translate('tr_meliscmsnews_attach_file_none');
+	   }
+	?>
+</div>
+<?php endif;?>

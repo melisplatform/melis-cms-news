@@ -1,0 +1,7 @@
+
+<div id="<?= $this->newsId ?>_cnews_status" class="make-switch main_variant_switch" data-on-label="<?php echo $this->translate('tr_meliscmsnews_status_active')?>" data-off-label="<?php echo $this->translate('tr_meliscmsnews_status_inactive')?>" data-text-label="<?php echo $this->translate('tr_meliscmsnews_status_status')?>">
+    <input type="checkbox" name="cnews_status" id="cnews_status"  <?= $this->status ?>>
+</div>
+<script type="text/javascript">
+	$("#<?= $this->newsId ?>_cnews_status").bootstrapSwitch();
+</script>	

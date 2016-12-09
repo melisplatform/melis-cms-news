@@ -1,0 +1,43 @@
+	<?php
+	$id = '';
+	if (!empty($this->zoneconfig['conf']['id'])){
+	    $id .= $this->newsId.'_'.$this->zoneconfig['conf']['id'];
+	}
+	$collapse = 'collapse in';
+    $collapsed = '';
+    if(!empty($this->newsId)):
+	?>
+	<div id="<?= $id ?>" data-melisKey="<?= $this->melisKey; ?>">
+		<h4>
+			<i class="fa fa-align-left"></i>
+			<?= $this->translate('tr_meliscmsnews_subheader_paragraphs')?>
+		</h4>
+		<br>
+		<?php 
+		$c = 1;
+		foreach($this->forms as $form):
+		?>
+		<a class="btn btn-primary form-control a-accordion <?= $collapsed?>" data-toggle="collapse" href="#<?= $this->newsId ?>_paragraph<?= $c?>" aria-expanded="false" aria-controls="payment1">
+    		<span>Paragraph <?= $c?></span>
+    	</a>
+    	<div class="<?= $collapse?>" id="<?= $this->newsId ?>_paragraph<?= $c?>">
+    	<?php 
+    	echo $this->form()->openTag($form);
+    	echo $this->melisFieldCollection($form);
+    	echo $this->form()->closeTag();
+    	?>
+    	<script type="text/javascript">
+    	melisTinyMCE.createTinyMCE("tool", "#<?= $this->newsId?>_id_meliscmsnews_content_tabs_properties_details_right_paragraphs textarea#<?= $this->newsId?>_cnews_paragraph<?= $c?>", {height: 300});
+    	</script>
+    	</div>
+		<?php 
+		$collapsed = 'collapsed';
+		$collapse = 'collapse';
+		$c++;
+		endforeach;
+		?>    	
+    	
+    	
+	</div>
+	<?php endif;?>
+	

@@ -1,0 +1,167 @@
+.melis-news-heading{
+	padding-bottom: 20px;
+}
+
+.melis-news-heading h3 {
+    display: inline-block;
+}
+
+.npdc-heading {
+    padding-bottom: 30px;
+    min-height: 45px;
+}
+
+.npdc-heading h4 {
+    display: inline-block;
+    margin: 7px 0 0 0;
+}
+
+.npdc-heading a {
+    float: right;
+}
+
+.melis-news-heading .has-switch{
+	float: right;
+}
+
+.news-file-cont p:hover i.fa{
+	color: #cb4040;
+}
+
+/* file attachment container */
+.news-file-cont p{
+	margin:0 8px 10px 0;
+	padding: 6px 15px;
+	background: #ECEBEB;
+	border-radius: 4px;
+	color: #7D7B7B;
+}
+
+.news-file-cont p i.fa{
+	padding-right: 0px;
+	float:right;
+	cursor:pointer;
+	font-size: 20px;
+	color: #C3C0C0;
+}
+
+.me-p-image{
+	 position:relative;
+	 margin:5px;
+}
+.me-p-image .hover-details{
+	display: none;
+	position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background: rgba(0,0,0, .2);
+}
+.me-p-image:hover .hover-details{
+	display: block;
+}
+.me-p-btn-cont{
+	text-align: center;
+   	position: absolute;
+	top: 50%;
+    left: 50%;
+    width: 100%;
+    opacity: initial;
+    transform: translate(-50%,-50%);
+    -webkit-transform: translate(-50%,-50%);
+    -moz-transform: translate(-50%,-50%);
+    -ms-transform: translate(-50%,-50%);
+    -o-transform: translate(-50%,-50%);
+}
+.me-p-btn-cont a{
+    padding: 11px 14px;
+    margin: 0 3px;
+    background: #fff;
+    border-radius: 100%;
+    display: inline-block;
+	cursor: pointer;
+	height: 42px;
+	width: 42px;
+}
+
+.me-p-image img{
+	height: auto; 
+    width: auto; 
+    max-width: 100%;
+}
+
+/* ACCORDION */
+.a-accordion .fa-times {
+    clear: none;
+    display: inline-block;
+    float: right;
+    font-size: 20px;
+}
+.a-accordion span {
+	float: left; 
+}
+.tab-pane a.btn.a-accordion:before {
+    font-family: 'Glyphicons Halflings';
+    content: "\e114";
+    float: left;
+    padding: 0 10px;
+	color: #fff;
+}
+.tab-pane a.btn.a-accordion.collapsed:hover:before {    
+	color: #fff
+}
+.tab-pane a.btn.a-accordion.collapsed:before {    
+    content: "\e080";
+	color: #fff;
+}
+.tab-pane a.btn.a-accordion.collapsed {
+	margin: 0 0 5px;
+	border-radius: 5px;
+	background: #932E2A;
+	color: #fff;
+}
+.tab-pane a.btn.a-accordion.collapsed:hover,
+.tab-pane a.btn.a-accordion {
+	margin: 0 0 5px;
+	border-radius: 5px;
+	border-color: #932E2A;
+	background: #932E2A;
+	color: #fff;
+}
+.panel-title a.btn {
+	margin: 10px 0 0 10px;
+}
+.panel-title > a {
+    display: block;
+	text-decoration: none;
+}
+.panel-heading .accordion-toggle:before {
+    font-family: 'Glyphicons Halflings';
+    content: "\e114";
+    float: left;
+    color: grey;
+    margin: 17px 0 0;
+    padding: 0 10px;
+}
+.panel-heading .accordion-toggle.collapsed:before {    
+    content: "\e080";
+}
+.accordion-toggle {
+	background: #fff;
+	border-bottom: dadada;
+	padding: 0 10px 0;
+}
+#content .accordion-toggle h1.content-heading {
+	text-transform: none;
+}
+
+#content .panel-default > .panel-heading+.panel-collapse .panel-body {
+	border: none medium;
+}
+.panel-body {
+	padding: 0;
+}
+.content-cont .panel-title > a {
+	color: #111;
+}

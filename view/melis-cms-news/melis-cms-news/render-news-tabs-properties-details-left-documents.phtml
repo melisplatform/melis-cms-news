@@ -1,0 +1,39 @@
+
+<br>
+<?php 
+    $id = '';
+    if (!empty($this->zoneconfig['conf']['id'])){
+        $id .= $this->newsId.'_'.$this->zoneconfig['conf']['id'];
+    }
+    if(!empty($this->newsId)):
+?>
+<div id="<?= $id ?>" data-melisKey="<?= $this->melisKey; ?>">
+	<div class="npdc-heading">
+		<h4>
+			<i class="fa fa-paperclip"></i>
+			<?= $this->translate('tr_meliscmsnews_subheader_documents')?>
+		</h4>
+		<?php if(count($this->documents) != $this->limit && !empty($this->newsId)):?>						
+		<a class="btn btn-success newsAttachFile" data-newsid="<?= $this->newsId?>" data-filetype="file"><i class="fa fa-link" style="padding-right:10px;"></i><?= $this->translate('tr_meliscmsnews_attach_file')?></a>
+		<?php endif;?>
+	</div>						
+	<div class="pdc-content border-bottom">
+		<?php 
+		if(!empty($this->documents)){
+		    echo '<div class="news-file-cont">';
+		    foreach($this->documents as $doc):?>
+		    <p><?= $doc['documents'] ?> 
+				<i class="fa fa-times-circle removeAttachFile" data-newsid="<?= $doc['cnews_id']?>" data-column="<?= $doc['column']?>" ></i>
+			</p>		    
+		    <?php
+		    endforeach;
+		    echo '</div>';
+		}else{
+		    echo $this->translate('tr_meliscmsnews_attach_file_none');
+		    
+		}
+		?>					
+		<br>
+	</div>
+</div>
+<?php endif;?>

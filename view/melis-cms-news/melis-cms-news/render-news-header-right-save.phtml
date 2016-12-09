@@ -1,0 +1,7 @@
+<?php 
+    $name = '';
+    if (!empty($this->zoneconfig['conf']['name'])){
+        $name = $this->zoneconfig['conf']['name'];
+    } 
+?>
+<a data-melisKey="<?= $this->melisKey; ?>" data-newsId="<?= $this->newsId?>" class="btn btn-success saveNewsLetter" title="<?= $name; ?>"><i class="fa fa-save" style="padding-right:10px;"></i><?= $name; ?></a>
