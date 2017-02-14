@@ -28,7 +28,9 @@ class MelisCmsNewsService extends MelisCoreGeneralService
      * 
      * @return array MelisCmsSlider[]
      */
-    public function getNewsList($status = null, $start = null, $limit = null, $order = null, $search = null )
+    
+    public function getNewsList($status = null, $dateMin = null, $dateMax = null, $publishDateMin = null, $publishDateMax = null, 
+                                $start = null, $limit = null, $orderColumn = null, $order = null, $search = null )
     {
         // Event parameters prepare
         $arrayParameters = $this->makeArrayFromParameters(__METHOD__, func_get_args());
@@ -39,8 +41,8 @@ class MelisCmsNewsService extends MelisCoreGeneralService
    
         // Service implementation start
         $newsTable = $this->getServiceLocator()->get('MelisCmsNewsTable');
-        $news = $newsTable->getNewsList($arrayParameters['status'], $arrayParameters['start'], $arrayParameters['limit'],
-                                        $arrayParameters['order'], $arrayParameters['search']);
+        $news = $newsTable->getNewsList($arrayParameters['status'], $arrayParameters['dateMin'], $arrayParameters['dateMax'], $arrayParameters['publishDateMin'], $arrayParameters['publishDateMax'], 
+                                    $arrayParameters['start'], $arrayParameters['limit'], $arrayParameters['orderColumn'], $arrayParameters['order'], $arrayParameters['search']);
        
         foreach($news as $new){            
             $results[] = $this->getNewsById($new->cnews_id);

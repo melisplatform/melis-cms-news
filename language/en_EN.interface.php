@@ -7,12 +7,16 @@
 	    'tr_meliscmsnews_list_col_title' => 'Title',
 	    'tr_meliscmsnews_list_col_status' => 'Status',
 	    'tr_meliscmsnews_list_col_date' => 'Created',
+	    'tr_meliscmsnews_list_col_published' => 'Published',
 	    
 	    'tr_meliscmsnews_common_label_yes' => 'Yes',
 	    'tr_meliscmsnews_common_label_no' => 'No',
 	    'tr_meliscmsnews_common_label_delete_news' => 'Delete news',
 	    'tr_meliscmsnews_common_label_delete_confirm' => 'Are you sure you want to delete this news?',
 	    'tr_meliscmsnews_common_label_remove_file' => 'Delete file',
+	    'tr_meliscmsnews_common_paragraph' => 'Paragraph',
+	    
+	    'tr_meliscmsliderdetails_common_label_choose' => 'Choose',
 	    'tr_meliscmsnews_news_delete_fail' => 'Failed to delete news',
 	    'tr_meliscmsnews_news_delete_success' => 'News has been successfully deleted',
 	    'tr_meliscmsnews_save_fail' => 'Failed to save news',
@@ -20,7 +24,7 @@
 	    'tr_meliscmsnews_save_file_fail' => 'Failed to save file',	    
 	    'tr_meliscmsnews_save_file_success' => 'File has been successfully saved',
 	    'tr_meliscmsnews_remove_file_fail' => 'Failed to remove file',
-	    'tr_meliscmsnews_remove_file_success' => 'File has been successfully removed',
+	    
 	    'tr_meliscmsnews_save_upload_too_big' => 'Uploaded file too big, maximum size is %s',
 	    'tr_meliscmsnews_save_upload_too_small' => 'Uploaded file too small, minimum size is %s',
 	    'tr_meliscmsnews_save_upload_file_does_not_exists' => 'Uploaded file does not exists',
@@ -30,6 +34,22 @@
 	    'tr_meliscmsnews_save_upload_file_path_rights_error' => 'You do not have the rights to execute this action, please contact the administrator',
 	    'tr_meliscmsnews_save_upload_empty_file' => 'Please submit a valid file',
 	    
+	    // Common File Attachment and Images Deletion labels and messages
+	    // File
+	    'tr_meliscmsnews_delete_file_title' => 'Delete file',
+	    'tr_meliscmsnews_delete_file_confirm_msg' => 'Are you sure you want to delete this file?',
+	    'tr_meliscmsnews_delete_file_success' => 'File has been successfully deleted',
+	    'tr_meliscmsnews_delete_file_unable' => 'Unable to delete file, please try again later',
+	    'tr_meliscmsnews_delete_file_rights_issue' => 'Unable to delete file, please check your rights',
+	    'tr_meliscmsnews_delete_file_not_exists' => 'Unable to delete file, file does not exists',
+	    // Image
+	    'tr_meliscmsnews_delete_image_title' => 'Delete image',
+	    'tr_meliscmsnews_delete_image_confirm_msg' => 'Are you sure you want to delete this image?',
+	    'tr_meliscmsnews_delete_image_success' => 'Image has been successfully deleted',
+	    'tr_meliscmsnews_delete_image_unable' => 'Unable to delete image, please try again later',
+	    'tr_meliscmsnews_delete_image_rights_issue' => 'Unable to delete image, please check your rights',
+	    'tr_meliscmsnews_delete_image_not_exists' => 'Unable to delete image, file does not exists',
+	    
 	    'tr_meliscmsnews_header_title' => 'News',
 	    'tr_meliscmsnews_header_right_save' => 'Save',
 	    'tr_meliscmsnews_form_btn_cancel' => 'Cancel',
@@ -38,6 +58,7 @@
 	    'tr_meliscmsnews_input_file_uploading' => 'Uploading...',
 	    'tr_meliscmsnews_content_tabs_properties' => 'Properties',
 	    'tr_meliscmsnews_form_subtitle' => 'Subtitle',
+	    'tr_meliscmsnews_form_publish' => 'Publish date',
 	    'tr_meliscmsnews_subheader_title' => 'News details',
 	    'tr_meliscmsnews_subheader_documents' => 'File attachments',
 	    'tr_meliscmsnews_subheader_images' => 'Images',
@@ -49,6 +70,7 @@
 	    'tr_meliscmsnews_modal_documents_form_image' => 'Attach image',
 	    'tr_meliscmsnews_attach_image' => 'Add image',
 	    'tr_meliscmsnews_attach_file_none' => 'No file uploaded',
+	    'tr_meliscmsnews_image_none' => 'No image uploaded',
 	    
 	    'tr_meliscmsnews_form_error_long_255' => 'Value is too long, it should be less than 255 characters',
 	    'tr_meliscmsnews_form_error_empty' => 'The input is required and can\'t be empty',

@@ -18,7 +18,7 @@
 		foreach($this->forms as $form):
 		?>
 		<a class="btn btn-primary form-control a-accordion <?= $collapsed?>" data-toggle="collapse" href="#<?= $this->newsId ?>_paragraph<?= $c?>" aria-expanded="false" aria-controls="payment1">
-    		<span>Paragraph <?= $c?></span>
+    		<span><?= $this->translate('tr_meliscmsnews_common_paragraph').' '.$c?></span>
     	</a>
     	<div class="<?= $collapse?>" id="<?= $this->newsId ?>_paragraph<?= $c?>">
     	<?php 
@@ -27,7 +27,20 @@
     	echo $this->form()->closeTag();
     	?>
     	<script type="text/javascript">
-    	melisTinyMCE.createTinyMCE("tool", "#<?= $this->newsId?>_id_meliscmsnews_content_tabs_properties_details_right_paragraphs textarea#<?= $this->newsId?>_cnews_paragraph<?= $c?>", {height: 300});
+    	
+    	if (typeof tinymce != "undefined") {
+        	var id = "<?= $this->newsId?>_cnews_paragraph<?= $c?>";
+    	    var ed = tinymce.get(id);
+    	    if (ed) {
+    	        try {
+    	            ed.remove();
+    	        } catch(e) {
+    	            delete tinymce.editors[id];
+    	        }
+    	    }
+    	}
+    	melisTinyMCE.createTinyMCE("tool", "#<?= $this->newsId?>_cnews_paragraph<?= $c?>", {height: 300});
+    	   	
     	</script>
     	</div>
 		<?php 

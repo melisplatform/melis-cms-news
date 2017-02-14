@@ -3,7 +3,7 @@
 /**
  * Melis Technology (http://www.melistechnology.com)
  *
- * @copyright Copyright (c) 2015 Melis Technology (http://www.melistechnology.com)
+ * @copyright Copyright (c) 2016 Melis Technology (http://www.melistechnology.com)
  *
  */
 
@@ -15,6 +15,7 @@ use Zend\ModuleManager\ModuleManager;
 use Zend\Stdlib\ArrayUtils;
 use Zend\Session\Container;
 
+use MelisCmsNews\Listener\MelisCmsNewsSliderDeletedListener;
 use MelisCmsNews\Listener\MelisCmsNewsFlashMessengerListener;
 
 class Module
@@ -45,6 +46,7 @@ class Module
         if ($melisRoute)
         {
             // attach listeners for Melis
+            $eventManager->attach(new MelisCmsNewsSliderDeletedListener());
             $eventManager->attach(new MelisCmsNewsFlashMessengerListener());         
             
         }
@@ -62,6 +64,8 @@ class Module
     			include __DIR__ . '/../config/app.interface.php',
     			include __DIR__ . '/../config/app.tools.php',
     	        include __DIR__ . '/../config/app.forms.php',
+    	        include __DIR__ . '/../config/diagnostic.config.php',
+    	        include __DIR__ . '/../config/app.plugins.php',
     	);
     	
     	foreach ($configFiles as $file) {
@@ -89,8 +93,16 @@ class Module
     
         $container = new Container('meliscore');
         $locale = $container['melis-lang-locale'];
-    
-        $translator->addTranslationFile('phparray', __DIR__ . '/../language/' . $locale . '.interface.php');
+
+        if (!empty($locale)){
+            
+            // Inteface translations
+            $interfaceTransPath = 'module/MelisModuleConfig/languages/MelisCmsNews/' . $locale . '.interface.php';
+            $default = __DIR__ . '/../language/en_EN.interface.php';
+            $transPath = (file_exists($interfaceTransPath))? $interfaceTransPath : $default;
+            $translator->addTranslationFile('phparray', $transPath);
+
+        }
     }
  
 }

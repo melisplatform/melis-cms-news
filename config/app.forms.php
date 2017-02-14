@@ -35,7 +35,18 @@ return array(
                                     'id' => 'cnews_subtitle',
                                 ),
                             ),
-                        ),                        
+                        ),
+                        array(
+                            'spec' => array(
+                                'name' => 'cnews_publish_date',
+                                'type' => 'DateField',
+                                'options' => array(),
+                                'attributes' => array(
+                                    'dateId' => 'newsPublishDate',
+                                    'dateLabel' => 'tr_meliscmsnews_form_publish'
+                                ),
+                            ),
+                        ),
                         array(
                             'spec' => array(
                                 'name' => 'cnews_id',
@@ -114,6 +125,7 @@ return array(
                                     'class' => 'filestyle',
                                     'label' => 'Upload',
                                     'required' => 'required',
+                                    'onchange' => 'newsImagePreview(".imgDocThumbnail", this);',
                                 ),
 //                                 'options' => array(
 //                                     'label' => 'tr_meliscmsnews_input_file_doc1',
@@ -129,6 +141,12 @@ return array(
                         array(
                             'spec' => array(
                                 'name' => 'cnews_id',
+                                'type' => 'hidden',
+                            ),
+                        ),
+                        array(
+                            'spec' => array(
+                                'name' => 'column',
                                 'type' => 'hidden',
                             ),
                         ),

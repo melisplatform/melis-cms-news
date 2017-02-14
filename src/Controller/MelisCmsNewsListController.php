@@ -205,11 +205,11 @@ class MelisCmsNewsListController extends AbstractActionController
             
             $postValues = $this->getRequest()->getPost();
             
-            $tmp = $newsSvc->getNewsList(null, null, null, null, $search);
+            $tmp = $newsSvc->getNewsList(null, null, null, null, null, null, null, null,  null, $search);
              
             $dataFiltered = count($tmp);
             
-            $news = $newsSvc->getNewsList(null, $start, $length, $colOrder, $search);
+            $news = $newsSvc->getNewsList(null, null, null, null, null, $start, $length, $selCol, $sortOrder, $search);
             
             $dataCount = count($news);
             $c = 0;
@@ -225,7 +225,8 @@ class MelisCmsNewsListController extends AbstractActionController
                 $tableData[$c]['cnews_id'] = $new->getId();               
                 $tableData[$c]['cnews_status'] = $status;
                 $tableData[$c]['cnews_title'] = $new->getNews()->cnews_title;
-                $tableData[$c]['cnews_creation_date'] = $this->getTool()->dateFormatLocale($new->getNews()->cnews_creation_date);            
+                $tableData[$c]['cnews_creation_date'] = $this->getTool()->dateFormatLocale($new->getNews()->cnews_creation_date);
+                $tableData[$c]['cnews_publish_date'] = $this->getTool()->dateFormatLocale($new->getNews()->cnews_publish_date);
                 $c++;
             }
         }
@@ -246,17 +247,19 @@ class MelisCmsNewsListController extends AbstractActionController
     {
         $this->getEventManager()->trigger('meliscmsnews_delete_news_start', $this, array());
         $response = array();
+        $id = null;
         $success = 0;
         $errors  = array();
         $data = array();
-        $textMessage = $this->getTool()->getTranslation('tr_meliscmsnews_news_delete_fail');
-        $textTitle = $this->getTool()->getTranslation('tr_meliscmsnews_list_header_title');
+        $textMessage = 'tr_meliscmsnews_news_delete_fail';
+        $textTitle = 'tr_meliscmsnews_list_header_title';
         
         $newsSvc = $this->getServiceLocator()->get('MelisCmsNewsService');
         $melisCoreConfig = $this->serviceLocator->get('MelisCoreConfig');
         
-        if($this->getRequest()->isPost()) { 
+        if($this->getRequest()->isPost()){ 
             $postValues = get_object_vars($this->getRequest()->getPost());
+            $id = $postValues['newsId'];
             $tmp = $newsSvc->getNewsById($postValues['newsId'])->getNews();
             //delete db data
             if($newsSvc->deleteNewsById($postValues['newsId'])){
@@ -299,9 +302,8 @@ class MelisCmsNewsListController extends AbstractActionController
                 }
                 
                 $success = 1;
-                $textMessage = $this->getTool()->getTranslation('tr_meliscmsnews_news_delete_success');
+                $textMessage = 'tr_meliscmsnews_news_delete_success';
             }
-             
         }
         
         $response = array(
@@ -311,7 +313,10 @@ class MelisCmsNewsListController extends AbstractActionController
             'errors' => $errors,
             'chunk' => $data,
         );
-        $this->getEventManager()->trigger('meliscmsnews_delete_news_end', $this, $response);
+        
+        $this->getEventManager()->trigger('meliscmsnews_delete_news_end',
+            $this, array_merge($response, array('typeCode' => 'CMS_NEWS_DELETE', 'itemId' => $id)));
+        
         return new JsonModel($response);
     }
     

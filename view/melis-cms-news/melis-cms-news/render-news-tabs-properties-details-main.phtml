@@ -1,11 +1,11 @@
 <?php 
     $id = '';
     if (!empty($this->zoneconfig['conf']['id'])){
-        $id .= $this->sliderId.'_'.$this->zoneconfig['conf']['id'];
+        $id .= $this->newsId.'_'.$this->zoneconfig['conf']['id'];
     }
    
     ?>
-<div id="<?= $id ?>" data-melisKey="<?= $this->melisKey; ?>" class="col-xs-12 col-md-12 innerAll">
+<div id="<?= $id ?>" data-melisKey="<?= $this->melisKey; ?>">
 	<?php 
         	if(!empty($this->zoneconfig['interface'])) {
         	    foreach($this->zoneconfig['interface'] as $keyConfig => $menuConfig) {

@@ -24,6 +24,10 @@
 	float: right;
 }
 
+.melis-news-heading .addSliderData{
+	float: right;
+}
+
 .news-file-cont p:hover i.fa{
 	color: #cb4040;
 }
@@ -159,9 +163,7 @@
 #content .panel-default > .panel-heading+.panel-collapse .panel-body {
 	border: none medium;
 }
-.panel-body {
-	padding: 0;
-}
+
 .content-cont .panel-title > a {
 	color: #111;
 }

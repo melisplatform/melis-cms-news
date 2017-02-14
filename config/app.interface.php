@@ -9,13 +9,7 @@ return array(
                     'interface' => array(
         			    'meliscore_toolstree' =>  array(
         			    	'interface' => array(
-								'meliscmsnews_tools_section' => array(
-									'conf' => array(
-											'id' => 'id_meliscmsnews_tools_section',
-											'name' => 'tr_meliscmsnews_list_header_title',
-											'icon' => 'fa-list-alt',
-											'rights_checkbox_disable' => true,
-									),
+								'meliscms_tools_section' => array(
         			    			'interface' => array( 
 		        			    		'meliscmsnews_left' => array(
 		        			    			'conf' => array(
@@ -407,7 +401,12 @@ return array(
                                                                                 'controller' => 'MelisCmsNews',
                                                                                 'action' => 'render-news-tabs-properties-details-left-properties',
                                                                             ),
-                                                                        ),
+                                                                        ),                                                                        
+                                                                        'meliscmsnews_content_tabs_properties_details_left_sliders' => array(
+                                                                            'conf' => array(
+                                                                                'type' => 'MelisCmsSlider/interface/meliscmsslider_select_slider',
+                                                                            )
+                                                                        ),                                                                        
                                                                         'meliscmsnews_content_tabs_properties_details_left_documents' => array(
                                                                             'conf' => array(
                                                                                 'id' => 'id_meliscmsnews_content_tabs_properties_details_left_documents',
@@ -513,5 +512,4 @@ return array(
             ),
         ),
     ),
-
 );

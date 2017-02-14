@@ -49,12 +49,17 @@ return array(
                             ),
                             'cnews_title' => array(
                                 'text' => 'tr_meliscmsnews_list_col_title',
-                                'css' => array('width' => '25%', 'padding-right' => '0'),
+                                'css' => array('width' => '35%', 'padding-right' => '0'),
                                 'sortable' => true,
                             ),
                             'cnews_creation_date' => array(
                                 'text' => 'tr_meliscmsnews_list_col_date',
-                                'css' => array('width' => '25%', 'padding-right' => '0'),
+                                'css' => array('width' => '15%', 'padding-right' => '0'),
+                                'sortable' => true,
+                            ),
+                            'cnews_publish_date' => array(
+                                'text' => 'tr_meliscmsnews_list_col_published',
+                                'css' => array('width' => '15%', 'padding-right' => '0'),
                                 'sortable' => true,
                             ),
                         ),

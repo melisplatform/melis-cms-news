@@ -1,4 +1,3 @@
-
 <br>
 <?php 
     $id = '';
@@ -14,7 +13,7 @@
 			<?= $this->translate('tr_meliscmsnews_subheader_images')?>
 		</h4>
 		<?php if(count($this->images) != $this->limit && !empty($this->newsId)):?>						
-		<a class="btn btn-success newsAttachImage" data-newsid="<?= $this->newsId?>" data-filetype="image"><i class="fa fa-link" style="padding-right:10px;"></i><?= $this->translate('tr_meliscmsnews_attach_image')?></a>
+		<a class="btn btn-success newsAttachImage" data-newsid="<?= $this->newsId?>" data-filetype="image"><i class="fa fa-plus"></i> <?= $this->translate('tr_meliscmsnews_attach_image')?></a>
 		<?php endif;?>
 	</div>						
 	<?php 
@@ -25,10 +24,13 @@
         	<img src="<?= $image['image']?>">
         		<div class="hover-details">
         			<div class="me-p-btn-cont">
-        				<a class="viewImageDocument" href="<?= $image['image']?>">
+        				<a class="viewImageDocument" href="<?= $image['image']?>" target="_blank">
         					<i class="fa fa-eye"></i>
+        				</a>
+        				<a class="newsEditImage" data-newsid ="<?= $image['cnews_id']?>" data-column="<?= $image['column']?>"  data-filetype="image">
+        					<i class="fa fa-pencil"></i>
         				</a>				
-        				<a class="removeAttachFile" data-newsid ="<?= $image['cnews_id']?>" data-column="<?= $image['column']?>">
+        				<a class="removeAttachFile" data-newsid ="<?= $image['cnews_id']?>" data-column="<?= $image['column']?>"  data-type="image">
         					<i class="fa fa-times"></i>
         				</a>
         			</div>
@@ -38,7 +40,7 @@
 	       <?php 
 	       endforeach;
 	   }else{
-	       echo $this->translate('tr_meliscmsnews_attach_file_none');
+	       echo $this->translate('tr_meliscmsnews_image_none');
 	   }
 	?>
 </div>

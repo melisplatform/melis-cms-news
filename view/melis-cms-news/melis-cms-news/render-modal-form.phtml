@@ -11,7 +11,7 @@ if (!empty($this->zoneconfig['conf']['id']))
 			<div class="widget widget-tabs widget-tabs-double widget-tabs-responsive margin-none border-none">
                 <div class="widget-head">
                 	<ul class="nav nav-tabs">
-                		<li class="active"><a href="#<?php echo $this->zoneconfig['conf']['id'] ?>" class="glyphicons notes" data-toggle="tab" aria-expanded="true"><i></i><?= $this->zoneconfig['conf']['name']?> 
+                		<li class="active"><a href="#<?php echo $this->zoneconfig['conf']['id'] ?>" class="glyphicons plus" data-toggle="tab" aria-expanded="true"><i></i><?= $this->zoneconfig['conf']['name']?> 
                 		</a>
                 		
                 		</li>                		
@@ -22,13 +22,24 @@ if (!empty($this->zoneconfig['conf']['id']))
         				<div class="tab-pane active" id="<?= $id ?>">
                             <div class="row">
                             	<div class="col-md-12" id="newsAttachement">
+                                		<?php 
+                                		$img = empty($this->file)? $this->default : $this->file;
+                                		if($this->type == 'image'):?>
+                                		<div class="center-block">
+                                            <span class="thumbnail">
+                                              <img class="imgDocThumbnail" width="128" height="128" src="<?= $img?>">
+                                            </span>
+                                        </div>
                                           <?php 
+                                          
+                                          endif;
+
                                           echo $this->form()->openTag($this->form);
                                           echo $this->melisFieldCollection($this->form);
                                           echo $this->form()->closeTag();
                                           ?>
                                           	<script type="text/javascript">
-                                            	$(":file").filestyle({buttonBefore: true, input: true, buttonText: '&nbsp;<?php echo $this->translate('tr_meliscmsnews_input_file')?>', placeholder : ''});
+                                            	$(":file").filestyle({buttonBefore: true, input: true, buttonText: '&nbsp;<?php echo $this->translate('tr_meliscmsnews_input_file')?>', placeholder : '<?= $this->file?>'});
                                             </script>
                                             <div class="progressContent hidden">
                                                 <?= $this->translate('tr_meliscmsnews_input_file_uploading'); ?>

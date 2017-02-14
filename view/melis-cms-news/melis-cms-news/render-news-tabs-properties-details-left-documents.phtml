@@ -1,4 +1,3 @@
-
 <br>
 <?php 
     $id = '';
@@ -14,7 +13,7 @@
 			<?= $this->translate('tr_meliscmsnews_subheader_documents')?>
 		</h4>
 		<?php if(count($this->documents) != $this->limit && !empty($this->newsId)):?>						
-		<a class="btn btn-success newsAttachFile" data-newsid="<?= $this->newsId?>" data-filetype="file"><i class="fa fa-link" style="padding-right:10px;"></i><?= $this->translate('tr_meliscmsnews_attach_file')?></a>
+		<a class="btn btn-success newsAttachFile" data-newsid="<?= $this->newsId?>" data-filetype="file"><i class="fa fa-plus"></i> <?= $this->translate('tr_meliscmsnews_attach_file')?></a>
 		<?php endif;?>
 	</div>						
 	<div class="pdc-content border-bottom">
@@ -22,8 +21,10 @@
 		if(!empty($this->documents)){
 		    echo '<div class="news-file-cont">';
 		    foreach($this->documents as $doc):?>
-		    <p><?= $doc['documents'] ?> 
-				<i class="fa fa-times-circle removeAttachFile" data-newsid="<?= $doc['cnews_id']?>" data-column="<?= $doc['column']?>" ></i>
+		    <p><?= $doc['documents'] ?>
+		    	<i class="fa fa-times-circle removeAttachFile" data-newsid="<?= $doc['cnews_id']?>" data-column="<?= $doc['column']?>" data-type="file"></i> &nbsp;
+		    	<i class="fa fa-pencil newsEditImage" data-newsid="<?= $doc['cnews_id']?>" data-column="<?= $doc['column']?>" data-filetype="file" style="padding-right: 10px;"></i>
+				
 			</p>		    
 		    <?php
 		    endforeach;

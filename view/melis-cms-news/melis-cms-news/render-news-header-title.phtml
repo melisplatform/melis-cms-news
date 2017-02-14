@@ -4,4 +4,4 @@
         $id .= $this->newsId.'_'.$this->zoneconfig['conf']['id'];
     }
 ?>
-<h1 id="<?= $id ?>" data-melisKey="<?= $this->melisKey; ?>" class="content-heading"> <?= $this->translate($this->zoneconfig['conf']['name']).' '.$this->newsName ?></h1>
+<h1 id="<?= $id ?>" data-melisKey="<?= $this->melisKey; ?>" class="content-heading"> <?= ($this->newsId) ? $this->translate($this->zoneconfig['conf']['name']).' '.$this->newsName : $this->translate('tr_meliscmsnews_list_header_title_new') ?></h1>

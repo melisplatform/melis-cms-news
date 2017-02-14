@@ -41,11 +41,11 @@ $(document).ready(function(){
 			        encode		: true,
 			     }).success(function(data){
 			    	if(data.success){				
-							melisHelper.melisOkNotification( data.textTitle, data.textMessage, '#72af46' );
+							melisHelper.melisOkNotification( data.textTitle, data.textMessage );
 							toolNews.tabClose(newsId);
 							melisHelper.zoneReload("id_meliscmsnews_list_content_table", "meliscmsnews_list_content_table", {});
 					}else{
-						melisHelper.melisKoNotification(data.textTitle, data.textMessage, data.errors, 'closeByButtonOnly');				
+						melisHelper.melisKoNotification(data.textTitle, data.textMessage, data.errors);				
 					}		
 					melisCore.flashMessenger();	
 			     }).error(function(){
@@ -70,13 +70,18 @@ $(document).ready(function(){
 			name : 'column',
 			value: column,
 		});
+		dataString.push({
+			name : 'type',
+			value: type,
+		});
+		
 		melisCoreTool.pending(".removeAttachFile");
 		
 		melisCoreTool.confirm(
 			translations.tr_meliscmsnews_common_label_yes,
 			translations.tr_meliscmsnews_common_label_no,
-			translations.tr_meliscmsnews_common_label_remove_file, 
-			translations.tr_meliscmsnews_common_label_delete_confirm,
+			melisHelper.melisTranslator("tr_meliscmsnews_delete_"+type+"_title"), 
+			melisHelper.melisTranslator("tr_meliscmsnews_delete_"+type+"_confirm_msg"), 
 			function(){
 				$.ajax({
 			        type        : 'POST', 
@@ -86,11 +91,11 @@ $(document).ready(function(){
 			        encode		: true,
 			     }).success(function(data){
 			    	if(data.success){				
-							melisHelper.melisOkNotification( data.textTitle, data.textMessage, '#72af46' );
+							melisHelper.melisOkNotification( data.textTitle, data.textMessage );
 							melisHelper.zoneReload(newsId+"_id_meliscmsnews_content_tabs_properties_details_left_images", "meliscmsnews_content_tabs_properties_details_left_images", {'newsId' : newsId});
 							melisHelper.zoneReload(newsId+"_id_meliscmsnews_content_tabs_properties_details_left_documents", "meliscmsnews_content_tabs_properties_details_left_documents", {'newsId' : newsId});
 					}else{
-						melisHelper.melisKoNotification(data.textTitle, data.textMessage, data.errors, 'closeByButtonOnly');				
+						melisHelper.melisKoNotification(data.textTitle, data.textMessage, data.errors);				
 					}		
 					melisCore.flashMessenger();	
 			     }).error(function(){
@@ -107,6 +112,7 @@ $(document).ready(function(){
 		var newsPage = $(this).closest('.container-level-a');
 		var dataString = newsPage.find('form#newsLetterForm').serializeArray();
 		var newsId = newsPage.data('newsid');
+		var selectedSlider = newsPage.find('select#cnews_slider_id').val();
 		
 		newsPage.find('.make-switch div').each(function(){
 			var field = $(this).find('input').attr('name');
@@ -117,6 +123,8 @@ $(document).ready(function(){
 			}
 			dataString.push({ name : field, value : saveStatus});
 		});
+		
+		dataString.push({ name : 'cnews_slider_id', value : selectedSlider });
 		
 		var c = 1;
 		newsPage.find('#'+newsId+'_id_meliscmsnews_content_tabs_properties_details_right_paragraphs textarea').each(function(){
@@ -135,14 +143,13 @@ $(document).ready(function(){
 	     }).success(function(data){
 	    	 if(data.success){
 	    		 	toolNews.tabClose(newsId);
-					melisHelper.melisOkNotification( data.textTitle, data.textMessage, '#72af46' );
-					melisCore.flashMessenger();
+					melisHelper.melisOkNotification( data.textTitle, data.textMessage );
 					toolNews.tabOpen(toolNews.trimLength(data.chunk.cnews_title), data.chunk.cnews_id);
 					toolNews.refreshTable();
 			}else{
-				melisHelper.melisKoNotification(data.textTitle, data.textMessage, data.errors, 'closeByButtonOnly');				
+				melisHelper.melisKoNotification(data.textTitle, data.textMessage, data.errors);				
 			}
-	    	 
+	    	melisCore.flashMessenger();
 	     }).error(function(){
 	    	 console.log('failed');
 	     });
@@ -159,7 +166,7 @@ $(document).ready(function(){
 		melisKey = 'meliscmsnews_modal_documents_form';
 		modalUrl = 'melis/MelisCmsNews/MelisCmsNews/renderModal';
 		// requesitng to create modal and display after
-    	melisHelper.createModal(zoneId, melisKey, false, {'newsId' : newsId, 'type' : type}, modalUrl, function(){
+    	melisHelper.createModal(zoneId, melisKey, false, {'newsId' : newsId, 'type' : type, 'isNew' : 1}, modalUrl, function(){
     		melisCoreTool.done('.newsAttachFile');
     	});
 	});
@@ -173,7 +180,22 @@ $(document).ready(function(){
 		melisKey = 'meliscmsnews_modal_documents_form_image';
 		modalUrl = 'melis/MelisCmsNews/MelisCmsNews/renderModal';
 		// requesitng to create modal and display after
-    	melisHelper.createModal(zoneId, melisKey, false, {'newsId' : newsId, 'type' : type}, modalUrl, function(){
+    	melisHelper.createModal(zoneId, melisKey, false, {'newsId' : newsId, 'type' : type, 'isNew' : 1}, modalUrl, function(){
+    		melisCoreTool.done('.newsAttachImage');
+    	});
+	});
+	
+	body.on("click", '.newsEditImage', function(){
+		melisCoreTool.pending('.newsAttachImage');
+		var newsId = $(this).data('newsid');
+		var type = $(this).data('filetype');
+		var column = $(this).data('column');
+		// initialation of local variable
+		zoneId = 'id_meliscmsnews_modal_documents_form_image';
+		melisKey = 'meliscmsnews_modal_documents_form_image';
+		modalUrl = 'melis/MelisCmsNews/MelisCmsNews/renderModal';
+		// requesitng to create modal and display after
+    	melisHelper.createModal(zoneId, melisKey, false, {'newsId' : newsId, 'type' : type, 'isNew' : 0, 'column' : column}, modalUrl, function(){
     		melisCoreTool.done('.newsAttachImage');
     	});
 	});
@@ -242,7 +264,8 @@ var toolNews = {
 		},
 		
 		fileModal: function(data){
-			$("#id_meliscmsnews_modal_documents_form_container").modal("hide");	    		 	
+			$("#id_meliscmsnews_modal_documents_form_image_container").modal("hide");
+			$("#id_meliscmsnews_modal_documents_form_container").modal("hide");			
 		 	melisHelper.zoneReload(data.cnews_id+"_id_meliscmsnews_content_tabs_properties_details_left_documents", "meliscmsnews_content_tabs_properties_details_left_documents", {'newsId' : data.cnews_id});
 		},
 		
@@ -282,4 +305,13 @@ var toolNews = {
 			}
 		}
     	
+}
+window.newsImagePreview = function(id, fileInput) {
+	if(fileInput.files && fileInput.files[0]) {
+		var reader = new FileReader();
+		reader.onload = function(e) {
+			$(id).attr('src', e.target.result);
+		}
+		reader.readAsDataURL(fileInput.files[0]);
+	}
 }

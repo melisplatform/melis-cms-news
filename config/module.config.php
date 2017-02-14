@@ -71,11 +71,26 @@ return array(
             'MelisCmsNews\Controller\MelisCmsNews' => 'MelisCmsNews\Controller\MelisCmsNewsController',
             ),
     ),
+    'controller_plugins' => array(
+        'invokables' => array(
+            'MelisCmsNewsLatestNewsPlugin' => 'MelisCmsNews\Controller\Plugin\MelisCmsNewsLatestNewsPlugin',
+            'MelisCmsNewsListNewsPlugin' => 'MelisCmsNews\Controller\Plugin\MelisCmsNewsListNewsPlugin',
+            'MelisCmsNewsShowNewsPlugin' => 'MelisCmsNews\Controller\Plugin\MelisCmsNewsShowNewsPlugin',
+        )
+    ),
+    'form_elements' => array(
+        'factories' => array(
+            'DateField' => 'MelisCmsNews\Form\Factory\DateFieldFactory',
+        ),
+    ),
     'view_manager' => array(
         'display_not_found_reason' => true,
         'display_exceptions'       => true,
         'doctype'                  => 'HTML5',
         'template_map' => array(
+            'MelisCmsNews/latestnews' => __DIR__ . '/../view/melis-cms-news/plugins/latestnews.phtml',
+            'MelisCmsNews/listnews' => __DIR__ . '/../view/melis-cms-news/plugins/listnews.phtml',
+            'MelisCmsNews/shownews' => __DIR__ . '/../view/melis-cms-news/plugins/shownews.phtml',
         ),
         'template_path_stack' => array(
             __DIR__ . '/../view',
