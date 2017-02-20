@@ -66,13 +66,11 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
             $newsSrv = $this->getServiceLocator()->get('MelisCmsNewsService');
             $newsData = $newsSrv->getNewsById($newsId);
             
-            // Getting the News Data from CmsNews entity
-            $news = $newsData->getNews();
         }
         
         // Create an array with the variables that will be available in the view
         $viewVariables = array(
-            'news' => $news
+            'news' => $newsData
         );
         
         // return the variable array and let the view be created

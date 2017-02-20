@@ -697,7 +697,7 @@ class MelisCmsNewsController extends AbstractActionController
                 }
                 
                 $col = $postValues['column'];
-                $fileUploadPath = 'public'.$tmp->getNews()->$col;
+                $fileUploadPath = 'public'.$tmp->$col;
                 $this->deleteFileFromDirectory($fileUploadPath);
             }
         }
@@ -918,7 +918,7 @@ class MelisCmsNewsController extends AbstractActionController
         $newsSvc = $this->getServiceLocator()->get('MelisCmsNewsService');
         if($newsId){
             $resultData = $newsSvc->getNewsById($newsId);
-            $layoutVar['news'] = $resultData->getNews();
+            $layoutVar['news'] = $resultData;
         }
         $this->layout()->setVariables( array_merge( array(
             'newsId' => $newsId,

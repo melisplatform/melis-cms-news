@@ -80,13 +80,8 @@ class MelisCmsNewsListNewsPlugin extends MelisTemplatingPlugin
         $listNews = array();
         foreach ($newsList As $key => $val)
         {
-            // Getting the News Data from CmsNews entity
-            $news = $val->getNews();
-            if (!empty($news))
-            {
-                // Adding the News Data to result variable
-                array_push($listNews, $news);
-            }
+            // Adding the News Data to result variable
+            array_push($listNews, $val);
         }
         
         $paginator = new Paginator(new ArrayAdapter($listNews));

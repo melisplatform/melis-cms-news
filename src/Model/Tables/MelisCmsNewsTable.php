@@ -11,8 +11,9 @@ namespace MelisCmsNews\Model\Tables;
 
 use Zend\Db\TableGateway\TableGateway;
 use Zend\Db\Sql\Expression;
+use MelisEngine\Model\Tables\MelisGenericTable;
 
-class MelisCmsNewsTable extends MelisEcomGenericTable 
+class MelisCmsNewsTable extends MelisGenericTable 
 {
     protected $tableGateway;
     protected $idField;

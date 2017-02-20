@@ -10,7 +10,6 @@
 namespace MelisCmsNews\Service;
 
 use MelisCore\Service\MelisCoreGeneralService;
-use MelisCmsNews\Entity\MelisCmsNews;
 /**
  *
  * This service handles the slider system of Melis.
@@ -45,7 +44,7 @@ class MelisCmsNewsService extends MelisCoreGeneralService
                                     $arrayParameters['start'], $arrayParameters['limit'], $arrayParameters['orderColumn'], $arrayParameters['order'], $arrayParameters['search']);
        
         foreach($news as $new){            
-            $results[] = $this->getNewsById($new->cnews_id);
+            $results[] = $new;
         }
         // Service implementation end
         
@@ -75,12 +74,9 @@ class MelisCmsNewsService extends MelisCoreGeneralService
        
         // Service implementation start
         $newsTable = $this->getServiceLocator()->get('MelisCmsNewsTable');
-        $newsEntity = new MelisCmsNews();
 
-        foreach($newsTable->getEntryById($arrayParameters['newsId']) as $news){           
-            $newsEntity->setId($news->cnews_id);
-            $newsEntity->setNews($news);            
-            $results = $newsEntity;
+        foreach($newsTable->getEntryById($arrayParameters['newsId']) as $news){                   
+            $results = $news;
         }
         
         // Service implementation end

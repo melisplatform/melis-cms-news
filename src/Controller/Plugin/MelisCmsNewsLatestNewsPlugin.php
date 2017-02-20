@@ -75,7 +75,7 @@ class MelisCmsNewsLatestNewsPlugin extends MelisTemplatingPlugin
         foreach ($newsList As $key => $val)
         {
             // Getting the News Data from CmsNews entity
-            $news = $val->getNews();
+            $news = $val;
             if (!empty($news))
             {
                 // Adding the News Data to result variable

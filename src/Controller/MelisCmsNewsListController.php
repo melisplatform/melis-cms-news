@@ -217,16 +217,16 @@ class MelisCmsNewsListController extends AbstractActionController
             foreach($news as $new){
                 
                $status = '<span class="text-success"><i class="fa fa-fw fa-circle"></i></span>';
-                if(!$new->getNews()->cnews_status){
+                if(!$new->cnews_status){
                     $status = '<span class="text-danger"><i class="fa fa-fw fa-circle"></i></span>';
                 }
                 
-                $tableData[$c]['DT_RowId'] = $new->getId();
-                $tableData[$c]['cnews_id'] = $new->getId();               
+                $tableData[$c]['DT_RowId'] = $new->cnews_id;
+                $tableData[$c]['cnews_id'] = $new->cnews_id;               
                 $tableData[$c]['cnews_status'] = $status;
-                $tableData[$c]['cnews_title'] = $new->getNews()->cnews_title;
-                $tableData[$c]['cnews_creation_date'] = $this->getTool()->dateFormatLocale($new->getNews()->cnews_creation_date);
-                $tableData[$c]['cnews_publish_date'] = $this->getTool()->dateFormatLocale($new->getNews()->cnews_publish_date);
+                $tableData[$c]['cnews_title'] = $new->cnews_title;
+                $tableData[$c]['cnews_creation_date'] = $this->getTool()->dateFormatLocale($new->cnews_creation_date);
+                $tableData[$c]['cnews_publish_date'] = $this->getTool()->dateFormatLocale($new->cnews_publish_date);
                 $c++;
             }
         }
@@ -260,7 +260,7 @@ class MelisCmsNewsListController extends AbstractActionController
         if($this->getRequest()->isPost()){ 
             $postValues = get_object_vars($this->getRequest()->getPost());
             $id = $postValues['newsId'];
-            $tmp = $newsSvc->getNewsById($postValues['newsId'])->getNews();
+            $tmp = $newsSvc->getNewsById($postValues['newsId']);
             //delete db data
             if($newsSvc->deleteNewsById($postValues['newsId'])){
                 //delete directory files
