@@ -59,7 +59,7 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
         // Get the parameters and config from $this->pluginFrontConfig (default > hardcoded > get > post)
         $newsId = (!empty($this->pluginFrontConfig['newsId'])) ? $this->pluginFrontConfig['newsId'] : null;
         
-        $news = array();
+        $newsData = array();
         if ($newsId)
         {
             // Retreiving News using MelisCmsNewsService
@@ -75,15 +75,5 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
         
         // return the variable array and let the view be created
         return $viewVariables;
-    }
-    
-    
-    /**
-     * This function return the back office rendering for the template edition system
-     * TODO
-     */
-    public function back()
-    {
-        return array();
     }
 }

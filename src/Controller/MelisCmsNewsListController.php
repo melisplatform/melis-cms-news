@@ -221,7 +221,7 @@ class MelisCmsNewsListController extends AbstractActionController
                     $status = '<span class="text-danger"><i class="fa fa-fw fa-circle"></i></span>';
                 }
                 
-                $tableData[$c]['DT_RowId'] = $new->cnews_id;
+                $tableData[$c]['DT_RowId'] = $new->cnews_id; 
                 $tableData[$c]['cnews_id'] = $new->cnews_id;               
                 $tableData[$c]['cnews_status'] = $status;
                 $tableData[$c]['cnews_title'] = $new->cnews_title;

@@ -99,11 +99,4 @@ return array(
             'ViewJsonStrategy',
         ),
     ),
-    'asset_manager' => array(
-        'resolver_configs' => array(
-            'aliases' => array(
-                'MelisCmsNews/' => __DIR__ . '/../public/',
-            ),
-        ),
-    ),
 );

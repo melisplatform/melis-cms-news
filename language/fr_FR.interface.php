@@ -7,6 +7,7 @@
 	    'tr_meliscmsnews_list_col_title' => 'Titre',
 	    'tr_meliscmsnews_list_col_status' => 'Statut',
 	    'tr_meliscmsnews_list_col_date' => 'Création',
+	    'tr_meliscmsnews_list_col_published' => 'Publication',
 	    
 	    'tr_meliscmsnews_common_label_yes' => 'Oui',
 	    'tr_meliscmsnews_common_label_no' => 'Non',
@@ -58,6 +59,7 @@
 	    'tr_meliscmsnews_input_file_uploading' => 'Upload...',
 	    'tr_meliscmsnews_content_tabs_properties' => 'Propriétés',
 	    'tr_meliscmsnews_form_subtitle' => 'Sous-titre',
+	    'tr_meliscmsnews_form_publish' => 'Date',
 	    'tr_meliscmsnews_subheader_title' => 'Détails de l\'actualité',
 	    'tr_meliscmsnews_subheader_documents' => 'Pièces-jointes',
 	    'tr_meliscmsnews_subheader_images' => 'Images',
