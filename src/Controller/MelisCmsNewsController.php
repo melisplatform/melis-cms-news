@@ -573,6 +573,7 @@ class MelisCmsNewsController extends AbstractActionController
         $tool = $this->getServiceLocator()->get('MelisCoreTool');
         if($this->getRequest()->isPost()){
             $postValues = get_object_vars($this->getRequest()->getPost());
+            $postValues = $melisTool->sanitizePost($postValues);
             
             if ($postValues['cnews_id']){
                 $logTypeCode = 'CMS_NEWS_UPDATE';

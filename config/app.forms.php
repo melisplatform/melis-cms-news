@@ -55,6 +55,25 @@ return array(
                         ),
                     ),
                     'input_filter' => array(
+                        'cnews_id' => array(
+                            'name'     => 'cnews_id',
+                            'required' => false,
+                            'validators' => array(
+                                array(
+                                    'name'    => 'IsInt',
+                                    'options' => array(
+                                        'messages' => array(
+                                            \Zend\I18n\Validator\IsInt::NOT_INT => 'tr_meliscms_tool_platform_not_digit',
+                                            \Zend\I18n\Validator\IsInt::INVALID => 'tr_meliscms_tool_platform_not_digit',
+                                        )
+                                    )
+                                ),
+                            ),
+                            'filters' => array(
+                                array('name' => 'StripTags'),
+                                array('name' => 'StringTrim'),
+                            ),
+                        ),
                         'cnews_title' => array(
                             'name'     => 'cnews_title',
                             'required' => true,

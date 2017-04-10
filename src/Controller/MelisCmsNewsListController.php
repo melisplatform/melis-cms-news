@@ -166,7 +166,7 @@ class MelisCmsNewsListController extends AbstractActionController
         $melisKey = $this->params()->fromRoute('melisKey', '');
         $view->melisKey = $melisKey;
         $view->tableColumns = $columns;        
-        $view->getToolDataTableConfig = $this->getTool()->getDataTableConfiguration('#newsList', true);       
+        $view->getToolDataTableConfig = $this->getTool()->getDataTableConfiguration('#newsList', true, false, array('order' => '[[ 0, "desc" ]]'));       
         return $view;
     }
     
@@ -224,7 +224,7 @@ class MelisCmsNewsListController extends AbstractActionController
                 $tableData[$c]['DT_RowId'] = $new->cnews_id; 
                 $tableData[$c]['cnews_id'] = $new->cnews_id;               
                 $tableData[$c]['cnews_status'] = $status;
-                $tableData[$c]['cnews_title'] = $new->cnews_title;
+                $tableData[$c]['cnews_title'] = $this->getTool()->escapeHtml($new->cnews_title);
                 $tableData[$c]['cnews_creation_date'] = $this->getTool()->dateFormatLocale($new->cnews_creation_date);
                 $tableData[$c]['cnews_publish_date'] = $this->getTool()->dateFormatLocale($new->cnews_publish_date);
                 $c++;
