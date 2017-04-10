@@ -22,7 +22,7 @@ class MelisCmsNewsControllerTest extends AbstractHttpControllerTestCase
         $this->sm  = new ServiceManagerGrabber();
     }
 
-        /**
+    /**
      * Get getNewsTable table
      * @return mixed
      */
@@ -53,14 +53,14 @@ class MelisCmsNewsControllerTest extends AbstractHttpControllerTestCase
         $data = $this->getNewsTable()->fetchAll()->toArray();
         $this->assertEmpty($data, '<h4>This test is supposed to fail, so just ignore this test.</h4>');
     }
-    
+
     public function testInsertData()
     {
         $payloads = $this->getPayload(__METHOD__);
         $this->method = 'fetchAll';
         $this->getNewsTable()->save($payloads['dataToInsert']);
     }
-    
+
     public function testTableAccessWithPayloadFromConfig()
     {
         $payloads = $this->getPayload(__METHOD__);
@@ -69,7 +69,7 @@ class MelisCmsNewsControllerTest extends AbstractHttpControllerTestCase
         $data = $this->getNewsTable()->getEntryByField($column, $value)->current();
         $this->assertNotEmpty($payloads);
         $this->assertNotEmpty($data);
-    
+
     }
 
     public function testRemoveData()
@@ -77,11 +77,13 @@ class MelisCmsNewsControllerTest extends AbstractHttpControllerTestCase
         $payloads = $this->getPayload(__METHOD__);
         $columns = $payloads['dataToRemove']['column'];
         $value   = $payloads['dataToRemove']['value'];
-    
+
         $this->method = 'fetchAll';
         $this->getNewsTable()->deleteByField($columns, $value);
         $this->assertTrue(true);
     }
+
+
 
 }
 
