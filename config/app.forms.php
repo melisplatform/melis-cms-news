@@ -2,6 +2,10 @@
 return array(
     'plugins' => array(
         'MelisCmsNews' => array(
+            'conf' => array(
+                // user rights exclusions
+                'rightsDisplay' => 'none',
+            ),
             'forms' => array(
                 'meliscmsnews_properties_form' => array(
                     'attributes' => array(

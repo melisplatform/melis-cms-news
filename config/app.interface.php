@@ -486,7 +486,7 @@ return array(
                         'meliscmsnews_modal_documents_form' => array(
                             'conf' => array(
                                 'id' => 'id_meliscmsnews_modal_documents_form',
-                                'name' => 'tr_meliscmsnews_attach_file',
+                                'name' => 'tr_meliscmsnews_add_file',
                                 'melisKey' => 'meliscmsnews_modal_documents_form',
                             ),
                             'forward' => array(
@@ -512,5 +512,4 @@ return array(
             ),
         ),
     ),
-
 );

@@ -52,7 +52,7 @@
 	    
 	    'tr_meliscmsnews_header_title' => 'News',
 	    'tr_meliscmsnews_header_right_save' => 'Save',
-	    'tr_meliscmsnews_form_btn_cancel' => 'Cancel',
+	    'tr_meliscmsnews_form_btn_cancel' => 'Close',
 	    'tr_meliscmsnews_input_file' => 'File',
 	    'tr_meliscmsnews_input_file_doc1' => 'Document',
 	    'tr_meliscmsnews_input_file_uploading' => 'Uploading...',
@@ -66,7 +66,8 @@
 	    'tr_meliscmsnews_status_active' => 'Active',
 	    'tr_meliscmsnews_status_inactive' => 'Inactive',
 	    'tr_meliscmsnews_status_status' => 'Status',
-	    'tr_meliscmsnews_attach_file' => 'Attach file',
+	    'tr_meliscmsnews_attach_file' => 'Add file',
+	    'tr_meliscmsnews_add_file' => 'File',
 	    'tr_meliscmsnews_modal_documents_form_image' => 'Attach image',
 	    'tr_meliscmsnews_attach_image' => 'Add image',
 	    'tr_meliscmsnews_attach_file_none' => 'No file uploaded',
