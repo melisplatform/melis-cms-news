@@ -8,7 +8,7 @@ return array(
                     'table' => array(
                         'target' => '#newsList',
                         'ajaxUrl' => 'melis/MelisCmsNews/MelisCmsNewsList/renderNewsListData',
-                        'dataFunction' => '',
+                        'dataFunction' => 'initNewsList',
                         'ajaxCallback' => '',
                         'filters' => array(
                             'left' => array(
@@ -16,6 +16,11 @@ return array(
                                     'module' => 'MelisCmsNews',
                                     'controller' => 'MelisCmsNewsList',
                                     'action' => 'render-news-list-content-filter-limit'
+                                ),
+                                'news-list-news-filter-site' => array(
+                                    'module' => 'MelisCmsNews',
+                                    'controller' => 'MelisCmsNewsList',
+                                    'action' => 'render-news-list-content-filter-site'
                                 ),
                             ),
                         
@@ -49,17 +54,27 @@ return array(
                             ),
                             'cnews_title' => array(
                                 'text' => 'tr_meliscmsnews_list_col_title',
-                                'css' => array('width' => '35%', 'padding-right' => '0'),
+                                'css' => array('width' => '30%', 'padding-right' => '0'),
                                 'sortable' => true,
                             ),
                             'cnews_creation_date' => array(
                                 'text' => 'tr_meliscmsnews_list_col_date',
-                                'css' => array('width' => '15%', 'padding-right' => '0'),
+                                'css' => array('width' => '10%', 'padding-right' => '0'),
                                 'sortable' => true,
                             ),
                             'cnews_publish_date' => array(
                                 'text' => 'tr_meliscmsnews_list_col_published',
-                                'css' => array('width' => '15%', 'padding-right' => '0'),
+                                'css' => array('width' => '10%', 'padding-right' => '0'),
+                                'sortable' => true,
+                            ),
+                            'cnews_unpublish_date' => array(
+                                'text' => 'tr_meliscmsnews_list_col_unpublished',
+                                'css' => array('width' => '10%', 'padding-right' => '0'),
+                                'sortable' => true,
+                            ),
+                            'site_name' => array(
+                                'text' => 'tr_meliscmsnews_site_title',
+                                'css' => array('width' => '10%', 'padding-right' => '0'),
                                 'sortable' => true,
                             ),
                         ),

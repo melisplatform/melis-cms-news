@@ -53,7 +53,24 @@ return array(
                         ),
                         array(
                             'spec' => array(
+                                'name' => 'cnews_unpublish_date',
+                                'type' => 'DateField',
+                                'options' => array(),
+                                'attributes' => array(
+                                    'dateId' => 'newsUnpublishDate',
+                                    'dateLabel' => 'tr_meliscmsnews_form_unpublish'
+                                ),
+                            ),
+                        ),
+                        array(
+                            'spec' => array(
                                 'name' => 'cnews_id',
+                                'type' => 'hidden',
+                            ),
+                        ),
+                        array(
+                            'spec' => array(
+                                'name' => 'cnews_creation_date',
                                 'type' => 'hidden',
                             ),
                         ),
@@ -216,6 +233,40 @@ return array(
                             'filters'  => array(
                                 array('name' => 'StringTrim'),
                             ),
+                        ),
+                    ),
+                ),
+                'meliscmsnews_site_select_form' => array(
+                    'attributes' => array(
+                        'name' => 'newsSiteSelectForm',
+                        'id' => 'newsSiteSelectForm',
+                        'method' => 'POST',
+                        'action' => '',
+                    ),
+                    'hydrator'  => 'Zend\Stdlib\Hydrator\ArraySerializable',
+                    'elements' => array(
+                        array(
+                            'spec' => array(
+                                'name' => 'cnews_site_id',
+                                'type' => 'MelisCoreSiteSelect',
+                                'options' => array(
+                                    'label' => 'tr_meliscms_tool_templates_tpl_site_id',
+                                    'empty_option' => 'tr_meliscmsliderdetails_common_label_choose',
+                                    'disable_inarray_validator' => true,
+                                ),
+                                'attributes' => array(
+                                    'id' => 'id_cnews_site_id',
+                                    'value' => '',
+                                ),
+                            ),
+                        ),
+                    ),
+                    'input_filter' => array(
+                        'cnews_site_id' => array(
+                            'name' => 'cnews_site_id',
+                            'required' => false,
+                            'validators' => array(),
+                            'filters' => array(),
                         ),
                     ),
                 ),

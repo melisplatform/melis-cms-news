@@ -58,6 +58,10 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
     {
         // Get the parameters and config from $this->pluginFrontConfig (default > hardcoded > get > post)
         $newsId = (!empty($this->pluginFrontConfig['newsId'])) ? $this->pluginFrontConfig['newsId'] : null;
+        $siteId = (!empty($this->pluginFrontConfig['site_id'])) ? $this->pluginFrontConfig['site_id'] : null;
+        $active = (!empty($this->pluginFrontConfig['active'])) ? $this->pluginFrontConfig['active'] : true;
+        $filterPublish = (!empty($this->pluginFrontConfig['filter_publish'])) ? $this->pluginFrontConfig['filter_publish'] : true;
+        $filterUnpublish = (!empty($this->pluginFrontConfig['filter_unpublish'])) ? $this->pluginFrontConfig['filter_unpublish'] : true;
         
         $newsData = array();
         if ($newsId)
@@ -66,6 +70,29 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
             $newsSrv = $this->getServiceLocator()->get('MelisCmsNewsService');
             $newsData = $newsSrv->getNewsById($newsId);
             
+            if($filterPublish){
+                // publish date is not greater than today
+                if(empty($newsData->cnews_publish_date)){
+                    $newsData =  array();
+                }else{
+                    $newsData = (strtotime($newsData->cnews_publish_date) < strtotime("now"))? $newsData : array();
+                }
+            }
+          
+            if($filterUnpublish && !empty($newsData->cnews_unpublish_date)){
+                // unpublish date is not greater than today
+                $newsData = (strtotime($newsData->cnews_unpublish_date) > strtotime("now"))? $newsData : array();
+            }
+            
+            if($active){
+                // check if active
+                $newsData = ($newsData->cnews_status)? $newsData : array();
+            }
+            
+            if(!empty($newsData) && !is_null($siteId)){
+                // check site id
+                $newsData = ($siteId == $newsData->cnews_site_id)? $newsData : array();
+            }
         }
         
         // Create an array with the variables that will be available in the view

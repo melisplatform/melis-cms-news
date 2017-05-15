@@ -1,0 +1,25 @@
+<?php 
+    $id = '';
+    if (!empty($this->zoneconfig['conf']['id'])){
+        $id .= $this->newsId.'_'.$this->zoneconfig['conf']['id'];
+    }
+?>
+<div id="<?= $id ?>" data-melisKey="<?= $this->melisKey; ?>">
+<br>
+	<div class="npdc-heading">
+		<h4>
+			<i class="fa fa-book"></i>
+			<?= $this->translate('tr_meliscmsnews_sites_title')?>
+		</h4>		
+	</div>						
+	<div class="pdc-content border-bottom">
+		<?php 
+
+		echo $this->form()->openTag($this->form);
+		echo $this->melisFieldCollection($this->form);
+		echo $this->form()->closeTag();
+
+		?>					
+		<br>
+	</div>
+</div>

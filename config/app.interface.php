@@ -406,7 +406,19 @@ return array(
                                                                             'conf' => array(
                                                                                 'type' => 'MelisCmsSlider/interface/meliscmsslider_select_slider',
                                                                             )
-                                                                        ),                                                                        
+                                                                        ),
+                                                                        'meliscmsnews_content_tabs_properties_details_left_sites' => array(
+                                                                            'conf' => array(
+                                                                                'id' => 'id_meliscmsnews_content_tabs_properties_details_left_sites',
+                                                                                'melisKey' => 'meliscmsnews_content_tabs_properties_details_left_sites',
+                                                                                'name' => 'tr_meliscmsnews_content_tabs_properties_details_left_sites',
+                                                                            ),
+                                                                            'forward' => array(
+                                                                                'module' => 'MelisCmsNews',
+                                                                                'controller' => 'MelisCmsNews',
+                                                                                'action' => 'render-news-tabs-properties-details-left-sites',
+                                                                            ),
+                                                                        ),
                                                                         'meliscmsnews_content_tabs_properties_details_left_documents' => array(
                                                                             'conf' => array(
                                                                                 'id' => 'id_meliscmsnews_content_tabs_properties_details_left_documents',

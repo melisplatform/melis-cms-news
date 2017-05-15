@@ -112,7 +112,8 @@ $(document).ready(function(){
 		var newsPage = $(this).closest('.container-level-a');
 		var dataString = newsPage.find('form#newsLetterForm').serializeArray();
 		var newsId = newsPage.data('newsid');
-		var selectedSlider = newsPage.find('select#cnews_slider_id').val();
+		var selectedSlider = newsPage.find('select[name=cnews_slider_id]').val();
+		var selectedSite = newsPage.find('select[name=cnews_site_id]').val();
 		
 		newsPage.find('.make-switch div').each(function(){
 			var field = $(this).find('input').attr('name');
@@ -125,6 +126,7 @@ $(document).ready(function(){
 		});
 		
 		dataString.push({ name : 'cnews_slider_id', value : selectedSlider });
+		dataString.push({ name : 'cnews_site_id', value : selectedSite });
 		
 		var c = 1;
 		newsPage.find('#'+newsId+'_id_meliscmsnews_content_tabs_properties_details_right_paragraphs textarea').each(function(){
@@ -147,7 +149,18 @@ $(document).ready(function(){
 					toolNews.tabOpen(toolNews.trimLength(data.chunk.cnews_title), data.chunk.cnews_id);
 					toolNews.refreshTable();
 			}else{
-				melisHelper.melisKoNotification(data.textTitle, data.textMessage, data.errors);				
+				melisHelper.melisKoNotification(data.textTitle, data.textMessage, data.errors);	
+				melisCoreTool.highlightErrors(data.success, data.errors, activeTabId + " form");
+				$(".newsPublishDate").prev("label").css("color","#686868");
+                $(".newsUnpublishDate").prev("label").css("color","#686868");
+                $.each( data.errors, function( key, error ) {
+                    if( key == 'cnews_publish_date'){
+                        $(".newsPublishDate").prev("label").css("color","red");
+                    }
+                    if( key == 'cnews_unpublish_date'){
+                        $(".newsUnpublishDate").prev("label").css("color","red");
+                    }
+                });
 			}
 	    	melisCore.flashMessenger();
 	     }).error(function(){
@@ -243,6 +256,11 @@ $(document).ready(function(){
 		
 	});
 	
+	body.on("change", "select[name=cnews_site_id]", function(){
+		var tableId = $(this).parents().eq(6).find('table').attr('id');
+		$("#"+tableId).DataTable().ajax.reload();
+	});
+	
 });
 var toolNews = {
 		
@@ -314,4 +332,11 @@ window.newsImagePreview = function(id, fileInput) {
 		}
 		reader.readAsDataURL(fileInput.files[0]);
 	}
+}
+
+window.initNewsList = function(data, tblSettings){
+	if($('#newsSiteSelect').length){
+		data.cnews_site_id = $('#newsSiteSelect').val();
+	}
+		
 }

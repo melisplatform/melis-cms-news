@@ -110,6 +110,27 @@ class MelisCmsNewsListController extends AbstractActionController
     }
     
     /**
+     * renders the coupon list content news filter site
+     * @return \Zend\View\Model\ViewModel
+     */
+    public function renderNewsListContentFilterSiteAction()
+    {
+        $tableSite = $this->getServiceLocator()->get('MelisEngineTableSite');
+        $sites = $tableSite->fetchAll();
+        $siteId = $this->getRequest()->getPost('cnews_site_id');
+        
+        $options = '<option  value="">'.$this->getTool()->getTranslation('tr_meliscmsliderdetails_common_label_choose').'</option>';
+        foreach($sites as $site){
+            $selected  = ($site->site_id == $siteId)? 'selected' : '';
+            $options .= '<option value="'.$site->site_id.'" '.$selected.'>'.$site->site_name .'</option>';
+        }
+        
+        $view =  new ViewModel();
+        $view->options = $options;
+        return $view;
+    }
+    
+    /**
      * renders the coupon list content news filter search
      * @return \Zend\View\Model\ViewModel
      */
@@ -186,6 +207,10 @@ class MelisCmsNewsListController extends AbstractActionController
         $newsSvc = $this->getServiceLocator()->get('MelisCmsNewsService');
         
         if($this->getRequest()->isPost()) {
+            
+            $cnews_site_id = $this->getRequest()->getPost('cnews_site_id');
+            $cnews_site_id = !empty($cnews_site_id)? $cnews_site_id : null;
+            
             $colId = array_keys($this->getTool()->getColumns());
             
             $sortOrder = $this->getRequest()->getPost('order');
@@ -205,11 +230,11 @@ class MelisCmsNewsListController extends AbstractActionController
             
             $postValues = $this->getRequest()->getPost();
             
-            $tmp = $newsSvc->getNewsList(null, null, null, null, null, null, null, null,  null, $search);
+            $tmp = $newsSvc->getNewsList(null, null, null, null, null, null, null, null, null,  null, $cnews_site_id, $search);
              
             $dataFiltered = count($tmp);
             
-            $news = $newsSvc->getNewsList(null, null, null, null, null, $start, $length, $selCol, $sortOrder, $search);
+            $news = $newsSvc->getNewsList(null, null, null, null, null, null, $start, $length, $selCol, $sortOrder, $cnews_site_id, $search);
             
             $dataCount = count($news);
             $c = 0;
@@ -227,6 +252,8 @@ class MelisCmsNewsListController extends AbstractActionController
                 $tableData[$c]['cnews_title'] = $this->getTool()->escapeHtml($new->cnews_title);
                 $tableData[$c]['cnews_creation_date'] = $this->getTool()->dateFormatLocale($new->cnews_creation_date);
                 $tableData[$c]['cnews_publish_date'] = $this->getTool()->dateFormatLocale($new->cnews_publish_date);
+                $tableData[$c]['cnews_unpublish_date'] = $this->getTool()->dateFormatLocale($new->cnews_unpublish_date);
+                $tableData[$c]['site_name'] = $new->site_name;
                 $c++;
             }
         }

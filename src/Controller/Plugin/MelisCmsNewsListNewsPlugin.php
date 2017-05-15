@@ -71,11 +71,13 @@ class MelisCmsNewsListNewsPlugin extends MelisTemplatingPlugin
         $order = (!empty($this->pluginFrontConfig['filter']['order'])) ? $this->pluginFrontConfig['filter']['order'] : null;
         $dateMin = (!empty($this->pluginFrontConfig['filter']['date_min'])) ? $this->pluginFrontConfig['filter']['date_min'] : null;
         $dateMax = (!empty($this->pluginFrontConfig['filter']['date_max'])) ? $this->pluginFrontConfig['filter']['date_max'] : null;
+        $unpublishFilter = (!empty($this->pluginFrontConfig['filter']['unpublish_filter'])) ? $this->pluginFrontConfig['filter']['unpublish_filter'] : null;
+        $siteId = (!empty($this->pluginFrontConfig['filter']['site_id'])) ? $this->pluginFrontConfig['filter']['site_id'] : null;
         $search = (!empty($this->pluginFrontConfig['filter']['search'])) ? $this->pluginFrontConfig['filter']['search'] : null;
         
         // Retreiving News list using MelisCmsNewsService
         $newsSrv = $this->getServiceLocator()->get('MelisCmsNewsService');
-        $newsList = $newsSrv->getNewsList($status, null, null, $dateMin, $dateMax, null, null, $orderColumn, $order, $search);
+        $newsList = $newsSrv->getNewsList($status, null, null, $dateMin, $dateMax, $unpublishFilter, null, null, $orderColumn, $order, $siteId ,$search);
         
         $listNews = array();
         foreach ($newsList As $key => $val)
