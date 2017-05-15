@@ -660,9 +660,21 @@ class MelisCmsNewsController extends AbstractActionController
                 $postValues['cnews_creation_date'] = date("Y-m-d H:i:s");
             }
             
-//             if(empty($postValues['cnews_publish_date'])){
-//                 $postValues['cnews_publish_date'] = $postValues['cnews_creation_date'];
-//             }
+            if(empty($postValues['cnews_publish_date'])){
+                $postValues['cnews_publish_date'] = date("Y-m-d H:i:s");
+                
+                $pubDate = $tool->localeDateToSql($postValues['cnews_publish_date'], '', 'en_EN');
+                $unpubDate = $tool->localeDateToSql($postValues['cnews_unpublish_date'], '', 'en_EN');
+                
+                if( !empty($postValues['cnews_publish_date']) && !empty($postValues['cnews_unpublish_date'])){
+                    if(strtotime($pubDate) > strtotime($unpubDate)){
+                        $dateErrors['cnews_unpublish_date'] = array(
+                            'isGreaterThan' => $this->getTool()->getTranslation('tr_meliscmsnews_form_unpublish_error_date_today'),
+                            'label' => $this->getTool()->getTranslation('tr_meliscmsnews_form_unpublish'),
+                        );
+                    }
+                }
+            }
             
             $form->setData($postValues);
             if($form->isValid() && empty($dateErrors)){

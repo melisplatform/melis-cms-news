@@ -78,6 +78,7 @@
 	    'tr_meliscmsnews_form_publish' => 'Date de publication',
 	    'tr_meliscmsnews_form_unpublish' => 'Date de dépublication',
 	    'tr_meliscmsnews_form_unpublish_error' => 'La date de dépublication doit être ultérieure à la date de publication',
+	    'tr_meliscmsnews_form_unpublish_error_date_today' => 'La date de dépublication doit être ultérieure à la date du jour',
 	    'tr_meliscmsnews_form_unpublish_date_error' => 'Unpublish must be greater than creation date (%s)',
 	    
 	    'tr_meliscmsnews_form_error_long_255' => 'Valeur trop longue, elle doit être de moins de 255 caractères',

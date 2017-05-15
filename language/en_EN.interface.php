@@ -78,6 +78,7 @@
 	    'tr_meliscmsnews_form_publish' => 'Publish date',
 	    'tr_meliscmsnews_form_unpublish' => 'Unpublish date',
 	    'tr_meliscmsnews_form_unpublish_error' => 'The unpublish date must be ulterior to the publish date',
+	    'tr_meliscmsnews_form_unpublish_error_date_today' => 'The unpublish date must be ulterior to today`s date',
 	    'tr_meliscmsnews_form_unpublish_date_error' => 'Unpublish must be greater than creation date (%s)',
 	    
 	    'tr_meliscmsnews_form_error_long_255' => 'Value is too long, it should be less than 255 characters',
