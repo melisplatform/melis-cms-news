@@ -167,3 +167,15 @@
 .content-cont .panel-title > a {
 	color: #111;
 }
+
+#newsList_site select{
+	width: 100%;
+	display: inline-block;
+}
+
+@media ( max-width: 436px ) {
+	#newsList_site select{
+		width: 100px;
+		display: inline-block;
+	}
+}

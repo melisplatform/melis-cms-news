@@ -1,5 +1,6 @@
 <?php 
 	return array(
+        'tr_meliscms_meliscms' => 'MelisCms',
 	    'tr_meliscmsnews_list_header_title' => 'Actualités',
 	    'tr_meliscmsnews_list_header_title_new' => 'Nouvelle actualité',
 	    'tr_meliscmsnews_list_header_right_add' => 'Ajouter une actualité',

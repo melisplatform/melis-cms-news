@@ -1,5 +1,6 @@
 <?php 
 	return array(
+        'tr_meliscms_meliscms' => 'MelisCms',
 	    'tr_meliscmsnews_list_header_title' => 'News',
 	    'tr_meliscmsnews_list_header_title_new' => 'New news',
 	    'tr_meliscmsnews_list_header_right_add' => 'Add news',
