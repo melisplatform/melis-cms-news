@@ -95,6 +95,10 @@
     max-width: 100%;
 }
 
+.height-fix{
+	min-height: 645px;
+}
+
 /* ACCORDION */
 .a-accordion .fa-times {
     clear: none;

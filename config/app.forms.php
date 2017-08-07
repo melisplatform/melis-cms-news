@@ -22,9 +22,11 @@ return array(
                                 'type' => 'MelisText',
                                 'options' => array(
                                     'label' => 'tr_meliscmsnews_list_col_title',
+                                    'tooltip' => 'tr_meliscmsnews_list_col_title tooltip',
                                 ),
                                 'attributes' => array(
                                     'id' => 'cnews_title',
+                                    'required' => 'required',
                                 ),
                             ),
                         ),
@@ -34,6 +36,7 @@ return array(
                                 'type' => 'MelisText',
                                 'options' => array(
                                     'label' => 'tr_meliscmsnews_form_subtitle',
+                                    'tooltip' => 'tr_meliscmsnews_form_subtitle tooltip',
                                 ),
                                 'attributes' => array(
                                     'id' => 'cnews_subtitle',
@@ -44,10 +47,12 @@ return array(
                             'spec' => array(
                                 'name' => 'cnews_publish_date',
                                 'type' => 'DateField',
-                                'options' => array(),
+                                'options' => array(
+                                    'label' => 'tr_meliscmsnews_form_publish',
+                                    'tooltip' => 'tr_meliscmsnews_form_publish tooltip',
+                                ),
                                 'attributes' => array(
                                     'dateId' => 'newsPublishDate',
-                                    'dateLabel' => 'tr_meliscmsnews_form_publish'
                                 ),
                             ),
                         ),
@@ -55,10 +60,12 @@ return array(
                             'spec' => array(
                                 'name' => 'cnews_unpublish_date',
                                 'type' => 'DateField',
-                                'options' => array(),
+                                'options' => array(
+                                    'label' => 'tr_meliscmsnews_form_unpublish',
+                                    'tooltip' => 'tr_meliscmsnews_form_unpublish tooltip',
+                                ),
                                 'attributes' => array(
                                     'dateId' => 'newsUnpublishDate',
-                                    'dateLabel' => 'tr_meliscmsnews_form_unpublish'
                                 ),
                             ),
                         ),
@@ -159,6 +166,9 @@ return array(
                             'spec' => array(
                                 'name' => 'cnews_document',
                                 'type' => 'file',
+                                'options' => array(
+                                    'label' => 'tr_meliscmsnews_save_upload_file',  
+                                ),
                                 'attributes' => array(
                                     'id' => 'cnews_document',
                                     'value' => '',
@@ -167,9 +177,6 @@ return array(
                                     'required' => 'required',
                                     'onchange' => 'newsImagePreview(".imgDocThumbnail", this);',
                                 ),
-//                                 'options' => array(
-//                                     'label' => 'tr_meliscmsnews_input_file_doc1',
-//                                 ),
                             ),
                         ),
                         array(
@@ -251,6 +258,7 @@ return array(
                                 'type' => 'MelisCoreSiteSelect',
                                 'options' => array(
                                     'label' => 'tr_meliscms_tool_templates_tpl_site_id',
+                                    'tooltip' => 'tr_meliscmsnews_tpl_site_id tooltip',
                                     'empty_option' => 'tr_meliscmsliderdetails_common_label_choose',
                                     'disable_inarray_validator' => true,
                                 ),

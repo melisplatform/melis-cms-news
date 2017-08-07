@@ -69,9 +69,14 @@ class MelisCmsNewsTable extends MelisGenericTable
         {
             $select->where('cnews_publish_date <= "'.$publishDateMax.'"');
         }
+
+        if (!is_null($limit))
+        {
+            $select->limit( (int) $limit);
+        }
         
         if($unpublishFilter){
-            $select->where->nest->greaterThan('cnews_unpublish_date', date("Y-m-d H:i:s", strtotime("now")))->or->isNull('cnews_unpublish_date')->unnest;
+            $select->where->nest->greaterThan('cnews_unpublish_date', date("Y-m-d H:i:s"))->or->isNull('cnews_unpublish_date')->unnest;
         }
         
         if (!is_null($start))
@@ -79,14 +84,9 @@ class MelisCmsNewsTable extends MelisGenericTable
             $select->offset($start);
         }
         
-        if (!is_null($limit)&&$limit!=-1)
-        {
-            $select->limit($limit);
-        }
-        
         if (!is_null($orderColumn) && !is_null($order))
         {
-            $select->order(array($orderColumn => $order));
+            $select->order($orderColumn.' '.$order);
         }
         
         $resultData = $this->tableGateway->selectWith($select);

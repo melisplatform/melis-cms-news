@@ -60,12 +60,20 @@ class Module
     {
     	$config = array();
     	$configFiles = array(
-    			include __DIR__ . '/../config/module.config.php',
-    			include __DIR__ . '/../config/app.interface.php',
-    			include __DIR__ . '/../config/app.tools.php',
-    	        include __DIR__ . '/../config/app.forms.php',
-    	        include __DIR__ . '/../config/diagnostic.config.php',
-    	        include __DIR__ . '/../config/app.plugins.php',
+    		include __DIR__ . '/../config/module.config.php',
+
+    	    // interface design Melis
+    		include __DIR__ . '/../config/app.interface.php',
+    	    include __DIR__ . '/../config/app.tools.php',
+    	    include __DIR__ . '/../config/app.forms.php',
+
+    	    // Tests
+    	    include __DIR__ . '/../config/diagnostic.config.php',
+
+    	    // Templating plugins
+    	    include __DIR__ . '/../config/plugins/MelisCmsNewsLatestNewsPlugin.config.php',
+    	    include __DIR__ . '/../config/plugins/MelisCmsNewsListNewsPlugin.config.php',
+    	    include __DIR__ . '/../config/plugins/MelisCmsNewsShowNewsPlugin.config.php',
     	);
     	
     	foreach ($configFiles as $file) {

@@ -15,14 +15,17 @@
             	        $tabIcon = $menuConfig['conf']['icon'];
             	        $tabName = $menuConfig['conf']['name'];
             	        
-            	       
-        	            echo '<li>
+        	            $li= '<li>
                 	            <a class="'.$tabIcon.'" data-toggle="tab" href="#'.$tabId.'" aria-expanded="true">
                             		<i></i>
                             		<span>'.$this->translate($tabName).'</span>
                             	</a>
                             </li>';
-            	        
+        	            
+        	            if(empty($this->newsId) && $menuConfig['conf']['melisKey'] == 'meliscmsnews_content_tabs_medias'){
+        	                $li = '';
+        	            }
+        	            echo $li;
             	    }
             	}
             ?>

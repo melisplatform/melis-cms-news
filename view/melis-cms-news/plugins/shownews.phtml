@@ -1,3 +1,47 @@
-<?php if (!empty($this->news)):?>
-	<h4><?php echo $this->news->cnews_title?></h4>
-<?php endif;?>
+<style>
+.thumb-contenido{
+    margin-bottom:1%;
+    margin-left: 0px;
+    padding-left: 0px;
+}
+</style>
+<div id="<?php echo $this->pluginId?>">
+	<?php if (!empty($this->news)){?>
+        <div class="container">
+            <div class="well"> 
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="row hidden-md hidden-lg">
+                        	<h1 class="text-center" ><?php echo $this->news->cnews_title?></h1>
+                    	</div>
+                    	<?php if (!empty($this->news->cnews_image1)){?>
+                            <div class="pull-left col-md-4 col-xs-12 thumb-contenido">
+                             	<img class="center-block img-responsive" src='<?php echo $this->news->cnews_image1?>' />
+                         	</div>
+                     	<?php }?>
+                        <div class="">
+                            <h1  class="hidden-xs hidden-sm"><?php echo $this->news->cnews_title?></h1>
+                            <small><?php echo date('F d, Y', strtotime($this->news->cnews_publish_date))?></small><br>
+                            <?php
+                                $ctr = 1;
+                                do
+                                {
+                                    $tmp = 'cnews_paragraph'.$ctr++;
+                                    
+                                    if (!empty($this->news->$tmp))
+                                    {
+                                        echo '<p class="text-justify">'.$this->news->$tmp.'</p>';
+                                    }
+                                }while($ctr < 5);
+                            ?>
+                    	</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php }else{?>
+    	<div class="alert alert-warning" role="alert">
+			No result
+		</div>
+    <?php }?>
+</div>

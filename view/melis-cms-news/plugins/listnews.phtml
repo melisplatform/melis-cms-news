@@ -1,5 +1,69 @@
-<ul>
-<?php foreach ($this->latestNews as $news):?>
-	<li><?php echo $news->cnews_title?></li>
-<?php endforeach;?>
-</ul>
+<div id="<?php echo $this->pluginId?>">
+    <div id="news-list-plugin">
+    	<form method="get">
+        	<div class="row">
+              	<div class="col-sm-6 col-md-8">
+              		<div class="form-inline">
+              			<div class="form-group">
+                            <input type="text" class="form-control" name="date_min" id="date-min" placeholder="Date from" value="<?php echo $this->dateMin?>" readonly>
+                      	</div>
+                      	<div class="form-group">
+                            <input type="text" class="form-control" name="date_max" id="date-max"  placeholder="Date to" value="<?php echo $this->dateMax?>" readonly>
+                      	</div>
+                      	<button type="submit" class="btn btn-default">Filter</button>
+            		</div>
+              	</div>
+              	<div class="col-sm-6 col-md-4 text-right">
+                	<div class="form-inline">
+                      	<div class="form-group">
+                            <input type="text" class="form-control" name="search" placeholder="Search News..." value="<?php echo $this->searchKey?>">
+                      	</div>
+                      	<button type="submit" class="btn btn-default">Search</button>
+            		</div>
+              	</div>
+        	</div>
+    	</form>
+    	<br>
+        <div class="row">
+        	<?php if (!empty($this->listNews->count())){?>
+            	<?php foreach ($this->listNews As $val){?>
+                  	<div class="col-sm-6 col-md-4">
+                        <div class="thumbnail">
+                        	<?php if(!empty($val->cnews_image1)){?>
+                          		<img src="<?php echo $val->cnews_image1 ?>" alt="...">
+                          	<?php }?>
+                          	<div class="caption">
+                          		<a href="<?php echo $val->newsLink?>">
+                                	<h3><?php echo $val->cnews_title ?></h3>
+                                </a>
+                                <p><?php echo $val->cnews_paragraph1 ?></p>
+                          	</div>
+                        </div>
+                  	</div>
+              	<?php }?>
+          	<?php }else{?>
+          		<div class="col-sm-12 col-md-12">
+          			<div class="alert alert-warning" role="alert">
+            			No result
+            		</div>
+          		</div>
+          	<?php }?>
+        </div>
+    </div>
+    
+    <!-- Pagination -->
+    <?php 
+        // Generating Pagination Control using partial view
+        echo $this->paginationControl(
+                $this->listNews, 
+                'Sliding', 
+                'MelisCmsNews/list-paginator',
+                array(
+                    'searchKey' => $this->searchKey,
+                    'dateMin' => $this->dateMin,
+                    'dateMax' => $this->dateMax,
+                    'nbPageBeforeAfter' => $this->nbPageBeforeAfter
+                )
+        ); 
+    ?>
+</div>

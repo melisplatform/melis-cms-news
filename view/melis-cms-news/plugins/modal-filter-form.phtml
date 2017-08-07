@@ -1,0 +1,20 @@
+<style>
+input#date_min, input#date_max{
+	background: #fff;
+}
+</style>
+<?php
+    $form = $this->modalForm;
+    $form->prepare();
+    echo $this->form()->openTag($form);
+    echo $this->melisFieldCollection($form);
+    echo $this->form()->closeTag();
+?>
+<script type="text/javascript">
+    $(function () {
+        $("input#date_min, input#date_max").datepicker({
+            language: "en",
+    		format: "mm/dd/yyyy",
+        });
+    });
+</script>

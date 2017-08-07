@@ -1,11 +1,9 @@
-
-<br>
 <?php 
     $id = '';
     if (!empty($this->zoneconfig['conf']['id'])){
         $id .= $this->newsId.'_'.$this->zoneconfig['conf']['id'];
     }
-    if(!empty($this->newsId)):
+    if(!empty($this->newsId)){
 ?>
 <div id="<?= $id ?>" data-melisKey="<?= $this->melisKey; ?>">
 	<div class="npdc-heading">
@@ -16,10 +14,11 @@
 		<?php if(count($this->images) != $this->limit && !empty($this->newsId)):?>						
 		<a class="btn btn-success newsAttachImage" data-newsid="<?= $this->newsId?>" data-filetype="image"><i class="fa fa-plus"></i> <?= $this->translate('tr_meliscmsnews_attach_image')?></a>
 		<?php endif;?>
-	</div>						
+	</div>
+	<div class="pdc-content border-bottom">						
 	<?php 
 	   if(count($this->images)){
-	       foreach($this->images as $image):
+	       foreach($this->images as $image){
 	       ?>
 	       <div class="me-p-image">
         	<img src="<?= $image['image']?>">
@@ -39,10 +38,11 @@
         	</div>
         	<br>
 	       <?php 
-	       endforeach;
+	       }
 	   }else{
-	       echo $this->translate('tr_meliscmsnews_image_none');
+	       echo '<p>'.$this->translate('tr_meliscmsnews_image_none').'</p>';
 	   }
 	?>
+	</div>
 </div>
-<?php endif;?>
+<?php }?>

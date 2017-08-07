@@ -44,12 +44,12 @@ return array(
                         'columns' => array(
                             'cnews_id' => array(
                                 'text' => 'tr_meliscmsnews_list_col_id',
-                                'css' => array('width' => '10%', 'padding-right' => '0'),
+                                'css' => array('width' => '1%', 'padding-right' => '0'),
                                 'sortable' => true,
                             ),
                             'cnews_status' => array(
                                 'text' => 'tr_meliscmsnews_list_col_status',
-                                'css' => array('width' => '10%', 'padding-right' => '0'),
+                                'css' => array('width' => '1%', 'padding-right' => '0'),
                                 'sortable' => true,
                             ),
                             'cnews_title' => array(

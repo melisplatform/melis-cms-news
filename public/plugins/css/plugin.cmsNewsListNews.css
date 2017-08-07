@@ -1,0 +1,7 @@
+#news-list-plugin-default-template .thumbnail{
+   	max-height: 450px;
+    overflow: hidden;
+}
+#news-list-plugin-default-template h3{
+    color: initial;
+}

@@ -1,5 +1,27 @@
-<ul>
-<?php foreach ($this->latestNews as $news):?>
-	<li><?php echo $news->cnews_title?></li>
-<?php endforeach;?>
-</ul>
+<div id="<?php echo $this->pluginId?>">
+	<?php if (!empty($this->latestNews)){?>
+    <div id="news-latest-plugin">
+        <div class="row">
+        	<?php foreach ($this->latestNews As $val){?>
+              	<div class="col-sm-6 col-md-4">
+                    <div class="thumbnail">
+                    	<?php if(!empty($val->cnews_image1)){?>
+                      		<img src="<?php echo $val->cnews_image1 ?>" alt="...">
+                      	<?php }?>
+                      	<div class="caption">
+                      		<a href="<?php echo $val->newsLink?>">
+                            	<h3><?php echo $val->cnews_title ?></h3>
+                            </a>
+                            <p><?php echo $val->cnews_paragraph1 ?></p>
+                      	</div>
+                    </div>
+              	</div>
+          	<?php }?>
+        </div>
+    </div>
+    <?php }else{?>
+		<div class="alert alert-warning" role="alert">
+			No result
+		</div>
+  	<?php }?>
+</div>

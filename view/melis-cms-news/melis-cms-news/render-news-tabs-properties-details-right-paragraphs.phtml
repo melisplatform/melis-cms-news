@@ -1,3 +1,4 @@
+<div class="col-xs-12 height-fix">
 	<?php
 	$id = '';
 	if (!empty($this->zoneconfig['conf']['id'])){
@@ -7,11 +8,12 @@
     $collapsed = '';
 	?>
 	<div id="<?= $id ?>" data-melisKey="<?= $this->melisKey; ?>">
-		<h4>
-			<i class="fa fa-align-left"></i>
-			<?= $this->translate('tr_meliscmsnews_subheader_paragraphs')?>
-		</h4>
-		<br>
+		<div class="npdc-heading">
+    		<h4>
+    			<i class="fa fa-align-left"></i>
+    			<?= $this->translate('tr_meliscmsnews_subheader_paragraphs')?>
+    		</h4>
+		</div>
 		<?php 
 		$c = 1;
 		foreach($this->forms as $form):
@@ -51,4 +53,4 @@
     	
     	
 	</div>
-	
+</div>

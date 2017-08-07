@@ -78,9 +78,11 @@ return array(
             'MelisCmsNewsShowNewsPlugin' => 'MelisCmsNews\Controller\Plugin\MelisCmsNewsShowNewsPlugin',
         )
     ),
+
     'form_elements' => array(
         'factories' => array(
-            'DateField' => 'MelisCmsNews\Form\Factory\DateFieldFactory',
+            'MelisCmsNewsSelect' => 'MelisCmsNews\Form\Factory\MelisCmsNewsSelectFactory',
+            'MelisCmsSiteNewsSelect' => 'MelisCmsNews\Form\Factory\MelisCmsSiteNewsSelectFactory',
         ),
     ),
     'view_manager' => array(
@@ -88,9 +90,13 @@ return array(
         'display_exceptions'       => true,
         'doctype'                  => 'HTML5',
         'template_map' => array(
-            'MelisCmsNews/latestnews' => __DIR__ . '/../view/melis-cms-news/plugins/latestnews.phtml',
-            'MelisCmsNews/listnews' => __DIR__ . '/../view/melis-cms-news/plugins/listnews.phtml',
-            'MelisCmsNews/shownews' => __DIR__ . '/../view/melis-cms-news/plugins/shownews.phtml',
+            'MelisCmsNews/latestnews'                           => __DIR__ . '/../view/melis-cms-news/plugins/latestnews.phtml',
+            'MelisCmsNews/listnews'                             => __DIR__ . '/../view/melis-cms-news/plugins/listnews.phtml',
+            'MelisCmsNews/shownews'                             => __DIR__ . '/../view/melis-cms-news/plugins/shownews.phtml',
+            'MelisCmsNews/list-paginator'                       => __DIR__ . '/../view/melis-cms-news/plugins/list-paginator.phtml',
+            'MelisCmsNews/plugin/modal/modal-filter-form'       => __DIR__ . '/../view/melis-cms-news/plugins/modal-filter-form.phtml',
+            'MelisCmsNews/plugin/modal/modal-pagination-form'   => __DIR__ . '/../view/melis-cms-news/plugins/modal-pagination-form.phtml',
+            'MelisCmsNews/plugin/modal/modal-template-form'     => __DIR__ . '/../view/melis-cms-news/plugins/modal-template-form.phtml',
         ),
         'template_path_stack' => array(
             __DIR__ . '/../view',

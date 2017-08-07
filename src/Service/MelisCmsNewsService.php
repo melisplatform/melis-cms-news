@@ -41,12 +41,13 @@ class MelisCmsNewsService extends MelisCoreGeneralService
    
         // Service implementation start
         $newsTable = $this->getServiceLocator()->get('MelisCmsNewsTable');
+
         $news = $newsTable->getNewsList(
             $arrayParameters['status'], $arrayParameters['dateMin'], $arrayParameters['dateMax'], $arrayParameters['publishDateMin'], 
             $arrayParameters['publishDateMax'], $arrayParameters['unpublishFilter'], $arrayParameters['start'], $arrayParameters['limit'], 
             $arrayParameters['orderColumn'], $arrayParameters['order'], $arrayParameters['siteId'], $arrayParameters['search']
         );
-       
+
         foreach($news as $new){            
             $results[] = $new;
         }
