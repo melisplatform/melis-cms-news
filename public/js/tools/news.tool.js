@@ -4,13 +4,13 @@ $(document).ready(function(){
 	body.on("click", '.addNews', function(){
 		var newsId = 0;
 		var name = translations.tr_meliscmsnews_list_header_title_new;
-		toolNews.tabOpen(toolNews.trimLength(name), newsId);
+		toolNews.tabOpen(name, newsId);
 	});
 	
 	body.on("click", '.newsEdit', function(){
 		var newsId = $(this).closest('tr').attr('id');
 		var name = $(this).closest('tr').find("td:nth-child(3)").text();
-		toolNews.tabOpen(toolNews.trimLength(name), newsId);
+		toolNews.tabOpen(name, newsId);
 	});
 	
 	body.on("click", '.newsListRefresh', function(){
@@ -146,7 +146,7 @@ $(document).ready(function(){
 	    	 if(data.success){
 	    		 	toolNews.tabClose(newsId);
 					melisHelper.melisOkNotification( data.textTitle, data.textMessage );
-					toolNews.tabOpen(toolNews.trimLength(data.chunk.cnews_title), data.chunk.cnews_id);
+					toolNews.tabOpen(data.chunk.cnews_title, data.chunk.cnews_id);
 					toolNews.refreshTable();
 			}else{
 				melisHelper.melisKoNotification(data.textTitle, data.textMessage, data.errors);	
@@ -269,7 +269,7 @@ var toolNews = {
 		},
 		
 		tabOpen: function(name, id){
-			melisHelper.tabOpen(name, 'fa fa-list-alt', id+'_id_meliscmsnews_page', 'meliscmsnews_page', { newsId : id});
+			melisHelper.tabOpen(name, 'fa fa-list-alt', id+'_id_meliscmsnews_page', 'meliscmsnews_page', { newsId : id}, 'id_meliscmsnews_left_menu');
 		},
 		
 		tabClose: function(id){
