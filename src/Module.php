@@ -66,7 +66,8 @@ class Module
     		include __DIR__ . '/../config/app.interface.php',
     	    include __DIR__ . '/../config/app.tools.php',
     	    include __DIR__ . '/../config/app.forms.php',
-
+    	    include __DIR__ . '/../config/app.microservice.php',
+    	    
     	    // Tests
     	    include __DIR__ . '/../config/diagnostic.config.php',
 
@@ -74,6 +75,7 @@ class Module
     	    include __DIR__ . '/../config/plugins/MelisCmsNewsLatestNewsPlugin.config.php',
     	    include __DIR__ . '/../config/plugins/MelisCmsNewsListNewsPlugin.config.php',
     	    include __DIR__ . '/../config/plugins/MelisCmsNewsShowNewsPlugin.config.php',
+    	    
     	);
     	
     	foreach ($configFiles as $file) {
