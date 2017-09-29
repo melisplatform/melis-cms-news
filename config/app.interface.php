@@ -157,7 +157,7 @@ return array(
                                             ),
                                         ),                                        
                                     ),
-                                ),
+                                ), 
                                 'meliscmsnews_list_content' => array(
                                     'conf' => array(
                                         'id' => 'id_meliscmsnews_list_content',
