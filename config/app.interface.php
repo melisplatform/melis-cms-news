@@ -174,7 +174,7 @@ return array(
                                             'conf' => array(
                                                 'id' => 'id_meliscmsnews_list_content_table',
                                                 'melisKey' => 'meliscmsnews_list_content_table',
-                                                'name' => 'tr-meliscmsnews_list_content_table',
+                                                'name' => 'tr_meliscmsnews_list_content_table',
                                             ),
                                             'forward' => array(
                                                 'module' => 'MelisCmsNews',

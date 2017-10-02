@@ -13,6 +13,11 @@
 	    'tr_meliscmsnews_list_col_date' => 'Création',
 	    'tr_meliscmsnews_list_col_published' => 'Publication',
 	    'tr_meliscmsnews_list_col_unpublished' => 'Dépublication',
+	    'tr_meliscmsnews_list_header' => 'Header',
+	    'tr_meliscmsnews_list_header_right' => 'Header right zone',
+	    'tr_meliscmsnews_list_header_left' => 'Header left zone',
+	    'tr_meliscmsnews_list_content' => 'Content',
+	    'tr_meliscmsnews_list_content_table' => 'Content table',
 	    
 	    'tr_meliscmsnews_common_label_yes' => 'Oui',
 	    'tr_meliscmsnews_common_label_no' => 'Non',
