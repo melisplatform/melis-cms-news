@@ -173,7 +173,7 @@
 }
 
 #newsList_site select{
-	width: 100%;
+	width: 100px;
 	display: inline-block;
 }
 
