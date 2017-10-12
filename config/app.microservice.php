@@ -26,13 +26,14 @@ return array(
 									'name' => 'status',
 									'type' => 'Text',
 									'options' => array(
-										'label' => 'Status',
+										'label' => 'status',
 									),
 									'attributes' => array(
 										'id' => 'status',
 										'value' => '',
 										'class' => '',
-										'placeholder' => 'Enter Status',
+										'placeholder' => '1',
+										'data-type' => 'bool'
 									),
 								),
 							),
@@ -47,7 +48,8 @@ return array(
 										'id' => 'dateMin',
 										'value' => '',
 										'class' => '',
-										'placeholder' => 'Enter dateMin',
+										'placeholder' => '2017-04-18',
+										'data-type' => 'date'
 									),
 								),
 							),
@@ -62,22 +64,24 @@ return array(
 										'id' => 'dateMax',
 										'value' => '',
 										'class' => '',
-										'placeholder' => 'Enter dateMax',
+										'placeholder' => '2017-04-18',
+										'data-type' => 'date'
 									),
 								),
 							),
 							array(
 								'spec' => array(
-									'name' => 'puhlishDateMin',
+									'name' => 'publishDateMin',
 									'type' => 'Text',
 									'options' => array(
-										'label' => 'puhlishDateMin',
+										'label' => 'publishDateMin',
 									),
 									'attributes' => array(
-										'id' => 'puhlishDateMin',
+										'id' => 'publishDateMin',
 										'value' => '',
 										'class' => '',
-										'placeholder' => 'Enter publish`DateMin',
+										'placeholder' => '2017-04-18',
+										'data-type' => 'date'
 									),
 								),
 							),
@@ -92,7 +96,8 @@ return array(
 										'id' => 'publishDateMax',
 										'value' => '',
 										'class' => '',
-										'placeholder' => 'Enter publishDateMax',
+										'placeholder' => '2017-04-18',
+										'data-type' => 'date'
 									),
 								),
 							),
@@ -107,7 +112,8 @@ return array(
 										'id' => 'unpublishFilter',
 										'value' => '',
 										'class' => '',
-										'placeholder' => 'Enter unpublishFilter',
+										'placeholder' => 'false',
+										'data-type'  => 'bool'
 									),
 								),
 							),
@@ -122,7 +128,8 @@ return array(
 										'id' => 'start',
 										'value' => '',
 										'class' => '',
-										'placeholder' => 'Enter start',
+										'placeholder' => '0',
+										'data-type' => 'int'
 									),
 								),
 							),
@@ -137,7 +144,8 @@ return array(
 										'id' => 'limit',
 										'value' => '',
 										'class' => '',
-										'placeholder' => 'Enter limit',
+										'placeholder' => '5',
+										'data-type' => 'int'
 									),
 								),
 							),
@@ -152,7 +160,8 @@ return array(
 										'id' => 'orderColumn',
 										'value' => '',
 										'class' => '',
-										'placeholder' => 'Enter Order Column',
+										'placeholder' => 'cnews_id',
+										'data-type' => 'string'
 									),
 								),
 							),
@@ -167,7 +176,8 @@ return array(
 										'id' => 'order',
 										'value' => '',
 										'class' => '',
-										'placeholder' => 'Enter order',
+										'placeholder' => 'ASC',
+										'data-type' => 'string'
 									),
 								),
 							),
@@ -182,7 +192,8 @@ return array(
 										'id' => 'siteId',
 										'value' => '',
 										'class' => '',
-										'placeholder' => 'Enter Site Id',
+										'placeholder' => '1',
+										'data-type' => 'int'
 									),
 								),
 							),
@@ -197,7 +208,8 @@ return array(
 										'id' => 'search',
 										'value' => '',
 										'class' => '',
-										'placeholder' => 'search',
+										'placeholder' => 'fashion',
+										'data-type' => 'string'
 									),
 								),
 							),
@@ -435,13 +447,14 @@ return array(
 									'name' => 'newsId',
 									'type' => 'Text',
 									'options' => array(
-										'label' => 'News Id',
+										'label' => 'newsId',
 									),
 									'attributes' => array(
 										'id' => 'newsId',
 										'value' => '',
 										'class' => '',
-										'placeholder' => 'Enter news Id',
+										'placeholder' => '1',
+										'data-type' => 'int'
 									),
 								),
 							),
@@ -455,7 +468,7 @@ return array(
 										'name' => 'IsInt',
 										'options' => array(
 											'message' => array(
-												\Zend\I18n\Validator\IsInt::INVALID => 'News Id must be an integer'
+												\Zend\I18n\Validator\IsInt::INVALID => 'newsId must be an integer'
 											),
 										),
 									),
