@@ -117,29 +117,30 @@ class MelisCmsNewsTable extends MelisGenericTable
     public function getNewsListByMonths($limit = null, $siteId = null)
     {
         $select = $this->tableGateway->getSql()->select();
-        
+
         $select->columns(array(
-            new Expression('MONTH(cnews_publish_date) AS month'), 
+            new Expression('MONTH(cnews_publish_date) AS month'),
             new Expression('YEAR(cnews_publish_date) AS year'),
         ));
         $select->where(array('cnews_status' => '1'));
-        
+
         if(!is_null($siteId)){
             $select->where->equalTo('cnews_site_id', $siteId);
         }
-        
+
         $select->where->lessThan('cnews_publish_date', date('Y-m-d H:i:s', strtotime("now")));
-        
+
         $select->where->nest->greaterThan('cnews_unpublish_date', date('Y-m-d H:i:s', strtotime("now")))->or->isNull('cnews_unpublish_date')->unnest;
-        
-        $select->group(array(new Expression('MONTH(cnews_publish_date)'), new Expression('YEAR(cnews_publish_date)')));
-        $select->order(array('cnews_publish_date' => 'DESC'));
-        
-        
+
+        $select->group(array('month', 'year'));
+        $select->order(new Expression('month + " " + year'), 'DESC');
+
+
         if (!is_null($limit))
         {
             $select->limit($limit);
         }
+
     
         $resultData = $this->tableGateway->selectWith($select);
         return $resultData;
