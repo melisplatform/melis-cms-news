@@ -346,7 +346,30 @@ class MelisCmsNewsListController extends AbstractActionController
         
         return new JsonModel($response);
     }
-    
+
+    /**
+     * Returns the list of news of all site
+     */
+    public function getAllNewsList()
+    {
+        $error   = array();
+        $data    = array();
+        $request = $this->getRequest();
+        $success = 0;
+
+        if($request->isPost()){
+            $melisNews = $this->getServiceLocator()->get("MelisCmsNews");
+            $newsAllSite = $melisNews->getAllNewsList();
+
+            $data    = $newsAllSite;
+            $success = 0;
+            $error   = 0;
+        }
+
+        return $data;
+
+    }
+
     /**
      * Returns the Tool Service Class
      * @return MelisCoreTool
