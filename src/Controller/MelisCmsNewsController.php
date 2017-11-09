@@ -505,7 +505,28 @@ class MelisCmsNewsController extends AbstractActionController
         return $view;
         
     }
-    
+
+    /**
+     * Returns the news of a specific site
+     * @param siteId
+     * return array
+     */
+    public function getNewsBySiteId($siteId)
+    {
+        $success = 0;
+        $data    = array();
+        $request = $this->getRequest();
+
+        if($request->isPost()){
+            $news     = $this->getServiceLocator()->get("MelisCmsNewsService");
+            $siteNews = $news->getNews($siteId);
+
+            $data = $siteNews;
+        }
+
+        return $data;
+    }
+
     public function saveFileFormAction()
     {
         $this->getEventManager()->trigger('meliscmsnews_save_news_file_start', $this, array());
@@ -1015,5 +1036,7 @@ class MelisCmsNewsController extends AbstractActionController
         return $melisTool;
     
     }
+
+
 
 }
