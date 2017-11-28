@@ -50,13 +50,13 @@ Any module can override or add items in this form by building the keys in an arr
 return array(
 	'plugins' => array(
 
-		// MelisCms array
+		// MelisCmsNews array
 		'MelisCmsNews' => array(
 
 			// Form key
 			'forms' => array(
 
-				// MelisCms Page Properties form
+				// MelisCmsNews Properties form
 				'meliscmsnews_properties_form' => array(
 					'attributes' => array(
 						'name' => 'newsLetterForm',
