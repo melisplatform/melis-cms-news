@@ -18,6 +18,11 @@ use Zend\Session\Container;
 use MelisCmsNews\Listener\MelisCmsNewsSliderDeletedListener;
 use MelisCmsNews\Listener\MelisCmsNewsFlashMessengerListener;
 
+/**
+ * Class Module
+ * @package MelisCmsNews
+ * @require melis-core|melis-cms
+ */
 class Module
 {
     public function onBootstrap(MvcEvent $e)
