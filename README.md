@@ -23,6 +23,7 @@ composer require melisplatform/melis-cms-news
 
 * News Tool
 * Melis Templating News Plugins (ListNews, LatestNews, NewsShow)
+* News with Sliders when MelisCmsSlider Module in installed
 
 ## Running the code
 
