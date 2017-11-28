@@ -49,38 +49,36 @@ Any module can override or add items in this form by building the keys in an arr
 ``` 
 return array(
 	'plugins' => array(
-	
+
 		// MelisCms array
 		'MelisCmsNews' => array(
-		
+
 			// Form key
 			'forms' => array(
-			
+
 				// MelisCms Page Properties form
 				'meliscmsnews_properties_form' => array(
-                    'attributes' => array(
-                        'name' => 'newsLetterForm',
-                        'id' => 'newsLetterForm',
-                        'method' => 'POST',
-                        'action' => '',
-                    ),
+					'attributes' => array(
+						'name' => 'newsLetterForm',
+						'id' => 'newsLetterForm',
+						'method' => 'POST',
+						'action' => '',
+					),
 					'hydrator'  => 'Zend\Stdlib\Hydrator\ArraySerializable',
 					'elements' => array(  
-							array(
-								'spec' => array(
+						array(
+							'spec' => array(
 									...
-								),
 							),
+						),
 					),
 					'input_filter' => array(      
 						'cnews_id' => array(
-							...
+								...
 						),   
 					),
-				 ),
-				 
-			 ),
-			 
+				),
+			), 
 		),
 	),
 ),
