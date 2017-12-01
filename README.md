@@ -19,6 +19,10 @@ Run the composer command:
 composer require melisplatform/melis-cms-news
 ```
 
+**[See Full documentation on Melis CMS News here](https://www.melistechnology.com/MelisTechnology/resources/documentation/module/melis-cms-news/PresentationoftheNewsManagementT)**
+
+
+
 ### Database    
 
 Database model is accessible on the MySQL Workbench file:  
