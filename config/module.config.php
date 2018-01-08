@@ -44,6 +44,47 @@ return array(
                     ),
                 ),
             ),
+            /*
+           * This route will handle the
+           * alone setup of a module
+           */
+            'setup-melis-cms-news' => array(
+                'type'    => 'Literal',
+                'options' => array(
+                    'route'    => '/MelisCmsNews',
+                    'defaults' => array(
+                        '__NAMESPACE__' => 'MelisCmsNews\Controller',
+                        'controller'    => '',
+                        'action'        => '',
+                    ),
+                ),
+                'may_terminate' => true,
+                'child_routes' => array(
+                    'default' => array(
+                        'type'    => 'Segment',
+                        'options' => array(
+                            'route'    => '/[:controller[/:action]]',
+                            'constraints' => array(
+                                'controller' => '[a-zA-Z][a-zA-Z0-9_-]*',
+                                'action'     => '[a-zA-Z][a-zA-Z0-9_-]*',
+                            ),
+                            'defaults' => array(
+//
+                            ),
+                        ),
+                    ),
+                    'setup' => array(
+                        'type' => 'Segment',
+                        'options' => array(
+                            'route' => '/setup',
+                            'defaults' => array(
+                                'controller' => 'MelisCmsNews\Controller\MelisSetup',
+                                'action' => 'setup-form',
+                            ),
+                        ),
+                    ),
+                ),
+            ),
         ),
     ),
     'translator' => array(
