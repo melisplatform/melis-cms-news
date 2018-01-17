@@ -9,6 +9,7 @@
 
 namespace MelisCmsNews;
 
+use MelisCmsNews\Listener\MelisCmsNewsServiceMicroServiceListener;
 use Zend\Mvc\ModuleRouteListener;
 use Zend\Mvc\MvcEvent;
 use Zend\ModuleManager\ModuleManager;
@@ -53,7 +54,8 @@ class Module
             // attach listeners for Melis
             $eventManager->attach(new MelisCmsNewsSliderDeletedListener());
             $eventManager->attach(new MelisCmsNewsFlashMessengerListener());         
-            
+            $eventManager->attach(new MelisCmsNewsServiceMicroServiceListener());
+
         }
     }
     
