@@ -166,7 +166,6 @@ return array(
                                     'pageIdNews' => array(
                                         'name'     => 'pageIdNews',
                                         'required' => true,
-                                        'allowEmpty' => true,
                                         'validators' => array(
                                             array(
                                                 'name'    => 'Digits',
