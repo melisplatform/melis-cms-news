@@ -128,6 +128,22 @@ return array(
                                         'filters'  => array(
                                         ),
                                     ),
+                                    'site_id' => array(
+                                        'name'     => 'site_id',
+                                        'required' => true,
+                                        'validators' => array(
+                                            array(
+                                                'name' => 'NotEmpty',
+                                                'options' => array(
+                                                    'messages' => array(
+                                                        \Zend\Validator\NotEmpty::IS_EMPTY => 'tr_front_common_input_empty',
+                                                    ),
+                                                ),
+                                            ),
+                                        ),
+                                        'filters'  => array(
+                                        ),
+                                    ),
                                     'pageIdNews' => array(
                                         'name'     => 'pageIdNews',
                                         'required' => true,
