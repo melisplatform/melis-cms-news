@@ -112,7 +112,7 @@
 	    'tr_meliscmsnews_plugin_tab_filters' => 'Filtres',
 	    
         'tr_meliscmsnews_plugin_template' => 'Template',
-        'tr_meliscmsnews_plugin_detail_news_page_id' => 'Page détail des actualités',
+        'tr_meliscmsnews_plugin_detail_news_page_id' => 'Page détail actualités',
         'tr_meliscmsnews_plugin_detail_news_page_id tooltip' => 'Cette page correspond à la page du site où s&#39;affiche le détail de l&#39;actualité. Cette page sert à créer automatiquement un lien',
 
         'tr_meliscmsnews_plugin_filter'                 => 'Filtre',
