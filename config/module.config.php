@@ -110,7 +110,6 @@ return array(
         'invokables' => array(
             'MelisCmsNews\Controller\MelisCmsNewsList' => 'MelisCmsNews\Controller\MelisCmsNewsListController',
             'MelisCmsNews\Controller\MelisCmsNews' => 'MelisCmsNews\Controller\MelisCmsNewsController',
-            'MelisCmsNews\Controller\MelisSetup' => 'MelisCmsNews\Controller\MelisSetupController',
             ),
     ),
     'controller_plugins' => array(
