@@ -115,7 +115,7 @@
         'tr_meliscmsnews_plugin_detail_news_page_id tooltip' => 'This page correspond the site page where is displayed the detail of the news. This page is used to create a link automatically',
 
         'tr_meliscmsnews_plugin_filter'                 => 'Filter',
-        'tr_meliscmsnews_plugin_filter_by'              => 'Sort',
+        'tr_meliscmsnews_plugin_filter_by'              => 'Sort by',
         'tr_meliscmsnews_plugin_filter_by tooltip'      => 'This filter allows to sort the news by default',
         'tr_meliscmsnews_plugin_filter_col_name'        => 'Column name',
         'tr_meliscmsnews_plugin_filter_site'            => 'Site',
