@@ -64,6 +64,9 @@ class MelisCmsNewsListNewsPlugin extends MelisTemplatingPlugin
      */
     public function front()
     {
+        $container = new Container('melisplugins');
+        $langId = $container['melis-plugins-lang-id'];
+        
         // Get the parameters and config from $this->pluginFrontConfig (default > hardcoded > get > post)
         $data = $this->getFormData();
         
@@ -112,11 +115,11 @@ class MelisCmsNewsListNewsPlugin extends MelisTemplatingPlugin
                 $siteId = $site->site_id;
             }
         }
-        
+
         // Retrieving News list using MelisCmsNewsService
         $newsSrv = $this->getServiceLocator()->get('MelisCmsNewsService');
-        $newsList = $newsSrv->getNewsList($status, null, null, $dateMin, $dateMax, $unpublishFilter, null, null, $orderColumn, $order, $siteId ,$search);
-        
+        $newsList = $newsSrv->getNewsList($status, $langId, null, null, $dateMin, $dateMax, $unpublishFilter, null, null, $orderColumn, $order, $siteId ,$search);
+
         $listNews = array();
         foreach ($newsList As $key => $val) 
         {

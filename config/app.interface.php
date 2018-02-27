@@ -408,7 +408,7 @@ return array(
                                                                                 'controller' => 'MelisCmsNews',
                                                                                 'action' => 'render-news-tabs-properties-details-left-properties',
                                                                             ),
-                                                                        ),                                                                        
+                                                                        ),
                                                                     ),
                                                                 ),
                                                                 'meliscmsnews_content_tabs_properties_details_right' => array(
@@ -519,7 +519,7 @@ return array(
                                                                         'action' => 'render-news-tabs-content-details',
                                                                     ),
                                                                     'interface' => array(
-                                                                        
+
                                                                     ),
                                                                 ),
                                                             ),

@@ -103,9 +103,9 @@ class MelisCmsNewsController extends AbstractActionController
         $newsId = (int) $this->params()->fromQuery('newsId', '');
         $newsName = '';
         
-        if(!empty($this->layout()->news)){
-            $newsName = ' - '.$this->layout()->news->cnews_title;
-        }
+        // if(!empty($this->layout()->news)){
+        //     $newsName = ' - '.$this->layout()->news->cnews_title;
+        // }
         
         $view->newsName = $newsName;
         $view->melisKey = $melisKey;
@@ -350,7 +350,7 @@ class MelisCmsNewsController extends AbstractActionController
         $formElements = $this->serviceLocator->get('FormElementManager');
         $factory->setFormElementManager($formElements);
         $form = $factory->createForm($appConfigForm);
-    
+        
         if(!empty($this->layout()->news)){
             $form->setData((array)$this->layout()->news);
         }
@@ -406,40 +406,246 @@ class MelisCmsNewsController extends AbstractActionController
      */
     public function renderNewsTabsPropertiesDetailsRightParagraphsAction()
     {
-        $newsId = (int) $this->params()->fromQuery('newsId', '');       
-        
+        $newsId = (int) $this->params()->fromQuery('newsId', '');
         $melisCoreConfig = $this->serviceLocator->get('MelisCoreConfig');
-        $appConfigForm = $melisCoreConfig->getFormMergedAndOrdered('MelisCmsNews/forms/meliscmsnews_paragraph_form','meliscmsnews_paragraph_form');
-        $factory = new \Zend\Form\Factory();
-        $formElements = $this->serviceLocator->get('FormElementManager');
-        $factory->setFormElementManager($formElements);
-        $form = $factory->createForm($appConfigForm);
-        
+
+        $form = $this->getFormData($melisCoreConfig, 'MelisCmsNews/forms/meliscmsnews_paragraph_form','meliscmsnews_paragraph_form');
+
         // paragraph config in interface
         $parConf = $melisCoreConfig->getItem('meliscmsnews/conf/paragraphs_conf/');
         $limit = $parConf['max'];
         $name = $parConf['name'];
         $forms = array();
-        
-        for($c = 1; $c <= $limit; $c++){
-            $tmpForm = clone($form);
-            $tmp = $name.$c;
-            $tmpForm->get('paragraph')->setAttribute('id',$newsId.'_cnews_paragraph'.$c);
-            $i = array(
-                'paragraph' => !empty($this->layout()->news)? $this->layout()->news->$tmp : '',
-                'column' => $tmp,
-            );
-            $forms[] = $tmpForm->setData($i);
-            
-        }
-        
+
+        $formsTitleSubtitle = $this->getFormData($melisCoreConfig, 'MelisCmsNews/forms/meliscmsnews_site_title_subtitle_form','meliscmsnews_site_title_subtitle_form');
+        $newsTextsTable = $this->getServiceLocator()->get('MelisCmsNewsTextsTable');
+
+        $data  = ($newsId) ? (array)$newsTextsTable->getNewsDataByCnd(['cnews_id' => $newsId])->toArray() : '';
+        $lang_id = $this->getLangId();
+        $melisEngineLangTable = $this->getServiceLocator()->get('MelisEngineTableCmsLang');
+        $melisEngineLang = $melisEngineLangTable->fetchAll();//langOrderByName(); dunno why victor used langOrderByName despite the method does not exists. maybe he ran out of time? i dunno
+        $languages = $melisEngineLang->toArray();
+
         $view = new ViewModel();
         $melisKey = $this->params()->fromRoute('melisKey', '');
-        
+
         $view->melisKey = $melisKey;
         $view->newsId = $newsId;
         $view->forms = $forms;
+        $view->languages = $languages;
+        $view->lang_id = $lang_id;
+        $view->data = $data;
+        $view->formsTitleSubtitle = $formsTitleSubtitle;
+
         return $view;
+    }
+
+    /**
+     * Get Language
+     * @return int
+     */
+    private function getLangId() 
+    {
+        $locale = 'en_EN';
+        $container = new Container('meliscore');
+        $currentLang = '';
+
+        if ($container) {
+            $melisEngineLangTable = $this->getServiceLocator()->get('MelisEngineTableCmsLang');
+            $locale = $container['melis-lang-locale'];
+            $currentLangData = $melisEngineLangTable->getEntryByField('lang_cms_locale', $locale);
+            
+            $currentLang = $currentLangData->current();
+        }
+
+        return !empty($currentLang) ? $currentLang->lang_cms_id : 1;
+    }
+
+    public function saveNewsLetterAction()
+    {
+        $this->getEventManager()->trigger('meliscmsnews_save_news_letter_start', $this, array());
+        $melisTool = $this->getServiceLocator()->get('MelisCoreTool');
+        $response = array();
+        $id = null;
+        $success = 0;
+        $errors  = array();
+        $dateErrors = array();
+        $data = array();
+        $textMessage = 'tr_meliscmsnews_save_fail';
+        $textTitle = 'tr_meliscmsnews_list_header_title';
+        $logTypeCode = '';
+        
+        $newsSvc = $this->getServiceLocator()->get('MelisCmsNewsService');
+        $melisCoreConfig = $this->serviceLocator->get('MelisCoreConfig');
+        $tool = $this->getServiceLocator()->get('MelisCoreTool');
+        
+        if ($this->getRequest()->isPost()) {
+            $postValues = get_object_vars($this->getRequest()->getPost());
+            $postValues = $melisTool->sanitizePost($postValues);
+
+            $logTypeCode = !empty($postValues['cnews_id']) ? 'CMS_NEWS_UPDATE' : 'CMS_NEWS_ADD';
+            
+            $melisCoreConfig = $this->serviceLocator->get('MelisCoreConfig');
+            $form = $this->getFormData($melisCoreConfig, 'MelisCmsNews/forms/meliscmsnews_properties_form','meliscmsnews_properties_form'); 
+
+            $formsTitleSubtitle = $this->getFormData($melisCoreConfig, 'MelisCmsNews/forms/meliscmsnews_site_title_subtitle_form','meliscmsnews_site_title_subtitle_form');   
+          
+            $parConf = $melisCoreConfig->getItem('meliscmsnews/conf/paragraphs_conf/');
+            $limit = $parConf['max'];
+            $name = $parConf['name'];
+            
+            if (!empty($postValues['cnews_publish_date']) && !empty($postValues['cnews_unpublish_date'])) {
+                // convert date to generic for date comparison
+                $pubDate = $tool->localeDateToSql($postValues['cnews_publish_date'], '', 'en_EN');
+                $unpubDate = $tool->localeDateToSql($postValues['cnews_unpublish_date'], '', 'en_EN');
+                
+                if (strtotime($pubDate) > strtotime($unpubDate)) {
+                    $dateErrors['cnews_unpublish_date'] = array(
+                        'isGreaterThan' => $this->getTool()->getTranslation('tr_meliscmsnews_form_unpublish_error'),
+                        'label' => $this->getTool()->getTranslation('tr_meliscmsnews_form_unpublish'),
+                    );
+                }
+            }
+            
+            if (empty($postValues['cnews_id'])) {
+                $postValues['cnews_creation_date'] = date("Y-m-d H:i:s");
+            }
+            
+            if (empty($postValues['cnews_publish_date'])) {
+                $postValues['cnews_publish_date'] = date("Y-m-d H:i:s");
+                
+                $pubDate = $tool->localeDateToSql($postValues['cnews_publish_date'], '', 'en_EN');
+                $unpubDate = $tool->localeDateToSql($postValues['cnews_unpublish_date'], '', 'en_EN');
+                
+                if (!empty($postValues['cnews_publish_date']) && !empty($postValues['cnews_unpublish_date'])) {
+                    if(strtotime($pubDate) > strtotime($unpubDate)){
+                        $dateErrors['cnews_unpublish_date'] = array(
+                            'isGreaterThan' => $this->getTool()->getTranslation('tr_meliscmsnews_form_unpublish_error_date_today'),
+                            'label' => $this->getTool()->getTranslation('tr_meliscmsnews_form_unpublish'),
+                        );
+                    }
+                }
+            }
+            
+            $form->setData($postValues);
+            $data['cnews_id'] = '';
+
+            // check if any title exists
+            $titleExist = false;
+            for ($i = 0; $i < (int)$postValues['formCount']; $i++) {
+                if (!empty($postValues['cnews_title'][$i])) {
+                    $titleExist = true;
+                }
+            }
+            $titleErr = '';
+            if (!$titleExist) {
+                $titleErr = $this->getTool()->getTranslation('tr_meliscmsnews_form_error_empty');
+            }
+
+            if ($form->isValid() && $titleExist) {
+                $newsTbl = $form->getData();
+
+                $cnews_id = $newsTbl['cnews_id'];
+                $newsTbl['cnews_status'] = $postValues['cnews_status'];
+                $newsTbl['cnews_slider_id'] = empty($postValues['cnews_slider_id'])? NULL : $postValues['cnews_slider_id'];
+                $newsTbl['cnews_site_id'] = empty($postValues['cnews_site_id'])? NULL : $postValues['cnews_site_id'];
+                unset($newsTbl['cnews_id']);
+                $newsTbl['cnews_publish_date'] = $tool->localeDateToSql($newsTbl['cnews_publish_date']);
+                $newsTbl['cnews_unpublish_date'] = $tool->localeDateToSql($newsTbl['cnews_unpublish_date']);
+
+                $data['cnews_id'] = $newsSvc->saveNews($newsTbl, $cnews_id);
+
+                $lang_id = $this->getLangId();
+                $data['cnews_title'] = '';          
+                
+                if ($data['cnews_id']) {
+                    for ($i = 0; $i < (int)$postValues['formCount']; $i++) {
+                        $formsTitleSubtitle->setData($postValues);
+                       
+                        if ($postValues['cnews_lang_id'][$i] == $lang_id) {
+                            $data['cnews_title'] = $postValues['cnews_title'][$i];
+                        }
+                
+                        $newsTxt['cnews_title'] = $postValues['cnews_title'][$i];
+                        $newsTxt['cnews_subtitle'] = $postValues['cnews_subtitle'][$i];
+                        $newsTxt['cnews_lang_id'] = $postValues['cnews_lang_id'][$i];
+                        
+                        // get all paragraph values
+                        for ($c = 1; $c <= 4; $c++) {
+                            $newsTxt['cnews_paragraph'.$c] = $postValues['cnews_paragraph'.$c][$i];
+                        }
+                        
+                        // get news title to be displayed on new tab
+                        if (empty($data['cnews_title'])) {
+                            $data['cnews_title'] = !empty($postValues['cnews_title'][0]) ? $postValues['cnews_title'][0] : $postValues['cnews_title'][1];
+                        }
+
+                        $newsTable = $this->getServiceLocator()->get('MelisCmsNewsTable');
+                        $newsTextsTable = $this->getServiceLocator()->get('MelisCmsNewsTextsTable');
+
+                        $lastNews = $newsTable->getLastNews()->current();
+                   
+                        if (empty($postValues['cnews_id'])) {
+                            $lastNews = (array)$lastNews;
+                            $newsTxt['cnews_id'] = $lastNews['cnews_id'];
+                            
+                            $newsTextsTable->save($newsTxt);
+                        } else {
+                            $newsTextsTable->updateNewsText(
+                                $newsTxt, [
+                                    'cnews_id'      => $postValues['cnews_id'], 
+                                    'cnews_lang_id' => $newsTxt['cnews_lang_id']
+                                ]
+                            );
+                        }
+                    }
+                }
+
+                if ($data['cnews_id']) {
+                    $id = $data['cnews_id'];
+                    $textMessage = 'tr_meliscmsnews_save_success';
+                    $success = 1;
+                }
+
+            } else {
+                $errors = $form->getMessages();
+
+                foreach ($errors as $keyError => $valueError) {
+                    foreach ($appConfigForm['elements'] as $keyForm => $valueForm) {
+                        if ($valueForm['spec']['name'] == $keyError && !empty($valueForm['spec']['options']['label'])) {
+                            $errors[$keyError]['label'] = $valueForm['spec']['options']['label'];
+                        }
+                    }
+                }
+                $errors[$this->getTool()->getTranslation('tr_meliscmsnews_plugin_filter_order_column_title')]['tr_meliscmsnews_list_col_title'] = $titleErr;
+                $errors = array_merge($errors, $dateErrors);
+            }
+        }
+        
+        $response = array(
+            'success' => $success,
+            'textTitle' => $textTitle,
+            'textMessage' => $textMessage,
+            'errors' => $errors,
+            'chunk' => $data,
+        );
+        
+        $this->getEventManager()->trigger('meliscmsnews_save_news_letter_end',
+            $this, array_merge($response, array('typeCode' => $logTypeCode, 'itemId' => $id)));
+        
+        return new JsonModel($response);
+        
+    }
+
+    private function getFormData($config, $formPath, $formName)
+    {
+        $appConfigForm = $config->getFormMergedAndOrdered($formPath, $formName);
+        
+        $factory = new \Zend\Form\Factory();
+        $formElements = $this->serviceLocator->get('FormElementManager');
+        $factory->setFormElementManager($formElements);
+
+        return $factory->createForm($appConfigForm);
     }
     
     /**
@@ -505,28 +711,7 @@ class MelisCmsNewsController extends AbstractActionController
         return $view;
         
     }
-
-    /**
-     * Returns the news of a specific site
-     * @param siteId
-     * return array
-     */
-    public function getNewsBySiteId($siteId)
-    {
-        $success = 0;
-        $data    = array();
-        $request = $this->getRequest();
-
-        if($request->isPost()){
-            $news     = $this->getServiceLocator()->get("MelisCmsNewsService");
-            $siteNews = $news->getNews($siteId);
-
-            $data = $siteNews;
-        }
-
-        return $data;
-    }
-
+    
     public function saveFileFormAction()
     {
         $this->getEventManager()->trigger('meliscmsnews_save_news_file_start', $this, array());
@@ -619,143 +804,6 @@ class MelisCmsNewsController extends AbstractActionController
         
         return new JsonModel($response);
     } 
-    
-    public function saveNewsLetterAction()
-    {
-        $this->getEventManager()->trigger('meliscmsnews_save_news_letter_start', $this, array());
-        $melisTool = $this->getServiceLocator()->get('MelisCoreTool');
-        $response = array();
-        $id = null;
-        $success = 0;
-        $errors  = array();
-        $dateErrors = array();
-        $data = array();
-        $textMessage = 'tr_meliscmsnews_save_fail';
-        $textTitle = 'tr_meliscmsnews_list_header_title';
-        $logTypeCode = '';
-        
-        $newsSvc = $this->getServiceLocator()->get('MelisCmsNewsService');
-        $melisCoreConfig = $this->serviceLocator->get('MelisCoreConfig');
-        $tool = $this->getServiceLocator()->get('MelisCoreTool');
-        if($this->getRequest()->isPost()){
-            $postValues = get_object_vars($this->getRequest()->getPost());
-            $postValues = $melisTool->sanitizePost($postValues);
-            
-            if ($postValues['cnews_id']){
-                $logTypeCode = 'CMS_NEWS_UPDATE';
-            }else{
-                $logTypeCode = 'CMS_NEWS_ADD';
-            }
-            
-            $melisCoreConfig = $this->serviceLocator->get('MelisCoreConfig');
-            $appConfigForm = $melisCoreConfig->getFormMergedAndOrdered('MelisCmsNews/forms/meliscmsnews_properties_form','meliscmsnews_properties_form');
-            $factory = new \Zend\Form\Factory();
-            $formElements = $this->serviceLocator->get('FormElementManager');
-            $factory->setFormElementManager($formElements);
-            $form = $factory->createForm($appConfigForm);            
-            
-            $parConfigForm = $melisCoreConfig->getFormMergedAndOrdered('MelisCmsNews/forms/meliscmsnews_paragraph_form','meliscmsnews_paragraph_form');
-            $parFactory = new \Zend\Form\Factory();
-            $parFormElements = $this->serviceLocator->get('FormElementManager');
-            $parFactory->setFormElementManager($parFormElements);
-            $parForm = $parFactory->createForm($parConfigForm);
-            
-            $parConf = $melisCoreConfig->getItem('meliscmsnews/conf/paragraphs_conf/');
-            $limit = $parConf['max'];
-            $name = $parConf['name'];
-            
-            if( !empty($postValues['cnews_publish_date']) && !empty($postValues['cnews_unpublish_date'])){
-                // convert date to generic for date comparison
-                $pubDate = $tool->localeDateToSql($postValues['cnews_publish_date'], '', 'en_EN');
-                $unpubDate = $tool->localeDateToSql($postValues['cnews_unpublish_date'], '', 'en_EN');
-                
-                if(strtotime($pubDate) > strtotime($unpubDate)){
-                    $dateErrors['cnews_unpublish_date'] = array(
-                        'isGreaterThan' => $this->getTool()->getTranslation('tr_meliscmsnews_form_unpublish_error'),
-                        'label' => $this->getTool()->getTranslation('tr_meliscmsnews_form_unpublish'),
-                    );
-                }
-            }
-            
-            if(empty($postValues['cnews_id'])){
-                $postValues['cnews_creation_date'] = date("Y-m-d H:i:s");
-            }
-            
-            if(empty($postValues['cnews_publish_date'])){
-                $postValues['cnews_publish_date'] = date("Y-m-d H:i:s");
-                
-                $pubDate = $tool->localeDateToSql($postValues['cnews_publish_date'], '', 'en_EN');
-                $unpubDate = $tool->localeDateToSql($postValues['cnews_unpublish_date'], '', 'en_EN');
-                
-                if( !empty($postValues['cnews_publish_date']) && !empty($postValues['cnews_unpublish_date'])){
-                    if(strtotime($pubDate) > strtotime($unpubDate)){
-                        $dateErrors['cnews_unpublish_date'] = array(
-                            'isGreaterThan' => $this->getTool()->getTranslation('tr_meliscmsnews_form_unpublish_error_date_today'),
-                            'label' => $this->getTool()->getTranslation('tr_meliscmsnews_form_unpublish'),
-                        );
-                    }
-                }
-            }
-            
-            $form->setData($postValues);
-            if($form->isValid() && empty($dateErrors)){
-                
-                $data = $form->getData();
-                
-                // paragraph config in interface
-                for($c = 1; $c <= $limit; $c++){
-                    $tmpForm = clone($parForm);
-                    $tmp = $name.$c;
-                    if(!empty($postValues[$tmp])){
-                        $tmpForm->setData(array('paragraph' => $postValues[$tmp]));
-                        if($tmpForm->isValid()){
-                            $data[$tmp] = $tmpForm->getData()['paragraph'];
-                        }
-                    }
-                }
-                
-                $id = $data['cnews_id'];
-                $data['cnews_status'] = $postValues['cnews_status'];
-                $data['cnews_slider_id'] = empty($postValues['cnews_slider_id'])? NULL : $postValues['cnews_slider_id'];
-                $data['cnews_site_id'] = empty($postValues['cnews_site_id'])? NULL : $postValues['cnews_site_id'];
-                unset($data['cnews_id']);
-                $data['cnews_publish_date'] = $tool->localeDateToSql($data['cnews_publish_date']);
-                $data['cnews_unpublish_date'] = $tool->localeDateToSql($data['cnews_unpublish_date']);
-                $data['cnews_id'] = $newsSvc->saveNews($data, $id);
-                if($data['cnews_id']){
-                    $id = $data['cnews_id'];
-                    $textMessage = 'tr_meliscmsnews_save_success';
-                    $success = 1;
-                }
-            }else{
-                $errors = $form->getMessages();
-                foreach ($errors as $keyError => $valueError)
-                {
-                    foreach ($appConfigForm['elements'] as $keyForm => $valueForm)
-                    {
-                        if ($valueForm['spec']['name'] == $keyError && !empty($valueForm['spec']['options']['label'])){
-                            $errors[$keyError]['label'] = $valueForm['spec']['options']['label'];
-                        }
-                    }
-                }
-                $errors = array_merge($errors, $dateErrors);
-            }
-        }
-        
-        $response = array(
-            'success' => $success,
-            'textTitle' => $textTitle,
-            'textMessage' => $textMessage,
-            'errors' => $errors,
-            'chunk' => $data,
-        );
-        
-        $this->getEventManager()->trigger('meliscmsnews_save_news_letter_end',
-            $this, array_merge($response, array('typeCode' => $logTypeCode, 'itemId' => $id)));
-        
-        return new JsonModel($response);
-        
-    }
     
     public function removeAttachFileAction()
     {
@@ -1036,7 +1084,5 @@ class MelisCmsNewsController extends AbstractActionController
         return $melisTool;
     
     }
-
-
 
 }

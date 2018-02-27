@@ -5,19 +5,9 @@
   "license": "OSL-3.0",
   "homepage": "https://github.com/melisplatform/melis-cms-news",
   "support": {
-	"email": "contact@melistechnology.com",
     "source": "https://github.com/melisplatform/melis-cms-news",
-    "issues": "https://github.com/melisplatform/melis-cms-news/issues",
-	"docs": "https://www.melistechnology.com/melistechnology/resources/download-documentation/id/17#documentation"
+    "issues": "https://github.com/melisplatform/melis-cms-news/issues"
   },
-  "authors": [
-	{
-		"name": "Melis Technology",
-		"email": "contact@melistechnology.com",
-		"homepage": "https://www.melistechnology.com",
-		"role": "Developer"
-	}
-  ],
   "keywords": [
     "cms",
     "melis",
@@ -25,8 +15,7 @@
     "module"
   ],
   "extra": {
-    "module-name": "MelisCmsNews",
-    "dbdeploy": true
+    "module-name": "MelisCmsNews"
   },
   "require": {
     "php": "^5.5 || ^7.0",

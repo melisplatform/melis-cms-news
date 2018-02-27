@@ -115,7 +115,7 @@
         'tr_meliscmsnews_plugin_detail_news_page_id tooltip' => 'This page correspond the site page where is displayed the detail of the news. This page is used to create a link automatically',
 
         'tr_meliscmsnews_plugin_filter'                 => 'Filter',
-        'tr_meliscmsnews_plugin_filter_by'              => 'Sort by',
+        'tr_meliscmsnews_plugin_filter_by'              => 'Sort',
         'tr_meliscmsnews_plugin_filter_by tooltip'      => 'This filter allows to sort the news by default',
         'tr_meliscmsnews_plugin_filter_col_name'        => 'Column name',
         'tr_meliscmsnews_plugin_filter_site'            => 'Site',
@@ -152,5 +152,16 @@
 	    'tr_meliscmsnews_content_tabs_texts' => 'Texts',
 	    
 	    'tr_meliscmsnews_tpl_site_id tooltip' => 'Limit this news to the only site defined',
+
+	    // Paragraph
+	    'tr_meliscmsnews_paragraph1' => 'Paragraph 1',
+	    'tr_meliscmsnews_paragraph2' => 'Paragraph 2',
+	    'tr_meliscmsnews_paragraph3' => 'Paragraph 3',
+	    'tr_meliscmsnews_paragraph4' => 'Paragraph 4',
+	    'tr_meliscmsnews_paragraph1 tooltip' => 'News paragraph 1',
+	    'tr_meliscmsnews_paragraph2 tooltip' => 'News paragraph 2',
+	    'tr_meliscmsnews_paragraph3 tooltip' => 'News paragraph 3',
+	    'tr_meliscmsnews_paragraph4 tooltip' => 'News paragraph 4',
+
 	);
 ?>

@@ -73,8 +73,10 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
         // Retreiving News using MelisCmsNewsService
         $newsSrv = $this->getServiceLocator()->get('MelisCmsNewsService');
         
+        $container = new Container('melisplugins');
+        $langId = $container['melis-plugins-lang-id'];
+        
         if(is_null($newsId)){
-            
             /**
              * Getting the current page id
              */
@@ -90,11 +92,15 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
             if (!empty($site))
             {
                 // Retrieve most recent news as default
-                $newsData = $newsSrv->getNewsList(1, null, null, null, date('Y-m-d H:i:s'), true, null, 1, 'cnews_id', 'DESC', $site->site_id)[0];
+                $newsData = $newsSrv->getNewsList(1, $langId, null, null, null, date('Y-m-d H:i:s'), true, null, 1, 'cnews_id', 'DESC', $site->site_id);
+                if (!empty($newsData[0]))
+                {
+                    $newsData = $newsData[0];
+                }
             }
         }else{
             
-            $newsDataRes = $newsSrv->getNewsById($newsId);
+            $newsDataRes = $newsSrv->getNewsById($newsId, $langId);
             
             if (!empty($newsDataRes))
             {

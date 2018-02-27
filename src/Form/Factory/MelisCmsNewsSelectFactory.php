@@ -11,6 +11,7 @@ namespace MelisCmsNews\Form\Factory;
 
 use Zend\ServiceManager\ServiceLocatorInterface;
 use MelisCore\Form\Factory\MelisSelectFactory;
+use Zend\Session\Container;
 
 /**
  * MelisCms news select factory
@@ -23,7 +24,11 @@ class MelisCmsNewsSelectFactory extends MelisSelectFactory
 	    $serviceManager = $formElementManager->getServiceLocator();		
 		$newsSvc        = $serviceManager->get('MelisCmsNewsService');
 		$newsData       = [];
-		foreach($newsSvc->getNewsList() as $news){
+		
+		$container = new Container('melisplugins');
+		$langId = $container['melis-plugins-lang-id'];
+		
+		foreach($newsSvc->getNewsList(null, $langId) as $news){
 		    if($news->cnews_status) {
                 $newsData[$news->cnews_id] = $news->cnews_title;
             }
