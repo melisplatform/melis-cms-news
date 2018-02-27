@@ -18,33 +18,6 @@ return array(
                     'elements' => array(
                         array(
                             'spec' => array(
-                                'name' => 'cnews_title',
-                                'type' => 'MelisText',
-                                'options' => array(
-                                    'label' => 'tr_meliscmsnews_list_col_title',
-                                    'tooltip' => 'tr_meliscmsnews_list_col_title tooltip',
-                                ),
-                                'attributes' => array(
-                                    'id' => 'cnews_title',
-                                    'required' => 'required',
-                                ),
-                            ),
-                        ),
-                        array(
-                            'spec' => array(
-                                'name' => 'cnews_subtitle',
-                                'type' => 'MelisText',
-                                'options' => array(
-                                    'label' => 'tr_meliscmsnews_form_subtitle',
-                                    'tooltip' => 'tr_meliscmsnews_form_subtitle tooltip',
-                                ),
-                                'attributes' => array(
-                                    'id' => 'cnews_subtitle',
-                                ),
-                            ),
-                        ),
-                        array(
-                            'spec' => array(
                                 'name' => 'cnews_publish_date',
                                 'type' => 'DateField',
                                 'options' => array(
@@ -83,73 +56,6 @@ return array(
                         ),
                     ),
                     'input_filter' => array(
-                        'cnews_id' => array(
-                            'name'     => 'cnews_id',
-                            'required' => false,
-                            'validators' => array(
-                                array(
-                                    'name'    => 'IsInt',
-                                    'options' => array(
-                                        'messages' => array(
-                                            \Zend\I18n\Validator\IsInt::NOT_INT => 'tr_meliscms_tool_platform_not_digit',
-                                            \Zend\I18n\Validator\IsInt::INVALID => 'tr_meliscms_tool_platform_not_digit',
-                                        )
-                                    )
-                                ),
-                            ),
-                            'filters' => array(
-                                array('name' => 'StripTags'),
-                                array('name' => 'StringTrim'),
-                            ),
-                        ),
-                        'cnews_title' => array(
-                            'name'     => 'cnews_title',
-                            'required' => true,
-                            'validators' => array(
-                                array(
-                                    'name'    => 'StringLength',
-                                    'options' => array(
-                                        'encoding' => 'UTF-8',
-                                        'max'      => 255,
-                                        'messages' => array(
-                                            \Zend\Validator\StringLength::TOO_LONG => 'tr_meliscmsnews_form_error_long_255',
-                                        ),
-                                    ),
-                                ),
-                                array(
-                                    'name' => 'NotEmpty',
-                                    'options' => array(
-                                        'messages' => array(
-                                            \Zend\Validator\NotEmpty::IS_EMPTY => 'tr_meliscmsnews_form_error_empty',
-                                        ),
-                                    ),
-                                ),
-                            ),
-                            'filters'  => array(
-                                array('name' => 'StripTags'),
-                                array('name' => 'StringTrim'),
-                            ),
-                        ),
-                        'cnews_subtitle' => array(
-                            'name'     => 'cnews_subtitle',
-                            'required' => false,
-                            'validators' => array(
-                                array(
-                                    'name'    => 'StringLength',
-                                    'options' => array(
-                                        'encoding' => 'UTF-8',
-                                        'max'      => 255,
-                                        'messages' => array(
-                                            \Zend\Validator\StringLength::TOO_LONG => 'tr_meliscmsnews_form_error_long_255',
-                                        ),
-                                    ),
-                                ),
-                            ),
-                            'filters'  => array(
-                                array('name' => 'StripTags'),
-                                array('name' => 'StringTrim'),
-                            ),
-                        ),                        
                     ),
                 ),
                 'meliscmsnews_file_form' => array(
@@ -201,48 +107,6 @@ return array(
                     'input_filter' => array(
                     ),
                 ),
-                'meliscmsnews_paragraph_form' => array(
-                    'attributes' => array(
-                        'name' => 'newsParagraphForm',
-                        'id' => 'newsParagraphForm',
-                        'method' => 'POST',
-                        'action' => '',
-                    ),
-                    'hydrator'  => 'Zend\Stdlib\Hydrator\ArraySerializable',
-                    'elements' => array(
-                        array(
-                            'spec' => array(
-                                'name' => 'paragraph',
-                                'type' => 'TextArea',
-                                
-                                'attributes' => array(
-                                    'id' => 'cnews_paragraph',
-                                    'value' => '',
-                                    'class' => 'form-control editme',
-                                    'style' => 'max-width:100%',
-                                    'rows' => '4',
-                                ),
-                            ),
-                        ),
-                        array(
-                            'spec' => array(
-                                'name' => 'column',
-                                'type' => 'hidden',
-                            ),
-                        ),
-                    ),
-                    'input_filter' => array(
-                        'paragraph' => array(
-                            'name'     => 'paragraph',
-                            'required' => false,
-                            'validators' => array(
-                            ),
-                            'filters'  => array(
-                                array('name' => 'StringTrim'),
-                            ),
-                        ),
-                    ),
-                ),
                 'meliscmsnews_site_select_form' => array(
                     'attributes' => array(
                         'name' => 'newsSiteSelectForm',
@@ -276,6 +140,166 @@ return array(
                             'validators' => array(),
                             'filters' => array(),
                         ),
+                    ),
+                ),
+                'meliscmsnews_site_title_subtitle_form' => array(
+                    'attributes' => array(
+                        'name' => 'newsSiteTitleSubtitleForm',
+                        'id' => 'newsSiteTitleSubtitleForm',
+                        'method' => 'POST',
+                        'action' => '',
+                    ),
+                    'hydrator'  => 'Zend\Stdlib\Hydrator\ArraySerializable',
+                    'elements' => array(
+                        array(
+                            'spec' => array(
+                                'name' => 'cnews_title',
+                                'type' => 'MelisText',
+                                'options' => array(
+                                    'label' => 'tr_meliscmsnews_list_col_title',
+                                    'tooltip' => 'tr_meliscmsnews_list_col_title tooltip',
+                                ),
+                                'attributes' => array(
+                                    'id' => 'cnews_title',
+                                    'required' => false,
+                                ),
+                            ),
+                        ),
+                        array(
+                            'spec' => array(
+                                'name' => 'cnews_subtitle',
+                                'type' => 'MelisText',
+                                'options' => array(
+                                    'label' => 'tr_meliscmsnews_form_subtitle',
+                                    'tooltip' => 'tr_meliscmsnews_form_subtitle tooltip',
+                                ),
+                                'attributes' => array(
+                                    'id' => 'cnews_subtitle',
+                                ),
+                            ),
+                        ),
+                        array(
+                            'spec' => array(
+                                'name' => 'cnews_paragraph1',
+                                'type' => 'TextArea',
+                                 'options' => array(
+                                    'label' => 'tr_meliscmsnews_paragraph1',
+                                    'tooltip' => 'tr_meliscmsnews_paragraph1 tooltip',
+                                ),
+                                
+                                'attributes' => array(
+                                    'id' => 'cnews_paragraph1',
+                                    'value' => '',
+                                    'class' => 'form-control editme',
+                                    'style' => 'max-width:100%',
+                                    'rows' => '4',
+                                ),
+                            ),
+                        ),
+                        array(
+                            'spec' => array(
+                                'name' => 'cnews_paragraph2',
+                                'type' => 'TextArea',
+                                 'options' => array(
+                                    'label' => 'tr_meliscmsnews_paragraph2',
+                                    'tooltip' => 'tr_meliscmsnews_paragraph2 tooltip',
+                                ),
+                                
+                                'attributes' => array(
+                                    'id' => 'cnews_paragraph2',
+                                    'value' => '',
+                                    'class' => 'form-control editme',
+                                    'style' => 'max-width:100%',
+                                    'rows' => '4',
+                                ),
+                            ),
+                        ),
+                        array(
+                            'spec' => array(
+                                'name' => 'cnews_paragraph3',
+                                'type' => 'TextArea',
+                                 'options' => array(
+                                    'label' => 'tr_meliscmsnews_paragraph3',
+                                    'tooltip' => 'tr_meliscmsnews_paragraph3 tooltip',
+                                ),
+                                
+                                'attributes' => array(
+                                    'id' => 'cnews_paragraph3',
+                                    'value' => '',
+                                    'class' => 'form-control editme',
+                                    'style' => 'max-width:100%',
+                                    'rows' => '4',
+                                ),
+                            ),
+                        ),
+                        array(
+                            'spec' => array(
+                                'name' => 'cnews_paragraph4',
+                                'type' => 'TextArea',
+                                 'options' => array(
+                                    'label' => 'tr_meliscmsnews_paragraph4',
+                                    'tooltip' => 'tr_meliscmsnews_paragraph4 tooltip',
+                                ),
+                                
+                                'attributes' => array(
+                                    'id' => 'cnews_paragraph4',
+                                    'value' => '',
+                                    'class' => 'form-control editme',
+                                    'style' => 'max-width:100%',
+                                    'rows' => '4',
+                                ),
+                            ),
+                        ),
+                    ),
+                     'input_filter' => array(
+                        'cnews_title' => array(
+                            'name'     => 'cnews_title',
+                            'required' => false,
+                            'validators' => array(
+                                array(
+                                    'name'    => 'StringLength',
+                                    'options' => array(
+                                        'encoding' => 'UTF-8',
+                                        'max'      => 255,
+                                        'messages' => array(
+                                            \Zend\Validator\StringLength::TOO_LONG => 'tr_meliscmsnews_form_error_long_255',
+                                        ),
+                                    ),
+                                ),
+                                array(
+                                    'name' => 'NotEmpty',
+                                    'options' => array(
+                                        'messages' => array(
+                                            \Zend\Validator\NotEmpty::IS_EMPTY => 'tr_meliscmsnews_form_error_empty',
+                                        ),
+                                    ),
+                                ),
+                            ),
+                            'filters'  => array(
+                                array('name' => 'StripTags'),
+                                array('name' => 'StringTrim'),
+                            ),
+                        ),
+                        'cnews_subtitle' => array(
+                            'name'     => 'cnews_subtitle',
+                            'required' => false,
+                            'validators' => array(
+                                array(
+                                    'name'    => 'StringLength',
+                                    'options' => array(
+                                        'encoding' => 'UTF-8',
+                                        'max'      => 255,
+                                        'messages' => array(
+                                            \Zend\Validator\StringLength::TOO_LONG => 'tr_meliscmsnews_form_error_long_255',
+                                        ),
+                                    ),
+                                ),
+                            ),
+                            'filters'  => array(
+                                array('name' => 'StripTags'),
+                                array('name' => 'StringTrim'),
+                            ),
+                        ),                        
                     ),
                 ),
             ),            

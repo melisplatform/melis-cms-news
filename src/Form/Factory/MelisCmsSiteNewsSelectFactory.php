@@ -11,6 +11,7 @@ namespace MelisCmsNews\Form\Factory;
 
 use Zend\ServiceManager\ServiceLocatorInterface;
 use MelisCore\Form\Factory\MelisSelectFactory;
+use Zend\Session\Container;
 
 /**
  * MelisCmsNews site news select factory
@@ -24,9 +25,12 @@ class MelisCmsSiteNewsSelectFactory extends MelisSelectFactory
         $siteTbl        = $serviceManager->get('MelisEngineTableSite');
         $newsSrv        = $serviceManager->get('MelisCmsNewsService');
         
+        $container = new Container('melisplugins');
+        $langId = $container['melis-plugins-lang-id'];
+        
         foreach ($siteTbl->fetchAll() As $val)
         {
-            $newsRes = $newsSrv->getNewsList(1, null, null, null, null, 1, null, null, 'cnews_title', 'ASC', $val->site_id);
+            $newsRes = $newsSrv->getNewsList(1, $langId, null, null, null, null, 1, null, null, 'cnews_title', 'ASC', $val->site_id);
             
             foreach ($newsRes As $news)
             {

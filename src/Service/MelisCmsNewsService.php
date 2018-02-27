@@ -28,9 +28,9 @@ class MelisCmsNewsService extends MelisCoreGeneralService
      * @return array MelisCmsSlider[]
      */
     
-    public function getNewsList($status = null, $dateMin = null, $dateMax = null, $publishDateMin = null, 
+    public function getNewsList($status = null, $langId = null, $dateMin = null, $dateMax = null, $publishDateMin = null, 
                                 $publishDateMax = null, $unpublishFilter = false, $start = null, $limit = null, 
-                                $orderColumn = null, $order = null, $siteId = null, $search = null )
+                                $orderColumn = null, $order = null, $siteId = null, $search = null)
     {
         // Event parameters prepare
         $arrayParameters = $this->makeArrayFromParameters(__METHOD__, func_get_args());
@@ -43,7 +43,7 @@ class MelisCmsNewsService extends MelisCoreGeneralService
         $newsTable = $this->getServiceLocator()->get('MelisCmsNewsTable');
 
         $news = $newsTable->getNewsList(
-            $arrayParameters['status'], $arrayParameters['dateMin'], $arrayParameters['dateMax'], $arrayParameters['publishDateMin'], 
+            $arrayParameters['status'], $arrayParameters['langId'], $arrayParameters['dateMin'], $arrayParameters['dateMax'], $arrayParameters['publishDateMin'], 
             $arrayParameters['publishDateMax'], $arrayParameters['unpublishFilter'], $arrayParameters['start'], $arrayParameters['limit'], 
             $arrayParameters['orderColumn'], $arrayParameters['order'], $arrayParameters['siteId'], $arrayParameters['search']
         );
@@ -68,7 +68,7 @@ class MelisCmsNewsService extends MelisCoreGeneralService
      * 
      * @returns MelisCmsNews[]
      */
-    public function getNewsById($newsId)
+    public function getNewsById($newsId, $langId = null)
     {
         // Event parameters prepare
         $arrayParameters = $this->makeArrayFromParameters(__METHOD__, func_get_args());
@@ -80,7 +80,7 @@ class MelisCmsNewsService extends MelisCoreGeneralService
         // Service implementation start
         $newsTable = $this->getServiceLocator()->get('MelisCmsNewsTable');
 
-        foreach($newsTable->getEntryById($arrayParameters['newsId']) as $news){                   
+        foreach($newsTable->getNews($arrayParameters['newsId'], $arrayParameters['langId']) as $news){                   
             $results = $news;
         }
         

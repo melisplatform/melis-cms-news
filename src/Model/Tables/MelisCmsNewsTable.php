@@ -24,20 +24,69 @@ class MelisCmsNewsTable extends MelisGenericTable
         $this->idField = 'cnews_id';
     }
     
-    public function getNewsList(
-        $status = null, $dateMin = null, $dateMax = null, $publishDateMin = null, 
-        $publishDateMax = null, $unpublishFilter = false, $start = null, $limit = null, 
-        $orderColumn = 'cnews_id', $order = null, $siteId = null, $search = null 
-    )
+    public function getNews($newsId, $langId = null)
     {
         $select = $this->tableGateway->getSql()->select();
         $clause = array();
         
+        /**
+         * TEMPORARY FIXED
+         */
+        $cnews_text_cols = array(
+            'cnews_text_id',
+            'cnews_title',
+            'cnews_subtitle',
+            'cnews_paragraph1',
+            'cnews_paragraph2',
+            'cnews_paragraph3',
+            'cnews_paragraph4',
+            'cnews_lang_id',
+        );
+        
         $select->join('melis_cms_site', 'melis_cms_site.site_id = melis_cms_news.cnews_site_id', array('site_name'), $select::JOIN_LEFT);
+        $select->join('melis_cms_news_texts', 'melis_cms_news_texts.cnews_id = melis_cms_news.cnews_id', $cnews_text_cols, $select::JOIN_LEFT);
+        
+        $select->where('melis_cms_news.cnews_id ='.$newsId);
+        
+        if (!is_null($langId))
+        {
+            $select->where('melis_cms_news_texts.cnews_lang_id ='.$langId);
+        }
+        
+        $resultData = $this->tableGateway->selectWith($select);
+        return $resultData;
+    }
+    
+    public function getNewsList(
+        $status = null, $langId = null, $dateMin = null, $dateMax = null, $publishDateMin = null, 
+        $publishDateMax = null, $unpublishFilter = false, $start = null, $limit = null, 
+        $orderColumn = null, $order = null, $siteId = null, $search = null
+    )
+
+    {
+        $select = $this->tableGateway->getSql()->select();
+        $clause = array();
+        
+        /**
+         * TEMPORARY FIXED
+         */
+        $cnews_text_cols = array(
+            'cnews_text_id',
+            'cnews_title',
+            'cnews_subtitle',
+            'cnews_paragraph1',
+            'cnews_paragraph2',
+            'cnews_paragraph3',
+            'cnews_paragraph4',
+            'cnews_lang_id',
+        );
+        
+        $select->join('melis_cms_site', 'melis_cms_site.site_id = melis_cms_news.cnews_site_id', array('site_name'), $select::JOIN_LEFT);
+        $select->join('melis_cms_news_texts', 'melis_cms_news_texts.cnews_id = melis_cms_news.cnews_id', $cnews_text_cols, $select::JOIN_LEFT);
         
         if(!is_null($search)){
             $search = '%'.$search.'%';
-            $select->where->NEST->like('cnews_id', $search)
+            $select->where->NEST->like('melis_cms_news.cnews_id', $search)
             ->or->like('cnews_title', $search);
         }
         
@@ -48,6 +97,11 @@ class MelisCmsNewsTable extends MelisGenericTable
         if (!is_null($status))
         {
             $select->where('cnews_status ='.$status);
+        }
+        
+        if (!is_null($langId))
+        {
+            $select->where('melis_cms_news_texts.cnews_lang_id ='.$langId);
         }
         
         if (!is_null($dateMin))
@@ -83,13 +137,20 @@ class MelisCmsNewsTable extends MelisGenericTable
         {
             $select->offset($start);
         }
-        
+
         if (!is_null($orderColumn) && !is_null($order))
         {
             $select->order($orderColumn.' '.$order);
         }
+
+        $select->where('melis_cms_news_texts.cnews_title !=""');
         
         $resultData = $this->tableGateway->selectWith($select);
+
+//        $sql = $this->tableGateway->getSql();
+//        $raw = $sql->getSqlstringForSqlObject($select);
+//        die(var_dump($raw.PHP_EOL));
+
         return $resultData;
     }
     
@@ -171,4 +232,40 @@ class MelisCmsNewsTable extends MelisGenericTable
         $resultData = $this->tableGateway->selectWith($select);
         return $resultData;
     }
+
+    /**
+     * get last news record
+     * @return Object
+     */
+    public function getLastNews()
+    {
+        $select = $this->tableGateway->getSql()->select();
+
+        //$select->where(array('cnews_status' => '1'));
+        $select->order(array('cnews_id' => 'DESC'));
+
+        //$select->where->nest->greaterThan('cnews_unpublish_date', date('Y-m-d H:i:s', strtotime("now")))->or->isNull('cnews_unpublish_date')->unnest;
+
+        $select->limit(1);
+
+        return $this->tableGateway->selectWith($select);
+    }
+
+     /**
+     * get last news record
+     * @return Object
+     */
+    public function getNewsData($where)
+    {
+        $select = $this->tableGateway->getSql()->select();
+        
+        $select->join('melis_cms_news_texts', 'melis_cms_news_texts.cnews_id = melis_cms_news.cnews_id', array('cnews_title', 'cnews_lang_id'), $select::JOIN_LEFT);
+        
+        $select->where($where);
+
+        //$select->where->nest->greaterThan('cnews_unpublish_date', date('Y-m-d H:i:s', strtotime("now")))->or->isNull('cnews_unpublish_date')->unnest;
+
+        return $this->tableGateway->selectWith($select);
+    }
+
 }

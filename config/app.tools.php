@@ -7,7 +7,7 @@ return array(
                 'meliscmsnews_list_table' => array(
                     'table' => array(
                         'target' => '#newsList',
-                        'ajaxUrl' => 'melis/MelisCmsNews/MelisCmsNewsList/renderNewsListData',
+                        'ajaxUrl' => '/melis/MelisCmsNews/MelisCmsNewsList/renderNewsListData',
                         'dataFunction' => 'initNewsList',
                         'ajaxCallback' => '',
                         'filters' => array(

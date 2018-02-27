@@ -1,56 +1,65 @@
-<div class="col-xs-12 height-fix">
-	<?php
-	$id = '';
-	if (!empty($this->zoneconfig['conf']['id'])){
-	    $id .= $this->newsId.'_'.$this->zoneconfig['conf']['id'];
-	}
-	$collapse = 'collapse in';
-    $collapsed = '';
-	?>
-	<div id="<?= $id ?>" data-melisKey="<?= $this->melisKey; ?>">
-		<div class="npdc-heading">
-    		<h4>
-    			<i class="fa fa-align-left"></i>
-    			<?= $this->translate('tr_meliscmsnews_subheader_paragraphs')?>
-    		</h4>
-		</div>
-		<?php 
-		$c = 1;
-		foreach($this->forms as $form):
-		?>
-		<a class="btn btn-primary form-control a-accordion <?= $collapsed?>" data-toggle="collapse" href="#<?= $this->newsId ?>_paragraph<?= $c?>" aria-expanded="false" aria-controls="payment1">
-    		<span><?= $this->translate('tr_meliscmsnews_common_paragraph').' '.$c?></span>
-    	</a>
-    	<div class="<?= $collapse?>" id="<?= $this->newsId ?>_paragraph<?= $c?>">
-    	<?php 
-    	echo $this->form()->openTag($form);
-    	echo $this->melisFieldCollection($form);
-    	echo $this->form()->closeTag();
-    	?>
-    	<script type="text/javascript">
-    	
-    	if (typeof tinymce != "undefined") {
-        	var id = "<?= $this->newsId?>_cnews_paragraph<?= $c?>";
-    	    var ed = tinymce.get(id);
-    	    if (ed) {
-    	        try {
-    	            ed.remove();
-    	        } catch(e) {
-    	            delete tinymce.editors[id];
-    	        }
-    	    }
-    	}
-    	melisTinyMCE.createTinyMCE("tool", "#<?= $this->newsId?>_cnews_paragraph<?= $c?>", {height: 300});
-    	   	
-    	</script>
-    	</div>
-		<?php 
-		$collapsed = 'collapsed';
-		$collapse = 'collapse';
-		$c++;
-		endforeach;
-		?>    	
-    	
-    	
-	</div>
+<?php
+    $id = '';
+    if (!empty($this->zoneconfig['conf']['id'])) {
+        $id .= $this->newsId.'_'.$this->zoneconfig['conf']['id'];
+    }
+
+?>
+
+<div class="wizard" id="<?= $id ?>" data-melisKey="<?= $this->melisKey; ?>">
+    <div class="widget widget-tabs widget-tabs-double widget-tabs-responsive margin-none border-none">
+        <div class="widget-body innerAll inner-2x">
+            <div class="tab-pane active">
+                <div class="row">
+                    <div class="col-xs-12 col-md-2">
+                        <div class="product-text-tab-container">
+                            <ul class="nav-tabs product-text-tab">
+                                <?php foreach($this->languages as $idx => $lang) :?>
+                                    <li class="">
+                                        <a class="clearfix" data-toggle="tab" id="news_cms_lang_<?= $lang['lang_cms_id'] ?>" href="#<?= $lang['lang_cms_name']; ?>-log-type-details-<?= $id; ?>" aria-expanded="true" data-lang-id="<?= $lang['lang_cms_id'] ?>">
+                                        <span><?= $lang['lang_cms_name'] ?></span>
+
+                                        <?php 
+                                            $img = $lang['lang_cms_locale'];
+                                            echo '<span class="pull-right"><img src="/MelisCms/images/lang-flags/'.$img.'.png" class="imgDisplay pull-right"/></span>';
+                                        ?>
+                                        </a>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-md-10">
+                        <div class="tab-content">
+                            <?php foreach ($this->languages as $idx => $lang) : ?>
+                                <div id="<?= $lang['lang_cms_name']; ?>-log-type-details-<?= $id; ?>" class="tab-pane product-text-tab-content">
+                                    <div class="bg-white">
+                                        <h4 class=""><i class="fa fa-language" aria-hidden="true"></i> <?= $lang['lang_cms_name']; ?></h4>
+                                    </div>
+                                    <div id="cnews_<?= $lang['lang_cms_id']; ?>">
+                                        <?php
+                                            $form = clone $this->formsTitleSubtitle;
+                                            if ($this->data) {
+                                                foreach ($this->data as $item) {
+                                                    if($item['cnews_lang_id'] == $lang['lang_cms_id']){
+                                                        $form->setData((array)$item);
+                                                    }
+                                                } 
+                                            }
+                                            echo $this->form()->openTag($form);
+                                            echo $this->melisFieldCollection($form);
+                                            echo $this->form()->closeTag();
+                                        ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+<script type="text/javascript">
+    melisTinyMCE.createTinyMCE("tool", ".editme", {height: 300});
+</script>

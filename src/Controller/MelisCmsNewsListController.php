@@ -12,6 +12,7 @@ namespace MelisCmsNews\Controller;
 use Zend\Mvc\Controller\AbstractActionController;
 use Zend\View\Model\ViewModel;
 use Zend\View\Model\JsonModel;
+use Zend\Session\Container;
 
 class MelisCmsNewsListController extends AbstractActionController
 {
@@ -230,22 +231,64 @@ class MelisCmsNewsListController extends AbstractActionController
             
             $postValues = $this->getRequest()->getPost();
             
-            $tmp = $newsSvc->getNewsList(null, null, null, null, null, null, null, null, null,  null, $cnews_site_id, $search);
-             
+            $locale = 'en_EN';
+            $container = new Container('meliscore');
+            $lang_id = null;
+            if ($container) {
+                $melisEngineLangTable = $this->getServiceLocator()->get('MelisEngineTableCmsLang');
+                $locale = $container['melis-lang-locale'];
+                $currentLangData = $melisEngineLangTable->getEntryByField('lang_cms_locale', $locale);
+                
+                $currentLang = $currentLangData->current();
+                
+                if (!empty($currentLang)) {
+                    $lang_id = $currentLang->lang_cms_id;
+                }
+            }
+            
+            $tmp = $newsSvc->getNewsList(null, null, null, null, null, null, null, null, null, null,  null, $cnews_site_id, $search);
+            
             $dataFiltered = count($tmp);
             
-            $news = $newsSvc->getNewsList(null, null, null, null, null, null, $start, $length, $selCol, $sortOrder, $cnews_site_id, $search);
+            $news = $newsSvc->getNewsList(null, null, null, null, null, null, null, $start, $length, $selCol, $sortOrder, $cnews_site_id, $search);
+
+            $dataArray = [];
+            $idArray = [];
+
+            // get news with lang_id equals to current lang id of platform
+            foreach($news as $new) {
+                if ($new->cnews_lang_id == $lang_id) {
+                    $dataArray[] = $new;
+                    $idArray[] = $new->cnews_id; 
+                } 
+            }
+
+            // get news with lang_id not equals to current lang id of platform but doesnt exist on above id array
+            foreach ($news as $new) {
+                if (!in_array($new->cnews_id, $idArray)) {
+                    if ($new->cnews_lang_id !== $lang_id) {
+                        $dataArray[] = $new;
+                    } 
+                }
+            }
             
-            $dataCount = count($news);
+            // sort by column
+            if (!empty($selCol) && empty(!$sortOrder)) {
+                $sortOrder = ($sortOrder == 'asc') ? SORT_ASC : SORT_DESC;
+                array_multisort(array_column($dataArray, $selCol), $sortOrder, $dataArray);
+            } else {
+                array_multisort(array_column($dataArray, 'cnews_id'), SORT_DESC, $dataArray);
+            }
+    
+            $dataCount = count($dataArray);
             $c = 0;
-            
-            foreach($news as $new){
-                
-               $status = '<span class="text-success"><i class="fa fa-fw fa-circle"></i></span>';
+            foreach($dataArray as $new) {
+                $status = '<span class="text-success"><i class="fa fa-fw fa-circle"></i></span>';
                 if(!$new->cnews_status){
                     $status = '<span class="text-danger"><i class="fa fa-fw fa-circle"></i></span>';
                 }
-                
+
+                $new->cnews_title = !empty($data->cnews_title) ? $data->cnews_title : $new->cnews_title;
                 $tableData[$c]['DT_RowId'] = $new->cnews_id; 
                 $tableData[$c]['cnews_id'] = $new->cnews_id;               
                 $tableData[$c]['cnews_status'] = $status;
@@ -256,12 +299,13 @@ class MelisCmsNewsListController extends AbstractActionController
                 $tableData[$c]['site_name'] = $new->site_name;
                 $c++;
             }
+
         }
         
         return new JsonModel(array (
             'draw' => (int) $draw,
             'recordsTotal' => $dataCount,
-            'recordsFiltered' =>  $dataFiltered,
+            'recordsFiltered' => $dataFiltered,
             'data' => $tableData,
         ));
     }
@@ -346,30 +390,7 @@ class MelisCmsNewsListController extends AbstractActionController
         
         return new JsonModel($response);
     }
-
-    /**
-     * Returns the list of news of all site
-     */
-    public function getAllNewsList()
-    {
-        $error   = array();
-        $data    = array();
-        $request = $this->getRequest();
-        $success = 0;
-
-        if($request->isPost()){
-            $melisNews = $this->getServiceLocator()->get("MelisCmsNews");
-            $newsAllSite = $melisNews->getAllNewsList();
-
-            $data    = $newsAllSite;
-            $success = 0;
-            $error   = 0;
-        }
-
-        return $data;
-
-    }
-
+    
     /**
      * Returns the Tool Service Class
      * @return MelisCoreTool
