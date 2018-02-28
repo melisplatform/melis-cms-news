@@ -211,7 +211,10 @@ class MelisCmsNewsTable extends MelisGenericTable
     public function getNewsByMonthYear($month, $year, $limit = null, $siteId = null)
     {
         $select = $this->tableGateway->getSql()->select();
-        $select->columns(array('cnews_id', 'cnews_title'));
+
+//        $select->columns(array('cnews_id', 'cnews_title'));
+        $select->join('melis_cms_news_texts', 'melis_cms_news_texts.cnews_id = melis_cms_news.cnews_id', array('cnews_id', 'cnews_title'), $select::JOIN_LEFT);
+
         $select->where(array('cnews_status' => '1'));
         
         if(!is_null($siteId)){
