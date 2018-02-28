@@ -20,28 +20,6 @@ use Zend\Session\Container;
 
 class MelisCmsNewsController extends AbstractActionController
 {
-
-    public function testMeAction(){
-        echo '<pre>';
-        echo 'tested yeah!';
-        // Retrieving News list using MelisCmsNewsService
-        $newsSrv = $this->getServiceLocator()->get('MelisCmsNewsService');
-        $unpublishFilter= true;
-        $orderColumn    = 'cnews_publish_date';
-        $status         = true;
-        $langId         = '1';
-        $dateMin        = null;
-        $dateMax        = null;
-        $order          = 'DESC';
-        $siteId         = '1';
-        $search         = null;
-//        die(var_dump($status, $langId, $dateMin, $dateMax, $unpublishFilter, $orderColumn, $order, $siteId ,$search));
-        $newsList = $newsSrv->getNewsList($status, $langId, null, null, $dateMin, $dateMax, $unpublishFilter, null, null, $orderColumn, $order, $siteId ,$search);
-var_dump($newsList);
-        echo '</pre>';
-        die();
-    }
-
     /**
      * renders the page container
      * @return \Zend\View\Model\ViewModel
