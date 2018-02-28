@@ -245,33 +245,33 @@ class MelisCmsNewsListController extends AbstractActionController
                     $lang_id = $currentLang->lang_cms_id;
                 }
             }
-            
+
             $tmp = $newsSvc->getNewsList(null, null, null, null, null, null, null, null, null, null,  null, $cnews_site_id, $search);
-            
             $dataFiltered = count($tmp);
-            
+
             $news = $newsSvc->getNewsList(null, null, null, null, null, null, null, $start, $length, $selCol, $sortOrder, $cnews_site_id, $search);
 
             $dataArray = [];
             $idArray = [];
 
             // get news with lang_id equals to current lang id of platform
+//            die(print_r($news));
             foreach($news as $new) {
-                if ($new->cnews_lang_id == $lang_id) {
+                if ($new['cnews_lang_id'] == $lang_id) {
                     $dataArray[] = $new;
-                    $idArray[] = $new->cnews_id; 
-                } 
+                    $idArray[] = $new['cnews_id'];
+                }
             }
 
             // get news with lang_id not equals to current lang id of platform but doesnt exist on above id array
             foreach ($news as $new) {
-                if (!in_array($new->cnews_id, $idArray)) {
+                if (!in_array($new['cnews_id'], $idArray)) {
                     if ($new->cnews_lang_id !== $lang_id) {
                         $dataArray[] = $new;
                     } 
                 }
             }
-            
+
             // sort by column
             if (!empty($selCol) && empty(!$sortOrder)) {
                 $sortOrder = ($sortOrder == 'asc') ? SORT_ASC : SORT_DESC;
@@ -284,29 +284,29 @@ class MelisCmsNewsListController extends AbstractActionController
             $c = 0;
             foreach($dataArray as $new) {
                 $status = '<span class="text-success"><i class="fa fa-fw fa-circle"></i></span>';
-                if(!$new->cnews_status){
+                if(!$new['cnews_status']){
                     $status = '<span class="text-danger"><i class="fa fa-fw fa-circle"></i></span>';
                 }
 
-                $new->cnews_title = !empty($data->cnews_title) ? $data->cnews_title : $new->cnews_title;
-                $tableData[$c]['DT_RowId'] = $new->cnews_id; 
-                $tableData[$c]['cnews_id'] = $new->cnews_id;               
+//                $new->cnews_title = !empty($data->cnews_title) ? $data->cnews_title : $new->cnews_title;
+                $tableData[$c]['DT_RowId'] = $new['cnews_id'];
+                $tableData[$c]['cnews_id'] = $new['cnews_id'];
                 $tableData[$c]['cnews_status'] = $status;
-                $tableData[$c]['cnews_title'] = $this->getTool()->escapeHtml($new->cnews_title);
-                $tableData[$c]['cnews_creation_date'] = $this->getTool()->dateFormatLocale($new->cnews_creation_date);
-                $tableData[$c]['cnews_publish_date'] = $this->getTool()->dateFormatLocale($new->cnews_publish_date);
-                $tableData[$c]['cnews_unpublish_date'] = $this->getTool()->dateFormatLocale($new->cnews_unpublish_date);
-                $tableData[$c]['site_name'] = $new->site_name;
+                $tableData[$c]['cnews_title'] = $this->getTool()->escapeHtml($new['cnews_title']);
+                $tableData[$c]['cnews_creation_date'] = $this->getTool()->dateFormatLocale($new['cnews_creation_date']);
+                $tableData[$c]['cnews_publish_date'] = $this->getTool()->dateFormatLocale($new['cnews_publish_date']);
+                $tableData[$c]['cnews_unpublish_date'] = $this->getTool()->dateFormatLocale($new['cnews_unpublish_date']);
+                $tableData[$c]['site_name'] = $new['site_name'];
                 $c++;
             }
 
         }
         
         return new JsonModel(array (
-            'draw' => (int) $draw,
-            'recordsTotal' => $dataCount,
-            'recordsFiltered' => $dataFiltered,
-            'data' => $tableData,
+            'draw'              => (int) $draw,
+            'recordsTotal'      => $dataCount,
+            'recordsFiltered'   => $dataFiltered,
+            'data'              => $tableData,
         ));
     }
     

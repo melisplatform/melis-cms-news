@@ -126,10 +126,10 @@ class MelisCmsNewsListNewsPlugin extends MelisTemplatingPlugin
             
             // Generate link to news
             $link = $pageTreeService->getPageLink($pageIdDetailNews, false);
-            $val->newsLink = $link . '?newsId=' . $val->cnews_id;
+            $val['newsLink'] = $link . '?newsId=' . $val['cnews_id'];
             
             // date formated of news
-            $val->newsDateFormated = date('d M Y',strtotime(($val->cnews_publish_date) ? $val->cnews_publish_date : $val->cnews_creation_date));  
+            $val['newsDateFormated'] = date('d M Y',strtotime(($val['cnews_publish_date']) ? $val['cnews_publish_date'] : $val['cnews_creation_date']));
             
             // Adding the News Data to result variable           
             array_push($listNews, $val);
