@@ -255,7 +255,6 @@ class MelisCmsNewsListController extends AbstractActionController
             $idArray = [];
 
             // get news with lang_id equals to current lang id of platform
-//            die(print_r($news));
             foreach($news as $new) {
                 if ($new['cnews_lang_id'] == $lang_id) {
                     $dataArray[] = $new;
