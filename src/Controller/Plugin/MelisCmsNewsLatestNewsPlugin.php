@@ -12,6 +12,7 @@ namespace MelisCmsNews\Controller\Plugin;
 use MelisEngine\Controller\Plugin\MelisTemplatingPlugin;
 use Zend\View\Model\ViewModel;
 use Zend\Session\Container;
+use Zend\Stdlib\ArrayUtils;
 /**
  * This plugin implements the business logic of the
  * "latestNews" plugin.
@@ -61,6 +62,9 @@ class MelisCmsNewsLatestNewsPlugin extends MelisTemplatingPlugin
      */
     public function front()
     {
+        $container = new Container('melisplugins');
+        $langId = $container['melis-plugins-lang-id'];
+        
         // Get the parameters and config from $this->pluginFrontConfig (default > hardcoded > get > post)
         $data = $this->getFormData();
         
@@ -110,7 +114,7 @@ class MelisCmsNewsLatestNewsPlugin extends MelisTemplatingPlugin
         
         // Retreiving News list using MelisCmsNewsService
         $newsSrv = $this->getServiceLocator()->get('MelisCmsNewsService');
-        $newsList = $newsSrv->getNewsList($status, null, null, $dateMin, $dateMax, $unpublishFilter, null, $limit, $orderColumn, $order, $siteId, $search);
+        $newsList = $newsSrv->getNewsList($status, $langId, null, null, $dateMin, $dateMax, $unpublishFilter, null, $limit, $orderColumn, $order, $siteId, $search);
         
         $latestNews = array();
         foreach ($newsList As $key => $val)
@@ -121,10 +125,10 @@ class MelisCmsNewsLatestNewsPlugin extends MelisTemplatingPlugin
             {
                 // Generate link to news
                 $link = $pageTreeService->getPageLink($pageIdDetailNews, false);
-                $news->newsLink = $link . '?newsId=' . $news->cnews_id;
+                $news['newsLink'] = $link . '?newsId=' . $news['cnews_id'];
                 
                 // date formated of news
-                $news->newsDateFormated = date('d M Y',strtotime(($news->cnews_publish_date) ? $news->cnews_publish_date : $news->cnews_creation_date));
+                $news['newsDateFormated'] = date('d M Y',strtotime(($news['cnews_publish_date']) ? $news['cnews_publish_date'] : $news['cnews_creation_date']));
                 
                 // Adding the News Data to result variable
                 array_push($latestNews, $news);

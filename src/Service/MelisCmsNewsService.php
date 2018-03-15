@@ -25,38 +25,39 @@ class MelisCmsNewsService extends MelisCoreGeneralService
      * @param varchar|null $order The mysql ordering function, sets the order on how datas are retrieved
      * @param varchar|null $search Searches the table for the provided query, searcheable columns : mcslide_id, mcslide_name
      * 
-     * @return array MelisCmsSlider[]
+     * @return array
      */
     
-    public function getNewsList($status = null, $dateMin = null, $dateMax = null, $publishDateMin = null, 
+    public function getNewsList($status = null, $langId = null, $dateMin = null, $dateMax = null, $publishDateMin = null, 
                                 $publishDateMax = null, $unpublishFilter = false, $start = null, $limit = null, 
-                                $orderColumn = null, $order = null, $siteId = null, $search = null )
+                                $orderColumn = null, $order = null, $siteId = null, $search = null)
     {
         // Event parameters prepare
         $arrayParameters = $this->makeArrayFromParameters(__METHOD__, func_get_args());
         $results = array();
-   
+
         // Sending service start event
-        $arrayParameters = $this->sendEvent('meliscmsslider_service_get_news_list_start', $arrayParameters);
+        $arrayParameters = $this->sendEvent('melis_cms_news_get_news_list_start', $arrayParameters);
    
         // Service implementation start
         $newsTable = $this->getServiceLocator()->get('MelisCmsNewsTable');
 
         $news = $newsTable->getNewsList(
-            $arrayParameters['status'], $arrayParameters['dateMin'], $arrayParameters['dateMax'], $arrayParameters['publishDateMin'], 
+            $arrayParameters['status'], $arrayParameters['langId'], $arrayParameters['dateMin'], $arrayParameters['dateMax'], $arrayParameters['publishDateMin'], 
             $arrayParameters['publishDateMax'], $arrayParameters['unpublishFilter'], $arrayParameters['start'], $arrayParameters['limit'], 
             $arrayParameters['orderColumn'], $arrayParameters['order'], $arrayParameters['siteId'], $arrayParameters['search']
-        );
+        )->toArray();
 
-        foreach($news as $new){            
-            $results[] = $new;
-        }
+        $results = $news;
+//        foreach($news as $new){
+//            $results[] = $new;
+//        }
         // Service implementation end
         
         // Adding results to parameters for events treatment if needed
         $arrayParameters['results'] = $results;
         // Sending service end event
-        $arrayParameters = $this->sendEvent('meliscmsslider_service_get_news_list_end', $arrayParameters);
+        $arrayParameters = $this->sendEvent('melis_cms_news_get_news_list_end', $arrayParameters);
          
         return $arrayParameters['results'];
     }
@@ -68,19 +69,19 @@ class MelisCmsNewsService extends MelisCoreGeneralService
      * 
      * @returns MelisCmsNews[]
      */
-    public function getNewsById($newsId)
+    public function getNewsById($newsId, $langId = null)
     {
         // Event parameters prepare
         $arrayParameters = $this->makeArrayFromParameters(__METHOD__, func_get_args());
         $results = array();
         
         // Sending service start event
-        $arrayParameters = $this->sendEvent('meliscmsslider_service_get_news_by_id_start', $arrayParameters);
+        $arrayParameters = $this->sendEvent('melis_cms_news_get_news_by_id_start', $arrayParameters);
        
         // Service implementation start
         $newsTable = $this->getServiceLocator()->get('MelisCmsNewsTable');
 
-        foreach($newsTable->getEntryById($arrayParameters['newsId']) as $news){                   
+        foreach($newsTable->getNews($arrayParameters['newsId'], $arrayParameters['langId']) as $news){                   
             $results = $news;
         }
         
@@ -89,7 +90,7 @@ class MelisCmsNewsService extends MelisCoreGeneralService
         // Adding results to parameters for events treatment if needed
         $arrayParameters['results'] = $results;
         // Sending service end event
-        $arrayParameters = $this->sendEvent('meliscmsslider_service_get_news_by_id_end', $arrayParameters);
+        $arrayParameters = $this->sendEvent('melis_cms_news_get_news_by_id_end', $arrayParameters);
          
         return $arrayParameters['results'];
     }
@@ -109,7 +110,7 @@ class MelisCmsNewsService extends MelisCoreGeneralService
         $results = false;
         
         // Sending service start event
-        $arrayParameters = $this->sendEvent('meliscmsslider_service_save_news_start', $arrayParameters);
+        $arrayParameters = $this->sendEvent('melis_cms_news_save_news_start', $arrayParameters);
         
         // Service implementation start
         $newsTable = $this->getServiceLocator()->get('MelisCmsNewsTable');
@@ -123,7 +124,7 @@ class MelisCmsNewsService extends MelisCoreGeneralService
         // Adding results to parameters for events treatment if needed
         $arrayParameters['results'] = $results;
         // Sending service end event
-        $arrayParameters = $this->sendEvent('meliscmsslider_service_save_news_end', $arrayParameters);
+        $arrayParameters = $this->sendEvent('melis_cms_news_save_news_end', $arrayParameters);
          
         return $arrayParameters['results'];
     }
@@ -142,7 +143,7 @@ class MelisCmsNewsService extends MelisCoreGeneralService
         $results = false;
     
         // Sending service start event
-        $arrayParameters = $this->sendEvent('meliscmsslider_service_delete_news_by_id_start', $arrayParameters);
+        $arrayParameters = $this->sendEvent('melis_cms_news__delete_news_by_id_start', $arrayParameters);
     
         // Service implementation start
         $newsTable = $this->getServiceLocator()->get('MelisCmsNewsTable');
@@ -158,7 +159,7 @@ class MelisCmsNewsService extends MelisCoreGeneralService
         // Adding results to parameters for events treatment if needed
         $arrayParameters['results'] = $results;
         // Sending service end event
-        $arrayParameters = $this->sendEvent('meliscmsslider_service_delete_news_by_id_start', $arrayParameters);
+        $arrayParameters = $this->sendEvent('melis_cms_news__delete_news_by_id_end', $arrayParameters);
          
         return $arrayParameters['results'];
     }

@@ -19,7 +19,7 @@ $(document).ready(function(){
 	
 	body.on("click", ".newsDelete", function(){ 
 		var newsId   = $(this).closest('tr').attr('id');		
-		var ajaxUrl = 'melis/MelisCmsNews/MelisCmsNewsList/deleteNews';
+		var ajaxUrl = '/melis/MelisCmsNews/MelisCmsNewsList/deleteNews';
 		var dataString = [];
 		dataString.push({
 			name : 'newsId',
@@ -60,7 +60,7 @@ $(document).ready(function(){
 		var newsId   = $(this).data('newsid');
 		var column	 = $(this).data('column');
 		var type 	 = $(this).data('type');
-		var ajaxUrl = 'melis/MelisCmsNews/MelisCmsNews/removeAttachFile';
+		var ajaxUrl = '/melis/MelisCmsNews/MelisCmsNews/removeAttachFile';
 		var dataString = [];
 		dataString.push({
 			name : 'newsId',
@@ -108,33 +108,41 @@ $(document).ready(function(){
 	
 	body.on("click", ".saveNewsLetter", function(){
 		melisCoreTool.pending(".saveNewsLetter");
-		var ajaxUrl = 'melis/MelisCmsNews/MelisCmsNews/saveNewsLetter';
+		var ajaxUrl = '/melis/MelisCmsNews/MelisCmsNews/saveNewsLetter';
 		var newsPage = $(this).closest('.container-level-a');
 		var dataString = newsPage.find('form#newsLetterForm').serializeArray();
 		var newsId = newsPage.data('newsid');
 		var selectedSlider = newsPage.find('select[name=cnews_slider_id]').val();
 		var selectedSite = newsPage.find('select[name=cnews_site_id]').val();
-		
+        
+        //newsSiteTitleSubtitleForm
+        var forms = $('#'+newsId+'_id_meliscmsnews_content_tabs_properties_details_right_paragraphs form#newsSiteTitleSubtitleForm');
+        ctr = 0
+        len = 1;
+        forms.each(function(){
+            dataString.push({ name : 'cnews_title['+ctr+']', value : $('#'+newsId+'_id_meliscmsnews_content_tabs_properties_details_right_paragraphs #cnews_'+len+' '+'#cnews_title').val() });
+			dataString.push({ name : 'cnews_subtitle['+ctr+']', value : $('#'+newsId+'_id_meliscmsnews_content_tabs_properties_details_right_paragraphs #cnews_'+len+' '+'#cnews_subtitle').val() });
+			dataString.push({ name : 'cnews_lang_id' +"["+ctr+"]", value : $('#'+newsId+'_id_meliscmsnews_content_tabs_properties_details_right_paragraphs .product-text-tab #news_cms_lang_'+len).attr("data-lang-id")});
+			
+			for (var i = 1; i <= 4; i++) {
+				dataString.push({ name : 'cnews_paragraph'+i +"["+ctr+"]", value : $('#'+newsId+'_id_meliscmsnews_content_tabs_properties_details_right_paragraphs #cnews_'+len+' '+'#cnews_paragraph'+i).val()});
+			}
+            ctr++;
+            len++;
+        });
+
+        dataString.push({ name : 'formCount', value : forms.length});
+        //end 
+				
 		newsPage.find('.make-switch div').each(function(){
 			var field = $(this).find('input').attr('name');
 			var status = $(this).hasClass('switch-on');
-			var saveStatus = 0;
-			if(status) {
-				saveStatus = 1;
-			}
+			var saveStatus = (status) ? 1 : 0;
 			dataString.push({ name : field, value : saveStatus});
 		});
 		
 		dataString.push({ name : 'cnews_slider_id', value : selectedSlider });
 		dataString.push({ name : 'cnews_site_id', value : selectedSite });
-		
-		var c = 1;
-		newsPage.find('#'+newsId+'_id_meliscmsnews_content_tabs_properties_details_right_paragraphs textarea').each(function(){
-			var field = 'cnews_paragraph'+c;
-			var content = $(this).val();
-			dataString.push({ name : field, value : content});			
-			c++;
-		});
 		
 		$.ajax({
 	        type        : 'POST', 
@@ -143,27 +151,27 @@ $(document).ready(function(){
 	        dataType    : 'json',
 	        encode		: true,
 	     }).success(function(data){
-	    	 if(data.success){
+	    	if (data.success) {
 	    		 	toolNews.tabClose(newsId);
 					melisHelper.melisOkNotification( data.textTitle, data.textMessage );
 					toolNews.tabOpen(data.chunk.cnews_title, data.chunk.cnews_id);
 					toolNews.refreshTable();
-			}else{
+			} else {
 				melisHelper.melisKoNotification(data.textTitle, data.textMessage, data.errors);	
 				melisCoreTool.highlightErrors(data.success, data.errors, activeTabId + " form");
 				$(".newsPublishDate").prev("label").css("color","#686868");
                 $(".newsUnpublishDate").prev("label").css("color","#686868");
                 $.each( data.errors, function( key, error ) {
-                    if( key == 'cnews_publish_date'){
+                    if (key == 'cnews_publish_date') {
                         $(".newsPublishDate").prev("label").css("color","red");
                     }
-                    if( key == 'cnews_unpublish_date'){
+                    if (key == 'cnews_unpublish_date') {
                         $(".newsUnpublishDate").prev("label").css("color","red");
                     }
                 });
 			}
 	    	melisCore.flashMessenger();
-	     }).error(function(){
+	     }).error(function() {
 	    	 console.log('failed');
 	     });
 		
@@ -177,7 +185,7 @@ $(document).ready(function(){
 		// initialation of local variable
 		zoneId = 'id_meliscmsnews_modal_documents_form';
 		melisKey = 'meliscmsnews_modal_documents_form';
-		modalUrl = 'melis/MelisCmsNews/MelisCmsNews/renderModal';
+		modalUrl = '/melis/MelisCmsNews/MelisCmsNews/renderModal';
 		// requesitng to create modal and display after
     	melisHelper.createModal(zoneId, melisKey, false, {'newsId' : newsId, 'type' : type, 'isNew' : 1}, modalUrl, function(){
     		melisCoreTool.done('.newsAttachFile');
@@ -191,7 +199,7 @@ $(document).ready(function(){
 		// initialation of local variable
 		zoneId = 'id_meliscmsnews_modal_documents_form_image';
 		melisKey = 'meliscmsnews_modal_documents_form_image';
-		modalUrl = 'melis/MelisCmsNews/MelisCmsNews/renderModal';
+		modalUrl = '/melis/MelisCmsNews/MelisCmsNews/renderModal';
 		// requesitng to create modal and display after
     	melisHelper.createModal(zoneId, melisKey, false, {'newsId' : newsId, 'type' : type, 'isNew' : 1}, modalUrl, function(){
     		melisCoreTool.done('.newsAttachImage');
@@ -206,7 +214,7 @@ $(document).ready(function(){
 		// initialation of local variable
 		zoneId = 'id_meliscmsnews_modal_documents_form_image';
 		melisKey = 'meliscmsnews_modal_documents_form_image';
-		modalUrl = 'melis/MelisCmsNews/MelisCmsNews/renderModal';
+		modalUrl = '/melis/MelisCmsNews/MelisCmsNews/renderModal';
 		// requesitng to create modal and display after
     	melisHelper.createModal(zoneId, melisKey, false, {'newsId' : newsId, 'type' : type, 'isNew' : 0, 'column' : column}, modalUrl, function(){
     		melisCoreTool.done('.newsAttachImage');
@@ -214,7 +222,7 @@ $(document).ready(function(){
 	});
 	
 	body.on("click", "#newsAttachment", function(){
-		var ajaxUrl = 'melis/MelisCmsNews/MelisCmsNews/saveFileForm';
+		var ajaxUrl = '/melis/MelisCmsNews/MelisCmsNews/saveFileForm';
 		var newsId = $('form#newsFileForm input[name=cnews_id]').val();
 		var tmpForm = $('#newsFileForm').get(0);		
 		var sliderData = new FormData(tmpForm);

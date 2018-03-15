@@ -64,6 +64,9 @@ class MelisCmsNewsListNewsPlugin extends MelisTemplatingPlugin
      */
     public function front()
     {
+        $container = new Container('melisplugins');
+        $langId = $container['melis-plugins-lang-id'];
+        
         // Get the parameters and config from $this->pluginFrontConfig (default > hardcoded > get > post)
         $data = $this->getFormData();
         
@@ -112,21 +115,21 @@ class MelisCmsNewsListNewsPlugin extends MelisTemplatingPlugin
                 $siteId = $site->site_id;
             }
         }
-        
+
         // Retrieving News list using MelisCmsNewsService
         $newsSrv = $this->getServiceLocator()->get('MelisCmsNewsService');
-        $newsList = $newsSrv->getNewsList($status, null, null, $dateMin, $dateMax, $unpublishFilter, null, null, $orderColumn, $order, $siteId ,$search);
-        
+        $newsList = $newsSrv->getNewsList($status, $langId, null, null, $dateMin, $dateMax, $unpublishFilter, null, null, $orderColumn, $order, $siteId ,$search);
+
         $listNews = array();
         foreach ($newsList As $key => $val) 
         {
             
             // Generate link to news
             $link = $pageTreeService->getPageLink($pageIdDetailNews, false);
-            $val->newsLink = $link . '?newsId=' . $val->cnews_id;
+            $val['newsLink'] = $link . '?newsId=' . $val['cnews_id'];
             
             // date formated of news
-            $val->newsDateFormated = date('d M Y',strtotime(($val->cnews_publish_date) ? $val->cnews_publish_date : $val->cnews_creation_date));  
+            $val['newsDateFormated'] = date('d M Y',strtotime(($val['cnews_publish_date']) ? $val['cnews_publish_date'] : $val['cnews_creation_date']));
             
             // Adding the News Data to result variable           
             array_push($listNews, $val);
