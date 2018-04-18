@@ -63,6 +63,20 @@ return array(
                 'css' => array(
                     '/MelisCmsNews/css/news.css',
                 ),
+                /**
+                 * the "build" configuration compiles all assets into one file to make
+                 * lesser requests
+                 */
+                'build' => [
+                    // lists of assets that will be loaded in the layout
+                    'css' => [
+                        '/MelisCmsNews/build/css/bundle.css',
+
+                    ],
+                    'js' => [
+                        '/MelisCmsNews/build/js/bundle.js',
+                    ]
+                ]
             ),
             'datas' => array(
                 
