@@ -37,6 +37,22 @@ return array(
 									),
 								),
 							),
+                            array(
+                                'spec' => array(
+                                    'name' => 'langId',
+                                    'type' => 'Text',
+                                    'options' => array(
+                                        'label' => 'langId',
+                                    ),
+                                    'attributes' => array(
+                                        'id' => 'langId',
+                                        'value' => '',
+                                        'class' => '',
+                                        'placeholder' => '1',
+                                        'data-type' => 'int'
+                                    ),
+                                ),
+                            ),
 							array(
 								'spec' => array(
 									'name' => 'dateMin',
