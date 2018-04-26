@@ -26,7 +26,6 @@ class MelisCmsNewsTextsTable extends MelisGenericTable
 
     public function updateNewsText($set, $where)
     {
-    	//die(var_dump($set));
         $update = $this->tableGateway->getSql()->update();
         $update->set($set);
         $update->where($where);
@@ -47,8 +46,6 @@ class MelisCmsNewsTextsTable extends MelisGenericTable
         }
        
         $select->where($where);
-
-        //$select->where->nest->greaterThan('cnews_unpublish_date', date('Y-m-d H:i:s', strtotime("now")))->or->isNull('cnews_unpublish_date')->unnest;
 
         return $this->tableGateway->selectWith($select);
     }
