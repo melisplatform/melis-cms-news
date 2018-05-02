@@ -273,7 +273,6 @@ class MelisCmsNewsListNewsPlugin extends MelisTemplatingPlugin
     public function getFormData()
     {
         $data = parent::getFormData();
-//         $data = $this->pluginFrontConfig;
         return $data;
     }
 

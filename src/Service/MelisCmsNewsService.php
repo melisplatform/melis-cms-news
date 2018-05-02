@@ -49,11 +49,8 @@ class MelisCmsNewsService extends MelisCoreGeneralService
         )->toArray();
 
         $results = $news;
-//        foreach($news as $new){
-//            $results[] = $new;
-//        }
         // Service implementation end
-        
+
         // Adding results to parameters for events treatment if needed
         $arrayParameters['results'] = $results;
         // Sending service end event

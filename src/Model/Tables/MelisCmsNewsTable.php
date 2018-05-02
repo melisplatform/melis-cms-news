@@ -64,24 +64,12 @@ class MelisCmsNewsTable extends MelisGenericTable
     )
 
     {
-//        var_dump($status, $langId, $dateMin, $dateMax, $publishDateMin, $publishDateMax, $unpublishFilter, $start, $limit, $orderColumn, $order, $siteId, $search);
         $select = $this->tableGateway->getSql()->select();
-//        $clause = array();
-        
+
         /**
          * TEMPORARY FIXED
          */
-//        $cnews_text_cols = array(
-//            'cnews_text_id',
-//            'cnews_title',
-//            'cnews_subtitle',
-//            'cnews_paragraph1',
-//            'cnews_paragraph2',
-//            'cnews_paragraph3',
-//            'cnews_paragraph4',
-//            'cnews_lang_id',
-//        );
-        
+
         $select->join('melis_cms_site', 'melis_cms_site.site_id = melis_cms_news.cnews_site_id', array('site_name'), $select::JOIN_LEFT);
         $select->join('melis_cms_news_texts', 'melis_cms_news_texts.cnews_id = melis_cms_news.cnews_id', '*', $select::JOIN_LEFT);
 
@@ -148,10 +136,6 @@ class MelisCmsNewsTable extends MelisGenericTable
 
         $resultData = $this->tableGateway->selectWith($select);
 
-//        $sql = $this->tableGateway->getSql();
-//        $raw = $sql->getSqlstringForSqlObject($select);
-//        die(var_dump($raw.PHP_EOL));
-
         return $resultData;
     }
     
@@ -212,7 +196,6 @@ class MelisCmsNewsTable extends MelisGenericTable
     {
         $select = $this->tableGateway->getSql()->select();
 
-//        $select->columns(array('cnews_id', 'cnews_title'));
         $select->join('melis_cms_news_texts', 'melis_cms_news_texts.cnews_id = melis_cms_news.cnews_id', array('cnews_id', 'cnews_title'), $select::JOIN_LEFT);
 
         $select->where(array('cnews_status' => '1'));
@@ -245,10 +228,7 @@ class MelisCmsNewsTable extends MelisGenericTable
     {
         $select = $this->tableGateway->getSql()->select();
 
-        //$select->where(array('cnews_status' => '1'));
         $select->order(array('cnews_id' => 'DESC'));
-
-        //$select->where->nest->greaterThan('cnews_unpublish_date', date('Y-m-d H:i:s', strtotime("now")))->or->isNull('cnews_unpublish_date')->unnest;
 
         $select->limit(1);
 
@@ -266,8 +246,6 @@ class MelisCmsNewsTable extends MelisGenericTable
         $select->join('melis_cms_news_texts', 'melis_cms_news_texts.cnews_id = melis_cms_news.cnews_id', array('cnews_title', 'cnews_lang_id'), $select::JOIN_LEFT);
         
         $select->where($where);
-
-        //$select->where->nest->greaterThan('cnews_unpublish_date', date('Y-m-d H:i:s', strtotime("now")))->or->isNull('cnews_unpublish_date')->unnest;
 
         return $this->tableGateway->selectWith($select);
     }
