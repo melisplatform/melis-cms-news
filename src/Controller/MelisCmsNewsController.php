@@ -529,6 +529,7 @@ class MelisCmsNewsController extends AbstractActionController
             
             $form->setData($postValues);
             $data['cnews_id'] = '';
+            $data['cnews_author_account'] = $postValues['cnews_author_account'] ?? null;
 
             // check if any title exists
             $titleExist = false;
@@ -621,7 +622,9 @@ class MelisCmsNewsController extends AbstractActionController
                 $errors = array_merge($errors, $dateErrors);
             }
         }
-        
+
+
+
         $response = array(
             'success' => $success,
             'textTitle' => $textTitle,
