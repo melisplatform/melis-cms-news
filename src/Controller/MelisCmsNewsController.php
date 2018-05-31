@@ -529,7 +529,6 @@ class MelisCmsNewsController extends AbstractActionController
             
             $form->setData($postValues);
             $data['cnews_id'] = '';
-            $data['cnews_author_account'] = $postValues['cnews_author_account'] ?? null;
 
             // check if any title exists
             $titleExist = false;
@@ -632,7 +631,9 @@ class MelisCmsNewsController extends AbstractActionController
             'errors' => $errors,
             'chunk' => $data,
         );
-        
+
+        $this->getEventManager()->trigger('meliscmsnews_get_postvalues',$this, $postValues);
+
         $this->getEventManager()->trigger('meliscmsnews_save_news_letter_end',
             $this, array_merge($response, array('typeCode' => $logTypeCode, 'itemId' => $id)));
         
