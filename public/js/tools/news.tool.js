@@ -171,11 +171,11 @@ $(document).ready(function(){
                 });
 			}
 	    	melisCore.flashMessenger();
+            melisCoreTool.done(".saveNewsLetter");
 	     }).error(function() {
+             melisCoreTool.done(".saveNewsLetter");
 	    	 console.log('failed');
 	     });
-		
-		melisCoreTool.done(".saveNewsLetter");
 	});
 	
 	body.on("click", '.newsAttachFile', function(){
