@@ -28,13 +28,13 @@ class MelisCmsSiteNewsSelectFactory extends MelisSelectFactory
         $container = new Container('melisplugins');
         $langId = $container['melis-plugins-lang-id'];
         
-        foreach ($siteTbl->fetchAll() As $val)
-        {
+        foreach ($siteTbl->fetchAll() As $val) {
             $newsRes = $newsSrv->getNewsList(1, $langId, null, null, null, null, 1, null, null, 'cnews_title', 'ASC', $val->site_id);
-            
-            foreach ($newsRes As $news)
-            {
-                $newsData[$news->cnews_id] = $val->site_name.' - '.$news->cnews_title;
+
+            if (!empty($newsRes)) {
+                foreach ($newsRes as $news) {
+                    $newsData[$news['cnews_id']] = $val->site_name . ' - ' . $news['cnews_title'];
+                }
             }
         }
         
