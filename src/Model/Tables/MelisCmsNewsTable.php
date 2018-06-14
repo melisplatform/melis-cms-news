@@ -75,9 +75,6 @@ class MelisCmsNewsTable extends MelisGenericTable
     ) {
         $select = $this->tableGateway->getSql()->select();
 
-        $publishDateMin = date('Y-m-d',strtotime($publishDateMin));
-        $publishDateMax = date('Y-m-d',strtotime($publishDateMax));
-
         $select->join('melis_cms_site', 'melis_cms_site.site_id = melis_cms_news.cnews_site_id', array('site_name'), $select::JOIN_LEFT);
         $select->join('melis_cms_news_texts', 'melis_cms_news_texts.cnews_id = melis_cms_news.cnews_id', '*', $select::JOIN_LEFT);
 
@@ -108,11 +105,11 @@ class MelisCmsNewsTable extends MelisGenericTable
         }
 
         if (!is_null($publishDateMin)) {
-            $select->where('cnews_publish_date >= "'.$publishDateMin.' 00:00"');
+            $select->where('DATE(cnews_publish_date)>= "'.$publishDateMin.'"');
         }
 
         if (!is_null($publishDateMax)) {
-            $select->where('cnews_publish_date <= "'.$publishDateMax.' 23:59"');
+            $select->where('DATE(cnews_publish_date) <= "'.$publishDateMax.'"');
         }
 
         if (!is_null($limit)) {
