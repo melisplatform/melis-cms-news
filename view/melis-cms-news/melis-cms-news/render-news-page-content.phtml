@@ -22,7 +22,7 @@
                             	</a>
                             </li>';
         	            
-        	            if(empty($this->newsId) && $menuConfig['conf']['melisKey'] == 'meliscmsnews_content_tabs_medias'){
+        	            if(empty($this->newsId) && ($menuConfig['conf']['melisKey'] == 'meliscmsnews_content_tabs_medias' || $menuConfig['conf']['melisKey'] == 'meliscmsnews_content_tabs_comments')){
         	                $li = '';
         	            }
         	            echo $li;

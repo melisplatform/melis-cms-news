@@ -621,7 +621,9 @@ class MelisCmsNewsController extends AbstractActionController
                 $errors = array_merge($errors, $dateErrors);
             }
         }
-        
+
+
+
         $response = array(
             'success' => $success,
             'textTitle' => $textTitle,
@@ -629,7 +631,9 @@ class MelisCmsNewsController extends AbstractActionController
             'errors' => $errors,
             'chunk' => $data,
         );
-        
+
+        $this->getEventManager()->trigger('meliscmsnews_get_postvalues',$this, $postValues);
+
         $this->getEventManager()->trigger('meliscmsnews_save_news_letter_end',
             $this, array_merge($response, array('typeCode' => $logTypeCode, 'itemId' => $id)));
         
@@ -766,18 +770,16 @@ class MelisCmsNewsController extends AbstractActionController
                             break;
                         }
                     }
-                }else{
-                    
-                    $data = array(
+                } else {
+                    $data = [
                         $postValues['column'] => $file['fileName']
-                    );
-                    if($newsSvc->saveNews($data, $postValues['cnews_id'])){
-                        
-                        if (!empty($news->$postValues['column']))
-                        {
+                    ];
+                    if ($newsSvc->saveNews($data, $postValues['cnews_id'])) {
+                        $news = (array) $news;
+                        if (!empty($news[$postValues['column']])) {
                             // if the file exists, delete the file after update
-                            if(file_exists('public'.$news->$postValues['column'])) {
-                                unlink('public'.$news->$postValues['column']);
+                            if (file_exists('public'.$news[$postValues['column']])) {
+                                unlink('public'.$news[$postValues['column']]);
                             }
                         }
                         

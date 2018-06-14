@@ -3,8 +3,10 @@
 		<mp_title>Melis Cms News</mp_title>
 		<mp_subtitle>The module that brings a full news system to your website.</mp_subtitle>
 		<mp_description>
-			<p>MelisCmsNews is the News module of Melis Platform.<br /> The module comes with a tool that allows user to manage the list of news, their properties, their images and their texts.<br /> This module is also compatible with MelisCmsSlider, and if both are activated, a slider might be associated to a news and displayed with it.<br /> MelisCmsNews also brings 3 different plugins to be used on pages with drag'n'drop:</p>
-			<p>- list of news<br /> - latest news<br /> - news detail<br /> All plugins can be configured in order to adjust filters, ordering, etc.</p>
+			<![CDATA[
+				<p>MelisCmsNews is the News module of Melis Platform.<br /> The module comes with a tool that allows user to manage the list of news, their properties, their images and their texts.<br /> This module is also compatible with MelisCmsSlider, and if both are activated, a slider might be associated to a news and displayed with it.<br /> MelisCmsNews also brings 3 different plugins to be used on pages with drag'n'drop:</p>
+				<p>- list of news<br /> - latest news<br /> - news detail<br /> All plugins can be configured in order to adjust filters, ordering, etc.</p>
+			]]>
 		</mp_description>
 		<mp_maintainers>melisplatform</mp_maintainers>
 		<mp_group>Melis Cms</mp_group>

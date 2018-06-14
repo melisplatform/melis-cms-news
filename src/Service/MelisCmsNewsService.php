@@ -143,10 +143,13 @@ class MelisCmsNewsService extends MelisCoreGeneralService
         $arrayParameters = $this->sendEvent('melis_cms_news__delete_news_by_id_start', $arrayParameters);
     
         // Service implementation start
-        $newsTable = $this->getServiceLocator()->get('MelisCmsNewsTable');
+        $newsTable      = $this->getServiceLocator()->get('MelisCmsNewsTable');
+        $newsTextTable  = $this->getServiceLocator()->get('MelisCmsNewsTextsTable');
         try{
-            $newsTable->deleteById($arrayParameters['newsId']);            
-            $results = true;
+            if ($newsTable->deleteById($arrayParameters['newsId'])) {
+                // Remove news text
+                $results = empty($newsTextTable->deleteByField('cnews_id', $arrayParameters['newsId']))? false : true;
+            }
         }catch(\Exception $e){
             echo $e->getMessage();
         }

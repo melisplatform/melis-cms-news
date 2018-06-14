@@ -265,7 +265,7 @@ class MelisCmsNewsListController extends AbstractActionController
             // get news with lang_id not equals to current lang id of platform but doesnt exist on above id array
             foreach ($news as $new) {
                 if (!in_array($new['cnews_id'], $idArray)) {
-                    if ($new->cnews_lang_id !== $lang_id) {
+                    if ($new['cnews_lang_id'] !== $lang_id) {
                         $dataArray[] = $new;
                     } 
                 }
