@@ -103,13 +103,13 @@ class MelisCmsNewsTable extends MelisGenericTable
         if (!is_null($dateMax)) {
             $select->where('cnews_creation_date <= "'.$dateMax.'"');
         }
-        
+
         if (!is_null($publishDateMin)) {
-            $select->where('cnews_publish_date >= "'.$publishDateMin.'"');
+            $select->where('cnews_publish_date >= "'.$publishDateMin.' 00:00"');
         }
-        
+
         if (!is_null($publishDateMax)) {
-            $select->where('cnews_publish_date <= "'.$publishDateMax.'"');
+            $select->where('cnews_publish_date <= "'.$publishDateMax.' 23:59"');
         }
 
         if (!is_null($limit)) {
