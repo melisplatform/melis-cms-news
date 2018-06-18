@@ -66,6 +66,9 @@ class MelisCmsNewsListNewsPlugin extends MelisTemplatingPlugin
     {
         $container = new Container('melisplugins');
         $langId = $container['melis-plugins-lang-id'];
+
+        // Default values
+        $defLangLocale = 'en_EN';
         
         // Get the parameters and config from $this->pluginFrontConfig (default > hardcoded > get > post)
         $data = $this->getFormData();
@@ -139,7 +142,21 @@ class MelisCmsNewsListNewsPlugin extends MelisTemplatingPlugin
         $paginator->setCurrentPageNumber($current)
                 ->setItemCountPerPage($nbPerPage)
                 ->setPageRange(($nbPageBeforeAfter*2) + 1);
-                
+
+        /**
+         * Getting the page data (ex. Language Locale, etc.)
+         * @var \MelisEngine\Service\MelisPageService $pageService
+         */
+        $langLocale = $defLangLocale;  // english by default
+        $pageId     = (int) $this->pluginFrontConfig['pageId'];
+        if ($pageId) {
+            $pageService    = $this->getServiceLocator()->get('MelisEnginePage');
+            $pageData       = $pageService->getDatasPage($pageId)->getMelisPageTree();
+            if (!empty($pageData)) {
+                $langLocale = empty($pageData->lang_cms_locale)? $langLocale : $pageData->lang_cms_locale;
+            }
+        }
+
         // Create an array with the variables that will be available in the view
         $viewVariables = array(
             'pluginId' => $data['id'],
@@ -148,6 +165,8 @@ class MelisCmsNewsListNewsPlugin extends MelisTemplatingPlugin
             'dateMin' => $data['date_min'],
             'dateMax' => $data['date_max'],
             'nbPageBeforeAfter' => $nbPageBeforeAfter,
+            'langId' => $langId,
+            'locale' => $langLocale,
         );
 
         // return the variable array and let the view be created
