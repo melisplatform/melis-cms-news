@@ -1,4 +1,4 @@
-<div id="<?= $this->pluginId; ?>">
+<div id="<?= $this->pluginId; ?>" class="container news-list-plugin">
     <div id="news-list-plugin">
     	<form method="get">
         	<div class="row">
@@ -24,10 +24,10 @@
         	</div>
     	</form>
     	<br>
-        <div class="row">
+        <div class="row news">
         	<?php if (!empty($this->listNews->count())): ?>
             	<?php foreach ($this->listNews as $val): ?>
-                  	<div class="col-sm-6 col-md-4">
+                  	<div class="col-sm-6 col-md-4 post">
                         <div class="thumbnail">
                         	<?php if(!empty($val['cnews_image1'])): ?>
                           		<img src="<?= $val['cnews_image1']; ?>" alt="...">
@@ -50,13 +50,13 @@
           	<?php endif; ?>
         </div>
     </div>
-    
+
     <!-- Pagination -->
-    <?php 
+    <?php
         // Generating Pagination Control using partial view
         echo $this->paginationControl(
-                $this->listNews, 
-                'Sliding', 
+                $this->listNews,
+                'Sliding',
                 'MelisCmsNews/list-paginator',
                 array(
                     'searchKey' => $this->searchKey,
@@ -64,6 +64,6 @@
                     'dateMax' => $this->dateMax,
                     'nbPageBeforeAfter' => $this->nbPageBeforeAfter
                 )
-        ); 
+        );
     ?>
 </div>
