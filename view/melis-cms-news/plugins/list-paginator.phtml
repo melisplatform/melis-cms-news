@@ -3,14 +3,17 @@
     $urlQryStr = array();
     
     // News Search
-    if ($this->searchKey)
+    if (!empty($this->searchKey)) {
         $urlQryStr['search'] = $this->searchKey;
+    }
     
-    if ($this->dateMin)
+    if (!empty($this->dateMin)) {
         $urlQryStr['date_min'] = $this->dateMin;
+    }
     
-    if ($this->dateMax)
+    if (!empty($this->dateMax)) {
         $urlQryStr['date_max'] = $this->dateMax;
+    }
 ?>
 <div class="text-center">
     <?php if ($this->pageCount): ?>
