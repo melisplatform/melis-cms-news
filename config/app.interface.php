@@ -7,14 +7,15 @@ return array(
             'interface' => array(
                 'meliscore_leftmenu' => array(
                     'interface' => array(
-        			    'meliscore_toolstree' =>  array(
+        			    'meliscms_toolstree_section' =>  array(
         			    	'interface' => array(
-								'meliscms_tools_section' => array(
+								'meliscms_news_tool_section' => array(
                                     'conf' => array(
-                                        'id' => 'id_meliscms_tools_section',
-                                        'name' => 'tr_meliscms_meliscms',
+                                        'id' => 'id_meliscms_news_tool_section',
+                                        'name' => 'tr_meliscmsnews_list_header_title',
                                         'icon' => 'fa-newspaper-o',
                                         'rights_checkbox_disable' => true,
+                                        'melisKey' => 'meliscms_news_tool_section'
                                     ),
         			    			'interface' => array(
 		        			    		'meliscmsnews_left' => array(
