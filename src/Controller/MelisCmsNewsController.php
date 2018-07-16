@@ -480,14 +480,19 @@ class MelisCmsNewsController extends AbstractActionController
         $tool = $this->getServiceLocator()->get('MelisCoreTool');
         
         if ($this->getRequest()->isPost()) {
-            $postValues = get_object_vars($this->getRequest()->getPost());
-            $postValues = $melisTool->sanitizePost($postValues);
+            $postValues = $this->getRequest()->getPost()->toArray();
+            // Cache the fields to be sanitized
+            $sanitize = [
+                'cnews_title' => $postValues['cnews_title'],
+                'cnews_subtitle' => $postValues['cnews_subtitle'],
+                'cnews_lang_id' => $postValues['cnews_lang_id'],
+            ];
+            $postValues = array_merge($postValues, $melisTool->sanitizePost($sanitize));
 
             $logTypeCode = !empty($postValues['cnews_id']) ? 'CMS_NEWS_UPDATE' : 'CMS_NEWS_ADD';
             
             $melisCoreConfig = $this->serviceLocator->get('MelisCoreConfig');
-            $form = $this->getFormData($melisCoreConfig, 'MelisCmsNews/forms/meliscmsnews_properties_form','meliscmsnews_properties_form'); 
-
+            $form = $this->getFormData($melisCoreConfig, 'MelisCmsNews/forms/meliscmsnews_properties_form','meliscmsnews_properties_form');
             $formsTitleSubtitle = $this->getFormData($melisCoreConfig, 'MelisCmsNews/forms/meliscmsnews_site_title_subtitle_form','meliscmsnews_site_title_subtitle_form');   
           
             $parConf = $melisCoreConfig->getItem('meliscmsnews/conf/paragraphs_conf/');
@@ -609,7 +614,7 @@ class MelisCmsNewsController extends AbstractActionController
 
             } else {
                 $errors = $form->getMessages();
-
+                $appConfigForm = $melisCoreConfig->getFormMergedAndOrdered('MelisCmsNews/forms/meliscmsnews_properties_form','meliscmsnews_properties_form');
                 foreach ($errors as $keyError => $valueError) {
                     foreach ($appConfigForm['elements'] as $keyForm => $valueForm) {
                         if ($valueForm['spec']['name'] == $keyError && !empty($valueForm['spec']['options']['label'])) {

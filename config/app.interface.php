@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 return array(
     'plugins' => array(
@@ -7,30 +7,30 @@ return array(
             'interface' => array(
                 'meliscore_leftmenu' => array(
                     'interface' => array(
-        			    'meliscore_toolstree' =>  array(
-        			    	'interface' => array(
-								'meliscms_tools_section' => array(
+                        'meliscore_toolstree' =>  array(
+                            'interface' => array(
+                                'meliscms_tools_section' => array(
                                     'conf' => array(
                                         'id' => 'id_meliscms_tools_section',
                                         'name' => 'tr_meliscms_meliscms',
                                         'icon' => 'fa-newspaper-o',
                                         'rights_checkbox_disable' => true,
                                     ),
-        			    			'interface' => array(
-		        			    		'meliscmsnews_left' => array(
-		        			    			'conf' => array(
-		        			    				'type' => '/meliscmsnews/interface/meliscmsnews_list/interface/meliscmsnews_left_menu',
-		        			    			),
-		        			    		),
-        			    			),
-								),
-        			    	),
-        			    ),
+                                    'interface' => array(
+                                        'meliscmsnews_left' => array(
+                                            'conf' => array(
+                                                'type' => '/meliscmsnews/interface/meliscmsnews_list/interface/meliscmsnews_left_menu',
+                                            ),
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        ),
                     ),
                 ),
             ),
         ),
-		'meliscore_dashboard' => array(),
+        'meliscore_dashboard' => array(),
         'meliscmsnews' => array(
             'conf' => array(
                 'id' => '',
@@ -59,7 +59,7 @@ return array(
                     '/MelisCmsNews/js/tools/news.tool.js',
                     '/MelisCmsNews/assets/switch/bootstrap-switch.js',
                 ),
-                
+
                 'css' => array(
                     '/MelisCmsNews/css/news.css',
                 ),
@@ -79,7 +79,7 @@ return array(
                 ]
             ),
             'datas' => array(
-                
+
             ),
             'interface' => array(
                 'meliscmsnews_list' => array(
@@ -169,9 +169,9 @@ return array(
                                                     ),
                                                 ),
                                             ),
-                                        ),                                        
+                                        ),
                                     ),
-                                ), 
+                                ),
                                 'meliscmsnews_list_content' => array(
                                     'conf' => array(
                                         'id' => 'id_meliscmsnews_list_content',
@@ -200,7 +200,7 @@ return array(
                                 ),
                             ),
                         ),
-                    ),                    
+                    ),
                 ),
                 'meliscmsnews' => array(
                     'interface' => array(
