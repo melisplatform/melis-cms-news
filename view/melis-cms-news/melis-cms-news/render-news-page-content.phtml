@@ -3,13 +3,22 @@
     if (!empty($this->zoneconfig['conf']['id'])){
         $id .= $this->newsId.'_'.$this->zoneconfig['conf']['id'];
     }
+
+    /**
+     * Disabling "Medias" & "Comments" tabs during creation
+     */
+    $zoneConfigInterface = $this->zoneconfig['interface'];
+    if (empty($this->newsId)) {
+        unset($zoneConfigInterface['meliscmsnews_content_tabs_medias']);
+        unset($zoneConfigInterface['meliscmsnews_content_tabs_comments']);
+    }
 ?>
 <div id="<?= $id ?>" data-melisKey="<?= $this->melisKey; ?>" class="widget widget-tabs widget-tabs-double-2 widget-tabs-responsive">
 	<div class="widget-head nav">
 		<ul class="tabs-label nav-tabs">
 			<?php 
-            	if(!empty($this->zoneconfig['interface'])) {
-            	    foreach($this->zoneconfig['interface'] as $keyConfig => $menuConfig) {
+            	if(!empty($zoneConfigInterface)) {
+            	    foreach($zoneConfigInterface as $keyConfig => $menuConfig) {
             	        
             	        $tabId = $this->newsId.'_'.$menuConfig['conf']['id'];
             	        $tabIcon = $menuConfig['conf']['icon'];
@@ -21,10 +30,6 @@
                             		<span>'.$this->translate($tabName).'</span>
                             	</a>
                             </li>';
-        	            
-        	            if(empty($this->newsId) && ($menuConfig['conf']['melisKey'] == 'meliscmsnews_content_tabs_medias' || $menuConfig['conf']['melisKey'] == 'meliscmsnews_content_tabs_comments')){
-        	                $li = '';
-        	            }
         	            echo $li;
             	    }
             	}
@@ -34,8 +39,8 @@
 </div>
 <div class="tab-content innerAll spacing-x2">
 	<?php 
-    	if(!empty($this->zoneconfig['interface'])) {    	    
-    	    foreach($this->zoneconfig['interface'] as $keyConfig => $menuConfig) {    	        
+    	if(!empty($zoneConfigInterface)) {
+    	    foreach($zoneConfigInterface as $keyConfig => $menuConfig) {
 	           echo $this->$keyConfig.' ';    	        
     	    }    	    
     	}
