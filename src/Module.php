@@ -75,7 +75,10 @@ class Module
     	    include __DIR__ . '/../config/plugins/MelisCmsNewsLatestNewsPlugin.config.php',
     	    include __DIR__ . '/../config/plugins/MelisCmsNewsListNewsPlugin.config.php',
     	    include __DIR__ . '/../config/plugins/MelisCmsNewsShowNewsPlugin.config.php',
-    	    
+
+            // Extending with MelisCmsComments module
+            include __DIR__ . '/../config/comments.config.php',
+            include __DIR__ . '/../config/plugins/dashboard/dashboard.latest.comments.php',
     	);
     	
     	foreach ($configFiles as $file) {

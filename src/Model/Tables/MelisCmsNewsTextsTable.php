@@ -50,5 +50,23 @@ class MelisCmsNewsTextsTable extends MelisGenericTable
         return $this->tableGateway->selectWith($select);
     }
 
+    /**
+     * @param int|null $postId
+     * @return null
+     */
+    public function getPostTitle(int $postId = null)
+    {
+        if (empty($postId)) {
+            return null;
+        } else {
+            $select = $this->tableGateway->getSql()->select();
+            $select->where->equalTo('cnews_id', $postId);
+            $select->where('cnews_title !=""');
+            $select->limit(1);
 
+            $resultData = $this->tableGateway->selectWith($select);
+
+            return $resultData;
+        }
+    }
 }
