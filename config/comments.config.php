@@ -50,7 +50,7 @@ return array(
                                                                             'forward' => array(
                                                                                 'module' => 'MelisCmsComments',
                                                                                 'controller' => 'MelisCmsCommentsTab',
-                                                                                'action' => 'comments-validate-comments-news',
+                                                                                'action' => 'comments-validate-comments',
                                                                                 'jscallback' => '',
                                                                                 'jsdatas' => array()
                                                                             ),

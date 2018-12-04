@@ -9,12 +9,12 @@
 
 namespace MelisCmsNews\Controller;
 
+
 use Zend\Mvc\Controller\AbstractActionController;
 use Zend\View\Model\ViewModel;
 use Zend\View\Model\JsonModel;
 use Zend\Validator\File\Size;
 use Zend\Validator\File\IsImage;
-use Zend\Validator\File\Upload;
 use Zend\File\Transfer\Adapter\Http;
 use Zend\Session\Container;
 
@@ -115,11 +115,18 @@ class MelisCmsNewsController extends AbstractActionController
      */
     public function renderNewsPageContentAction()
     {
+        /**
+         * Removing "Validate Comments" field from the interface when MelisCmsComments DISABLED
+         */
+        $commentsModuleIsDisabled = !in_array('MelisCmsComments', $this->getServiceLocator()->get('MelisAssetManagerModulesService')->getActiveModules());
+
         $view = new ViewModel();
         $melisKey = $this->params()->fromRoute('melisKey', '');
         $newsId = (int) $this->params()->fromQuery('newsId', '');
         $view->melisKey = $melisKey;
         $view->newsId = $newsId;
+        $view->commentsModuleIsDisabled = $commentsModuleIsDisabled;
+
         return $view;
     }
     
@@ -235,11 +242,18 @@ class MelisCmsNewsController extends AbstractActionController
      */
     public function renderNewsTabsPropertiesDetailsLeftAction()
     {
+        /**
+         * True when MelisCmsComments module is DISABLED
+         */
+        $commentsModuleIsDisabled = !in_array('MelisCmsComments', $this->getServiceLocator()->get('MelisAssetManagerModulesService')->getActiveModules());
+
         $view = new ViewModel();
         $melisKey = $this->params()->fromRoute('melisKey', '');
         $newsId = (int) $this->params()->fromQuery('newsId', '');
         $view->melisKey = $melisKey;
         $view->newsId = $newsId;
+        $view->commentsModuleIsDisabled = $commentsModuleIsDisabled;
+
         return $view;
     }
     

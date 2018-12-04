@@ -78,7 +78,7 @@ class Module
 
             // Extending with MelisCmsComments module
             include __DIR__ . '/../config/comments.config.php',
-            include __DIR__ . '/../config/plugins/dashboard/dashboard.latest.comments.php',
+//            include __DIR__ . '/../config/plugins/dashboard/dashboard.latest.comments.php',
     	);
     	
     	foreach ($configFiles as $file) {
