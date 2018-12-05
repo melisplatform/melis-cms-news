@@ -6,7 +6,7 @@
 return [
     'plugins' => [
         'meliscmscomments' => [
-            'dashboard_plugins' => [
+            'dashboard-plugins' => [
                 'LatestCommentsPlugin' => [
                     'PostTypes' => [
                         'news' => [
