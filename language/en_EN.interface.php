@@ -138,8 +138,10 @@
         'tr_meliscmsnews_plugin_select_news_by_default tooltip'  => 'In case a person would access directly to the news detail page, this news would be displayed. If no news is selected, then the last news of this site is displayed.',
         'tr_meliscmsnews_plugin_pagination'             => 'Pagination',
         'tr_meliscmsnews_plugin_pagination_current'     => 'Current page',
-        'tr_meliscmsnews_plugin_pagination_nbPerPage'   => 'Number per page',
-        'tr_meliscmsnews_plugin_pagination_nbPageBeforeAfter' => 'No. of pagination link before & after',
+        'tr_meliscmsnews_plugin_pagination_nbPerPage'   => 'News per page',
+        'tr_meliscmsnews_plugin_pagination_nbPerPage tooltip'   => 'Number of news to be displayed',
+        'tr_meliscmsnews_plugin_pagination_nbPageBeforeAfter' => 'Pagination',
+        'tr_meliscmsnews_plugin_pagination_nbPageBeforeAfter tooltip' => 'No. of pagination link before & after',
         'tr_meliscmsnews_plugin_news_id_empty'          => 'Please select a news to display',
         'tr_meliscmsnews_plugin_invalid_dates'          => 'The end date must be ulterior to the start date',
 	    
