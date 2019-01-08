@@ -9,12 +9,12 @@
 
 namespace MelisCmsNews\Controller;
 
+
 use Zend\Mvc\Controller\AbstractActionController;
 use Zend\View\Model\ViewModel;
 use Zend\View\Model\JsonModel;
 use Zend\Validator\File\Size;
 use Zend\Validator\File\IsImage;
-use Zend\Validator\File\Upload;
 use Zend\File\Transfer\Adapter\Http;
 use Zend\Session\Container;
 
@@ -102,11 +102,7 @@ class MelisCmsNewsController extends AbstractActionController
         $melisKey = $this->params()->fromRoute('melisKey', '');
         $newsId = (int) $this->params()->fromQuery('newsId', '');
         $newsName = '';
-        
-        // if(!empty($this->layout()->news)){
-        //     $newsName = ' - '.$this->layout()->news->cnews_title;
-        // }
-        
+
         $view->newsName = $newsName;
         $view->melisKey = $melisKey;
         $view->newsId = $newsId;
@@ -119,11 +115,18 @@ class MelisCmsNewsController extends AbstractActionController
      */
     public function renderNewsPageContentAction()
     {
+        /**
+         * Removing "Validate Comments" field from the interface when MelisCmsComments DISABLED
+         */
+        $commentsModuleIsDisabled = !in_array('MelisCmsComments', $this->getServiceLocator()->get('MelisAssetManagerModulesService')->getActiveModules());
+
         $view = new ViewModel();
         $melisKey = $this->params()->fromRoute('melisKey', '');
         $newsId = (int) $this->params()->fromQuery('newsId', '');
         $view->melisKey = $melisKey;
         $view->newsId = $newsId;
+        $view->commentsModuleIsDisabled = $commentsModuleIsDisabled;
+
         return $view;
     }
     
@@ -239,11 +242,18 @@ class MelisCmsNewsController extends AbstractActionController
      */
     public function renderNewsTabsPropertiesDetailsLeftAction()
     {
+        /**
+         * True when MelisCmsComments module is DISABLED
+         */
+        $commentsModuleIsDisabled = !in_array('MelisCmsComments', $this->getServiceLocator()->get('MelisAssetManagerModulesService')->getActiveModules());
+
         $view = new ViewModel();
         $melisKey = $this->params()->fromRoute('melisKey', '');
         $newsId = (int) $this->params()->fromQuery('newsId', '');
         $view->melisKey = $melisKey;
         $view->newsId = $newsId;
+        $view->commentsModuleIsDisabled = $commentsModuleIsDisabled;
+
         return $view;
     }
     
@@ -408,13 +418,6 @@ class MelisCmsNewsController extends AbstractActionController
     {
         $newsId = (int) $this->params()->fromQuery('newsId', '');
         $melisCoreConfig = $this->serviceLocator->get('MelisCoreConfig');
-
-        $form = $this->getFormData($melisCoreConfig, 'MelisCmsNews/forms/meliscmsnews_paragraph_form','meliscmsnews_paragraph_form');
-
-        // paragraph config in interface
-        $parConf = $melisCoreConfig->getItem('meliscmsnews/conf/paragraphs_conf/');
-        $limit = $parConf['max'];
-        $name = $parConf['name'];
         $forms = array();
 
         $formsTitleSubtitle = $this->getFormData($melisCoreConfig, 'MelisCmsNews/forms/meliscmsnews_site_title_subtitle_form','meliscmsnews_site_title_subtitle_form');
@@ -423,7 +426,7 @@ class MelisCmsNewsController extends AbstractActionController
         $data  = ($newsId) ? (array)$newsTextsTable->getNewsDataByCnd(['cnews_id' => $newsId])->toArray() : '';
         $lang_id = $this->getLangId();
         $melisEngineLangTable = $this->getServiceLocator()->get('MelisEngineTableCmsLang');
-        $melisEngineLang = $melisEngineLangTable->fetchAll();//langOrderByName(); dunno why victor used langOrderByName despite the method does not exists. maybe he ran out of time? i dunno
+        $melisEngineLang = $melisEngineLangTable->fetchAll();
         $languages = $melisEngineLang->toArray();
 
         $view = new ViewModel();
@@ -446,7 +449,6 @@ class MelisCmsNewsController extends AbstractActionController
      */
     private function getLangId() 
     {
-        $locale = 'en_EN';
         $container = new Container('meliscore');
         $currentLang = '';
 
@@ -476,7 +478,6 @@ class MelisCmsNewsController extends AbstractActionController
         $logTypeCode = '';
         
         $newsSvc = $this->getServiceLocator()->get('MelisCmsNewsService');
-        $melisCoreConfig = $this->serviceLocator->get('MelisCoreConfig');
         $tool = $this->getServiceLocator()->get('MelisCoreTool');
         
         if ($this->getRequest()->isPost()) {
@@ -493,11 +494,6 @@ class MelisCmsNewsController extends AbstractActionController
             
             $melisCoreConfig = $this->serviceLocator->get('MelisCoreConfig');
             $form = $this->getFormData($melisCoreConfig, 'MelisCmsNews/forms/meliscmsnews_properties_form','meliscmsnews_properties_form');
-            $formsTitleSubtitle = $this->getFormData($melisCoreConfig, 'MelisCmsNews/forms/meliscmsnews_site_title_subtitle_form','meliscmsnews_site_title_subtitle_form');   
-          
-            $parConf = $melisCoreConfig->getItem('meliscmsnews/conf/paragraphs_conf/');
-            $limit = $parConf['max'];
-            $name = $parConf['name'];
             
             if (!empty($postValues['cnews_publish_date']) && !empty($postValues['cnews_unpublish_date'])) {
                 // convert date to generic for date comparison
@@ -540,6 +536,7 @@ class MelisCmsNewsController extends AbstractActionController
             for ($i = 0; $i < (int)$postValues['formCount']; $i++) {
                 if (!empty($postValues['cnews_title'][$i])) {
                     $titleExist = true;
+                    break;
                 }
             }
             $titleErr = '';
@@ -565,8 +562,6 @@ class MelisCmsNewsController extends AbstractActionController
                 
                 if ($data['cnews_id']) {
                     for ($i = 0; $i < (int)$postValues['formCount']; $i++) {
-                        $formsTitleSubtitle->setData($postValues);
-                       
                         if ($postValues['cnews_lang_id'][$i] == $lang_id) {
                             $data['cnews_title'] = $postValues['cnews_title'][$i];
                         }
@@ -961,8 +956,7 @@ class MelisCmsNewsController extends AbstractActionController
         if(!emptY($uploadedFile['name'])){
             //format name
             $fileName = $uploadedFile['name'];
-            $formattedFileName = $this->getFormattedFileName($fileName);
-            
+
             //create folder based on news id
             if($this->createFolder($postValues['cnews_id'])) {
                 $adapter = new Http();
@@ -1042,7 +1036,6 @@ class MelisCmsNewsController extends AbstractActionController
     {
         $newsTable = $this->getServiceLocator()->get('MelisCmsNewsTable');
         $docData = $newsTable->checkForDuplicates(pathinfo($filePath, PATHINFO_DIRNAME).'/'.pathinfo($filePath, PATHINFO_FILENAME));
-//         echo count($docData);die();
         $totalFile = count($docData) ? '_' .count($docData) : null;
         $fileDir = pathinfo($filePath, PATHINFO_DIRNAME);
         $fileName = pathinfo($filePath, PATHINFO_FILENAME) . $totalFile;
@@ -1078,18 +1071,15 @@ class MelisCmsNewsController extends AbstractActionController
             'newsId' => $newsId,
         ), $layoutVar));
     }
-    
+
     /**
      * Returns the Tool Service Class
-     * @return MelisCoreTool
+     * @return array|object
      */
     private function getTool()
     {
         $melisTool = $this->getServiceLocator()->get('MelisCoreTool');
-//         $melisTool->setMelisToolKey('meliscmsnews', 'meliscmsnews');
     
         return $melisTool;
-    
     }
-
 }

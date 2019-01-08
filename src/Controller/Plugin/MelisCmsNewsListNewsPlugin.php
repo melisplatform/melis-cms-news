@@ -120,6 +120,7 @@ class MelisCmsNewsListNewsPlugin extends MelisTemplatingPlugin
         }
 
         // Retrieving News list using MelisCmsNewsService
+        /** @var \MelisCmsNews\Model\Tables\MelisCmsNewsTable $newsSrv */
         $newsSrv = $this->getServiceLocator()->get('MelisCmsNewsService');
         $newsList = $newsSrv->getNewsList($status, $langId, null, null, $dateMin, $dateMax, $unpublishFilter, null, null, $orderColumn, $order, $siteId ,$search);
 

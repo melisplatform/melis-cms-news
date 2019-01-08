@@ -139,8 +139,10 @@
         'tr_meliscmsnews_plugin_select_news_by_default tooltip'  => 'Dans le cas où une personne accèderait directement à la page détail actualité, cette actualité s&#39;afficherait. Si aucune actualité n&#39;est sélectionnée, alors la dernière actualité de ce site s&#39;affiche.',
         'tr_meliscmsnews_plugin_pagination'             => 'Pagination',
         'tr_meliscmsnews_plugin_pagination_current'     => 'Page courante',
-        'tr_meliscmsnews_plugin_pagination_nbPerPage'   => 'Résultats par page',
-        'tr_meliscmsnews_plugin_pagination_nbPageBeforeAfter' => 'Nombre de lien avant et après la page courante',
+        'tr_meliscmsnews_plugin_pagination_nbPerPage'   => 'Actualités par page',
+        'tr_meliscmsnews_plugin_pagination_nbPerPage tooltip'   => 'Résultats par page',
+        'tr_meliscmsnews_plugin_pagination_nbPageBeforeAfter' => 'Pagination',
+        'tr_meliscmsnews_plugin_pagination_nbPageBeforeAfter tooltip' => 'Nombre de lien avant et après la page courante',
         'tr_meliscmsnews_plugin_news_id_empty'          => 'Sélectionner une actualité à afficher',
 	    'tr_meliscmsnews_plugin_invalid_dates'          => 'La date de fin doit être ultérieure à la date de début',
 	    

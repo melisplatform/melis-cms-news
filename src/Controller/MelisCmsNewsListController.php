@@ -155,7 +155,10 @@ class MelisCmsNewsListController extends AbstractActionController
      */
     public function renderNewsListContentActionInfoAction()
     {
-        return new ViewModel();
+        $view = new ViewModel();
+        $view->title = $this->getTool()->getTranslation('tr_meliscms_common_edit');
+
+        return $view;
     }
     
     /**
@@ -173,7 +176,10 @@ class MelisCmsNewsListController extends AbstractActionController
      */
     public function renderNewsListContentActionDeleteAction()
     {
-        return new ViewModel();
+        $view = new ViewModel();
+        $view->title = $this->getTool()->getTranslation('tr_meliscms_common_delete');
+
+        return $view;
     }
     
     /**

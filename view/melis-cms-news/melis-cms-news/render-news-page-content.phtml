@@ -1,17 +1,24 @@
-<?php 
-    $id = '';
-    if (!empty($this->zoneconfig['conf']['id'])){
-        $id .= $this->newsId.'_'.$this->zoneconfig['conf']['id'];
-    }
+<?php
+$id = '';
+if (!empty($this->zoneconfig['conf']['id'])) {
+    $id .= $this->newsId . '_' . $this->zoneconfig['conf']['id'];
+}
 
-    /**
-     * Disabling "Medias" & "Comments" tabs during creation
-     */
-    $zoneConfigInterface = $this->zoneconfig['interface'];
-    if (empty($this->newsId)) {
-        unset($zoneConfigInterface['meliscmsnews_content_tabs_medias']);
-        unset($zoneConfigInterface['meliscmsnews_content_tabs_comments']);
-    }
+/**
+ * Disabling "Medias" & "Comments" tabs during creation
+ */
+$zoneConfigInterface = $this->zoneconfig['interface'];
+if (empty($this->newsId)) {
+    unset($zoneConfigInterface['meliscmsnews_content_tabs_medias']);
+    unset($zoneConfigInterface['meliscmsnews_content_tabs_comments']);
+}
+
+/**
+ * Disabling tabs when Module is disabled
+ */
+if ($this->commentsModuleIsDisabled === true) {
+    unset($zoneConfigInterface['meliscmsnews_content_tabs_comments']);
+}
 ?>
 <div id="<?= $id ?>" data-melisKey="<?= $this->melisKey; ?>" class="widget widget-tabs widget-tabs-double-2 widget-tabs-responsive">
 	<div class="widget-head nav">
