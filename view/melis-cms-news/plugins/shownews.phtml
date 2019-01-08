@@ -4,7 +4,28 @@
         margin-left: 0px;
         padding-left: 0px;
     }
+    .news-details-author-data {
+        margin-top:40px !important;
+    }
+    .news-details-author-data img {
+        width:90px;
+        float:left;
+    }
+    blockquote {
+        position:relative;
+        clear:both;
+        overflow:hidden;
+    }
+    blockquote footer {
+        float:left;
+        margin-top:40px;
+        margin-left:20px;
+
+    }
 </style>
+<?php
+   $this->news = (array) $this->news;
+?>
 <div id="<?= $this->pluginId; ?>">
     <?php if (!empty($this->news)): ?>
         <div class="container">
@@ -33,6 +54,23 @@
                                 }
                             } while ($ctr < 5);
                             ?>
+                            <?php
+                            $userAccountData = $this->news['cnews_author_account'] ?? null ;
+                            if (is_array($userAccountData)) {?>
+                                <?php
+                                ?>
+                                <blockquote>
+                                    <div class="news-details-author-data">
+                                        <p><span>Email :</span> <?=$userAccountData['uac_email'?></p>
+                                        <?php if (! empty($userAccountData['uac_picture'])) {?>
+                                            <img src="data:image/jpge;base64,<?=  base64_encode($userAccountData['uac_picture']) ?>" class="img-circle">
+                                        <?php } else {?>
+                                            <img src="MelisCore/images/profile/default_picture.jpg" alt="">
+                                        <?php }?>
+                                    </div>
+                                    <footer><?= $userAccountData['uac_firstname'] . " " . $userAccountData['uac_lastname'] ?></footer>
+                                </blockquote>
+                            <?php }?>
                         </div>
                     </div>
                 </div>

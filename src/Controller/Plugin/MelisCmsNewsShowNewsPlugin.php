@@ -119,6 +119,20 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
                 }
             }
         }
+        # add user account
+        $activeModules = $this->getServiceLocator()->get('MelisAssetManagerModulesService')->getActiveModules();
+        $userAccountModuleIsLoaded = in_array('MelisCmsUserAccount', $activeModules);
+        if ($userAccountModuleIsLoaded) {
+            //get Author data
+            $authorId = $newsData->cnews_author_account ?? null;
+            $userSiteService = $this->getServiceLocator()->get('FrontUserAccountService');
+            $authorInfo = $userSiteService->getUserById($authorId);
+            if (!empty($authorInfo)) {
+                # remove password
+                unset($authorInfo['uac_password']);
+                $newsData->cnews_author_account = $authorInfo;
+            }
+        }
         
         // Create an array with the variables that will be available in the view
         $viewVariables = array(
