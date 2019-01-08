@@ -61,7 +61,7 @@
                                 ?>
                                 <blockquote>
                                     <div class="news-details-author-data">
-                                        <p><span>Email :</span> <?=$userAccountData['uac_email'?></p>
+                                        <p><span>Email :</span> <?=$userAccountData['uac_email']?></p>
                                         <?php if (! empty($userAccountData['uac_picture'])) {?>
                                             <img src="data:image/jpge;base64,<?=  base64_encode($userAccountData['uac_picture']) ?>" class="img-circle">
                                         <?php } else {?>
