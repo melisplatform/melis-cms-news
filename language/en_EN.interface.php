@@ -165,5 +165,6 @@
 	    'tr_meliscmsnews_paragraph3 tooltip' => 'News paragraph 3',
 	    'tr_meliscmsnews_paragraph4 tooltip' => 'News paragraph 4',
 
+        // Extending with melis cms comments
+        'tr_meliscms_news_comments_tab_title' => 'News comments',
 	);
-?>

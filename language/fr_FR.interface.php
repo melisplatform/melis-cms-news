@@ -165,5 +165,7 @@
 	    'tr_meliscmsnews_paragraph2 tooltip' => 'Actualité paragraphe 2',
 	    'tr_meliscmsnews_paragraph3 tooltip' => 'Actualité paragraphe 3',
 	    'tr_meliscmsnews_paragraph4 tooltip' => 'Actualité paragraphe 4',
+
+        // Extending with melis cms comments
+        'tr_meliscms_news_comments_tab_title' => 'Commentaires Actualités',
 	);
-?>
