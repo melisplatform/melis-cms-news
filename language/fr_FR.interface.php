@@ -168,4 +168,5 @@
 
         // Extending with melis cms comments
         'tr_meliscms_news_comments_tab_title' => 'Commentaires Actualités',
+        'tr_meliscms_news_comments_tab_icon_title' => 'Actualités',
 	);
