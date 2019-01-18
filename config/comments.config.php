@@ -46,6 +46,7 @@ return array(
                                                                                 'id'   => 'id_meliscms_comments_validate_comments',
                                                                                 'name' => 'tr_meliscms_comments_validate_comments',
                                                                                 'melisKey' => 'meliscms_comments_validate_comments',
+                                                                                'postType' => 'news',
                                                                             ),
                                                                             'forward' => array(
                                                                                 'module' => 'MelisCmsComments',
