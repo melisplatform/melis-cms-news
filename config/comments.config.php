@@ -91,6 +91,7 @@ return array(
                                                         'meliscmscomments_add_comment' => array(
                                                             'conf' => array(
                                                                 'id' => 'id_meliscmscomments_add_comment',
+                                                                'postType' => 'news',
                                                                 'melisKey' => 'meliscmscomments_add_comment',
                                                                 'name' => 'tr_meliscmscomments_add_comment',
                                                             ),
