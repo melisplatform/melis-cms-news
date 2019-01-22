@@ -31,7 +31,7 @@ return array(
                 ),
             ),
         ),
-        'meliscore_dashboard' => array(),
+//        'meliscore_dashboard' => array(),
         'meliscmsnews' => array(
             'conf' => array(
                 'id' => '',
