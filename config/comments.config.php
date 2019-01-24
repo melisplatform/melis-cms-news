@@ -64,6 +64,8 @@ return [
                                                 ],
                                             ],
                                         ],
+                                        'meliscmsnews_content_tabs_medias' => [],   // To preserve tab order
+                                        'meliscmsnews_content_tabs_texts' => [],    // To preserve tab order
                                         'meliscmsnews_content_tabs_comments' => [
                                             'conf' => [
                                                 'id' => 'id_meliscmsnews_content_tabs_comments',

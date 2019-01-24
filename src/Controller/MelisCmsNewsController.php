@@ -132,17 +132,11 @@ class MelisCmsNewsController extends AbstractActionController
      */
     public function renderNewsPageContentAction()
     {
-        /**
-         * Removing "Validate Comments" field from the interface when MelisCmsComments DISABLED
-         */
-        $commentsModuleIsDisabled = !in_array('MelisCmsComments', $this->getServiceLocator()->get('MelisAssetManagerModulesService')->getActiveModules());
-
         $view = new ViewModel();
         $melisKey = $this->params()->fromRoute('melisKey', '');
-        $newsId = (int)$this->params()->fromQuery('newsId', '');
+        $newsId = (int)$this->params()->fromQuery('newsId', 0);
         $view->melisKey = $melisKey;
         $view->newsId = $newsId;
-        $view->commentsModuleIsDisabled = $commentsModuleIsDisabled;
 
         return $view;
     }
@@ -437,7 +431,18 @@ class MelisCmsNewsController extends AbstractActionController
         $melisCoreConfig = $this->serviceLocator->get('MelisCoreConfig');
         $forms = array();
 
-        $formsTitleSubtitle = $this->getFormData($melisCoreConfig, 'MelisCmsNews/forms/meliscmsnews_site_title_subtitle_form', 'meliscmsnews_site_title_subtitle_form');
+        //$formsTitleSubtitle = $this->getFormData($melisCoreConfig, 'MelisCmsNews/forms/meliscmsnews_site_title_subtitle_form', 'meliscmsnews_site_title_subtitle_form');
+        /**
+         * Overriding the Title element's label: Added asterisk to emphasize as mandatory field
+         */
+        $titleFormConfig = $melisCoreConfig->getFormMergedAndOrdered('MelisCmsNews/forms/meliscmsnews_site_title_subtitle_form', 'meliscmsnews_site_title_subtitle_form');
+        $titleLabel = $titleFormConfig['elements'][0]['spec']['options']['label'];
+        $titleFormConfig['elements'][0]['spec']['options']['label'] = $titleLabel . ' *';
+        $factory = new \Zend\Form\Factory();
+        $formElements = $this->serviceLocator->get('FormElementManager');
+        $factory->setFormElementManager($formElements);
+        $formsTitleSubtitle = $factory->createForm($titleFormConfig);
+
         $newsTextsTable = $this->getServiceLocator()->get('MelisCmsNewsTextsTable');
 
         $data = ($newsId) ? (array)$newsTextsTable->getNewsDataByCnd(['cnews_id' => $newsId])->toArray() : '';
@@ -491,6 +496,10 @@ class MelisCmsNewsController extends AbstractActionController
         return !empty($currentLang) ? $currentLang->lang_cms_id : 1;
     }
 
+    /**
+     * Saving news details
+     * @return JsonModel
+     */
     public function saveNewsLetterAction()
     {
         $this->getEventManager()->trigger('meliscmsnews_save_news_letter_start', $this, []);
@@ -504,6 +513,7 @@ class MelisCmsNewsController extends AbstractActionController
         $textMessage = 'tr_meliscmsnews_save_fail';
         $textTitle = 'tr_meliscmsnews_list_header_title';
         $logTypeCode = '';
+        $postValues = [];
         /** @var \MelisCmsNews\Service\MelisCmsNewsService $newsSvc */
         $newsSvc = $this->getServiceLocator()->get('MelisCmsNewsService');
         $tool = $this->getServiceLocator()->get('MelisCoreTool');
@@ -529,10 +539,10 @@ class MelisCmsNewsController extends AbstractActionController
                 $unpubDate = $tool->localeDateToSql($postValues['cnews_unpublish_date'], '', 'en_EN');
 
                 if (strtotime($pubDate) > strtotime($unpubDate)) {
-                    $dateErrors['cnews_unpublish_date'] = array(
+                    $dateErrors['cnews_unpublish_date'] = [
                         'isGreaterThan' => $this->getTool()->getTranslation('tr_meliscmsnews_form_unpublish_error'),
                         'label' => $this->getTool()->getTranslation('tr_meliscmsnews_form_unpublish'),
-                    );
+                    ];
                 }
             }
 
@@ -548,10 +558,10 @@ class MelisCmsNewsController extends AbstractActionController
 
                 if (!empty($postValues['cnews_publish_date']) && !empty($postValues['cnews_unpublish_date'])) {
                     if (strtotime($pubDate) > strtotime($unpubDate)) {
-                        $dateErrors['cnews_unpublish_date'] = array(
+                        $dateErrors['cnews_unpublish_date'] = [
                             'isGreaterThan' => $this->getTool()->getTranslation('tr_meliscmsnews_form_unpublish_error_date_today'),
                             'label' => $this->getTool()->getTranslation('tr_meliscmsnews_form_unpublish'),
-                        );
+                        ];
                     }
                 }
             }
@@ -638,36 +648,47 @@ class MelisCmsNewsController extends AbstractActionController
                 }
 
             } else {
-                $errors = $form->getMessages();
-                $appConfigForm = $melisCoreConfig->getFormMergedAndOrdered('MelisCmsNews/forms/meliscmsnews_properties_form', 'meliscmsnews_properties_form');
-                foreach ($errors as $keyError => $valueError) {
-                    foreach ($appConfigForm['elements'] as $keyForm => $valueForm) {
-                        if ($valueForm['spec']['name'] == $keyError && !empty($valueForm['spec']['options']['label'])) {
-                            $errors[$keyError]['label'] = $valueForm['spec']['options']['label'];
-                        }
-                    }
+                $formErrors = $form->getMessages();
+                foreach ($formErrors as $fieldName => $fieldErrors) {
+                    $errors[$fieldName] = $fieldErrors;
+                    $errors[$fieldName]['label'] = $form->get($fieldName)->getLabel();
                 }
-                $errors[$this->getTool()->getTranslation('tr_meliscmsnews_plugin_filter_order_column_title')]['tr_meliscmsnews_list_col_title'] = $titleErr;
+
+                if (!$titleExist) {
+                    $errors[$this->getTool()->getTranslation('tr_meliscmsnews_plugin_filter_order_column_title')]['tr_meliscmsnews_list_col_title'] = $titleErr;
+                }
+
                 $errors = array_merge($errors, $dateErrors);
+                /** START: OLD LOGIC */
+//                $errors = $form->getMessages();
+//                $appConfigForm = $melisCoreConfig->getFormMergedAndOrdered('MelisCmsNews/forms/meliscmsnews_properties_form', 'meliscmsnews_properties_form');
+//                foreach ($errors as $keyError => $valueError) {
+//                    foreach ($appConfigForm['elements'] as $keyForm => $valueForm) {
+//                        if ($valueForm['spec']['name'] == $keyError && !empty($valueForm['spec']['options']['label'])) {
+//                            $errors[$keyError]['label'] = $valueForm['spec']['options']['label'];
+//                        }
+//                    }
+//                }
+//                $errors[$this->getTool()->getTranslation('tr_meliscmsnews_plugin_filter_order_column_title')]['tr_meliscmsnews_list_col_title'] = $titleErr;
+//                $errors = array_merge($errors, $dateErrors);
+                /** END: OLD LOGIC */
             }
         }
 
-
-        $response = array(
+        $response = [
             'success' => $success,
             'textTitle' => $textTitle,
             'textMessage' => $textMessage,
             'errors' => $errors,
             'chunk' => $data,
-        );
+        ];
 
         $this->getEventManager()->trigger('meliscmsnews_get_postvalues', $this, $postValues);
 
         $this->getEventManager()->trigger('meliscmsnews_save_news_letter_end',
-            $this, array_merge($response, array('typeCode' => $logTypeCode, 'itemId' => $id)));
+            $this, array_merge($response, ['typeCode' => $logTypeCode, 'itemId' => $id]));
 
         return new JsonModel($response);
-
     }
 
     /**
