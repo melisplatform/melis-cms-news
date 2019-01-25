@@ -171,7 +171,7 @@ $(document).ready(function () {
                     toolNews.refreshTable();
                 } else {
                     melisHelper.melisKoNotification(data.textTitle, data.textMessage, data.errors);
-                    melisCoreTool.highlightErrors(data.success, data.errors, data.chunk.cblog_id + "_id_meliscmsnews_page form");
+                    melisCoreTool.highlightErrors(data.success, data.errors, data.chunk.cnews_id + "_id_meliscmsnews_page form");
 
                     if (data.errors.hasOwnProperty('cnews_title')) {
                         /**
