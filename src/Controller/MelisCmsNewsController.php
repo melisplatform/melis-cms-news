@@ -504,11 +504,9 @@ class MelisCmsNewsController extends AbstractActionController
     {
         $this->getEventManager()->trigger('meliscmsnews_save_news_letter_start', $this, []);
         $melisTool = $this->getServiceLocator()->get('MelisCoreTool');
-        $response = [];
         $id = null;
         $success = 0;
         $errors = [];
-        $dateErrors = [];
         $data = [];
         $textMessage = 'tr_meliscmsnews_save_fail';
         $textTitle = 'tr_meliscmsnews_list_header_title';
@@ -539,7 +537,7 @@ class MelisCmsNewsController extends AbstractActionController
                 $unpubDate = $tool->localeDateToSql($postValues['cnews_unpublish_date'], '', 'en_EN');
 
                 if (strtotime($pubDate) > strtotime($unpubDate)) {
-                    $dateErrors['cnews_unpublish_date'] = [
+                    $errors['cnews_unpublish_date'] = [
                         'isGreaterThan' => $this->getTool()->getTranslation('tr_meliscmsnews_form_unpublish_error'),
                         'label' => $this->getTool()->getTranslation('tr_meliscmsnews_form_unpublish'),
                     ];
@@ -558,7 +556,7 @@ class MelisCmsNewsController extends AbstractActionController
 
                 if (!empty($postValues['cnews_publish_date']) && !empty($postValues['cnews_unpublish_date'])) {
                     if (strtotime($pubDate) > strtotime($unpubDate)) {
-                        $dateErrors['cnews_unpublish_date'] = [
+                        $errors['cnews_unpublish_date'] = [
                             'isGreaterThan' => $this->getTool()->getTranslation('tr_meliscmsnews_form_unpublish_error_date_today'),
                             'label' => $this->getTool()->getTranslation('tr_meliscmsnews_form_unpublish'),
                         ];
@@ -582,7 +580,7 @@ class MelisCmsNewsController extends AbstractActionController
                 $titleErr = $this->getTool()->getTranslation('tr_meliscmsnews_form_error_empty');
             }
 
-            if ($form->isValid() && $titleExist) {
+            if (empty($errors) && $titleExist && $form->isValid()) {
                 $newsTbl = $form->getData();
 
                 $cnews_id = $newsTbl['cnews_id'];
@@ -660,8 +658,6 @@ class MelisCmsNewsController extends AbstractActionController
                         'label' => $this->getTool()->getTranslation('tr_meliscmsnews_plugin_filter_order_column_title')
                     ];
                 }
-
-                $errors = array_merge($errors, $dateErrors);
             }
         }
 
