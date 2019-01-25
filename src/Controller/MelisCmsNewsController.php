@@ -567,7 +567,7 @@ class MelisCmsNewsController extends AbstractActionController
             }
 
             $form->setData($postValues);
-            $data['cnews_id'] = '';
+            $data['cnews_id'] = 0;
 
             // check if any title exists
             $titleExist = false;
@@ -655,23 +655,13 @@ class MelisCmsNewsController extends AbstractActionController
                 }
 
                 if (!$titleExist) {
-                    $errors[$this->getTool()->getTranslation('tr_meliscmsnews_plugin_filter_order_column_title')]['tr_meliscmsnews_list_col_title'] = $titleErr;
+                    $errors['cnews_title'] = [
+                        'isEmpty' => $titleErr,
+                        'label' => $this->getTool()->getTranslation('tr_meliscmsnews_plugin_filter_order_column_title')
+                    ];
                 }
 
                 $errors = array_merge($errors, $dateErrors);
-                /** START: OLD LOGIC */
-//                $errors = $form->getMessages();
-//                $appConfigForm = $melisCoreConfig->getFormMergedAndOrdered('MelisCmsNews/forms/meliscmsnews_properties_form', 'meliscmsnews_properties_form');
-//                foreach ($errors as $keyError => $valueError) {
-//                    foreach ($appConfigForm['elements'] as $keyForm => $valueForm) {
-//                        if ($valueForm['spec']['name'] == $keyError && !empty($valueForm['spec']['options']['label'])) {
-//                            $errors[$keyError]['label'] = $valueForm['spec']['options']['label'];
-//                        }
-//                    }
-//                }
-//                $errors[$this->getTool()->getTranslation('tr_meliscmsnews_plugin_filter_order_column_title')]['tr_meliscmsnews_list_col_title'] = $titleErr;
-//                $errors = array_merge($errors, $dateErrors);
-                /** END: OLD LOGIC */
             }
         }
 
