@@ -754,21 +754,18 @@ class MelisCmsNewsController extends AbstractActionController
 
     public function saveFileFormAction()
     {
-        $this->getEventManager()->trigger('meliscmsnews_save_news_file_start', $this, array());
-        $melisTool = $this->getServiceLocator()->get('MelisCoreTool');
+        $this->getEventManager()->trigger('meliscmsnews_save_news_file_start', $this, []);
         $newsSvc = $this->getServiceLocator()->get('MelisCmsNewsService');
 
         $id = null;
-        $response = array();
         $success = 0;
-        $errors = array();
-        $data = array();
+        $errors = [];
         $textMessage = 'tr_meliscmsnews_save_file_fail';
         $textTitle = 'tr_meliscmsnews_list_header_title';
         $logTypeCode = '';
         $postValues = [];
         if ($this->getRequest()->isPost()) {
-            $postValues = get_object_vars($this->getRequest()->getPost());
+            $postValues = $this->getRequest()->getPost()->toArray();
             $file = $this->attachmentValidator();
 
             if ($file['type'] == 'image') {
@@ -780,7 +777,6 @@ class MelisCmsNewsController extends AbstractActionController
             if (empty($file['errors'])) {
                 $id = $postValues['cnews_id'];
                 $news = $newsSvc->getNewsById($postValues['cnews_id']);
-
 
                 //check for image or file type
                 if ($file['type'] == 'file') {
@@ -796,9 +792,9 @@ class MelisCmsNewsController extends AbstractActionController
                     for ($c = 1; $c <= $limit; $c++) {
                         $tmp = $string . $c;
                         if (empty($news->$tmp)) {
-                            $data = array(
+                            $data = [
                                 $tmp => $file['fileName']
-                            );
+                            ];
                             if ($newsSvc->saveNews($data, $postValues['cnews_id'])) {
                                 $success = 1;
                                 $textMessage = 'tr_meliscmsnews_save_file_success';
@@ -829,22 +825,23 @@ class MelisCmsNewsController extends AbstractActionController
             }
         }
 
-        $response = array(
+        $response = [
             'success' => $success,
             'textTitle' => $textTitle,
             'textMessage' => $textMessage,
             'errors' => $errors,
             'chunk' => $postValues,
-        );
+        ];
 
         $this->getEventManager()->trigger('meliscmsnews_save_news_file_end',
-            $this, array_merge($response, array('typeCode' => $logTypeCode, 'itemId' => $id)));
+            $this, array_merge($response, ['typeCode' => $logTypeCode, 'itemId' => $id]));
 
         return new JsonModel($response);
     }
 
     private function attachmentValidator()
     {
+        $tool = $this->getTool();
         $melisCoreConfig = $this->getServiceLocator()->get('MelisCoreConfig');
         $confUpload = $melisCoreConfig->getItem('meliscmsnews/conf/files');
         $minSize = $confUpload['minUploadSize'];
@@ -856,36 +853,36 @@ class MelisCmsNewsController extends AbstractActionController
         $type = 'file';
 
         //prepare validators
-        $size = new Size(array(
+        $size = new Size([
             'min' => $minSize,
             'max' => $maxSize,
-            'messages' => array(
-                'fileSizeTooBig' => $this->getTool()->getTranslation('tr_meliscmsnews_save_upload_too_big', array($this->formatBytes($maxSize))),
-                'fileSizeTooSmall' => $this->getTool()->getTranslation('tr_meliscmsnews_save_upload_too_small', array($this->formatBytes($minSize))),
-                'fileSizeNotFound' => $this->getTool()->getTranslation('tr_meliscmsnews_save_upload_file_does_not_exists'),
-            ),
-        ));
+            'messages' => [
+                'fileSizeTooBig' => $tool->getTranslation('tr_meliscmsnews_save_upload_too_big', [$this->formatBytes($maxSize)]),
+                'fileSizeTooSmall' => $tool->getTranslation('tr_meliscmsnews_save_upload_too_small', [$this->formatBytes($minSize)]),
+                'fileSizeNotFound' => $tool->getTranslation('tr_meliscmsnews_save_upload_file_does_not_exists'),
+            ],
+        ]);
 
-        $imageValidator = new IsImage(array(
-            'messages' => array(
-                'fileIsImageFalseType' => $this->getTool()->getTranslation('tr_meliscmsnews_save_upload_image_fileIsImageFalseType'),
-                'fileIsImageNotDetected' => $this->getTool()->getTranslation('tr_meliscmsnews_save_upload_image_fileIsImageNotDetected'),
-                'fileIsImageNotReadable' => $this->getTool()->getTranslation('tr_meliscmsnews_save_upload_image_fileIsImageNotReadable'),
-            ),
-        ));
+        $imageValidator = new IsImage([
+            'messages' => [
+                'fileIsImageFalseType' => $tool->getTranslation('tr_meliscmsnews_save_upload_image_fileIsImageFalseType'),
+                'fileIsImageNotDetected' => $tool->getTranslation('tr_meliscmsnews_save_upload_image_fileIsImageNotDetected'),
+                'fileIsImageNotReadable' => $tool->getTranslation('tr_meliscmsnews_save_upload_image_fileIsImageNotReadable'),
+            ],
+        ]);
 
-        $postValues = get_object_vars($this->getRequest()->getPost());
+        $postValues = $this->getRequest()->getPost()->toArray();
         $uploadedFile = $this->getRequest()->getFiles()->toArray()['cnews_document'];
 
         //set validators for file only or image only
         if ($postValues['type'] == 'image') {
             $type = 'image';
-            $validator = array($size, $imageValidator);
+            $validator = [$size, $imageValidator];
         } else {
-            $validator = array($size);
+            $validator = [$size];
         }
 
-        if (!emptY($uploadedFile['name'])) {
+        if (!empty($uploadedFile['name'])) {
             //format name
             $fileName = $uploadedFile['name'];
 
@@ -896,15 +893,27 @@ class MelisCmsNewsController extends AbstractActionController
                 // do saving
                 $adapter->setValidators($validator, $fileName);
 
-                if ($adapter->isValid()) {
+                /** Ensuring file is an image is  */
+                if ($type === 'image' && !empty($uploadedFile['tmp_name'])) {
+                    $sourceImg = @imagecreatefromstring(@file_get_contents($uploadedFile['tmp_name']));
+                    if ($sourceImg === false) {
+                        return [
+                            'upload' => false,
+                            'type' => $type,
+                            'fileName' => '',
+                            'errors' => 'tr_meliscmsnews_save_upload_image_fileIsImageFalseType'
+                        ];
+                    }
+                }
 
+                if ($adapter->isValid()) {
                     $adapter->setDestination('public' . $conPath . $postValues['cnews_id'] . '/');
                     $newFileName = $this->renameIfDuplicateFile($conPath . $postValues['cnews_id'] . '/' . $fileName);
                     $savedDocFileName = 'public' . $newFileName;
-                    $adapter->addFilter('File\Rename', array(
+                    $adapter->addFilter('File\Rename', [
                         'target' => $savedDocFileName,
                         'overwrite' => true,
-                    ));
+                    ]);
 
                     // if uploaded successfully
                     if ($adapter->receive()) {
@@ -918,18 +927,19 @@ class MelisCmsNewsController extends AbstractActionController
                     }
                 }
             } else {
-                $textMessage = $this->getTool()->getTranslation('tr_meliscmsnews_save_upload_file_path_rights_error');
+                $textMessage = $tool->getTranslation('tr_meliscmsnews_save_upload_file_path_rights_error');
             }
         } else {
-            $textMessage = $this->getTool()->getTranslation('tr_meliscmsnews_save_upload_empty_file');
+            $textMessage = $tool->getTranslation('tr_meliscmsnews_save_upload_empty_file');
         }
 
-        $file = array(
+        $file = [
             'upload' => $upload,
             'type' => $type,
             'fileName' => $newFileName,
             'errors' => $textMessage,
-        );
+        ];
+
         return $file;
     }
 

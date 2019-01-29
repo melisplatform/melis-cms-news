@@ -183,3 +183,7 @@
 		display: inline-block;
 	}
 }
+
+img.imgDocThumbnail {
+	min-height: 20px;
+}

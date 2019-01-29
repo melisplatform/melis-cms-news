@@ -256,7 +256,6 @@ $(document).ready(function () {
         melisCoreTool.pending(saveBtn);
 
         var ajaxUrl = '/melis/MelisCmsNews/MelisCmsNews/saveFileForm';
-        var newsId = $('form#newsFileForm input[name=cnews_id]').val();
         var tmpForm = $('#newsFileForm').get(0);
         var sliderData = new FormData(tmpForm);
 
