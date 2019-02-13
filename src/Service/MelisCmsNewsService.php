@@ -95,6 +95,7 @@ class MelisCmsNewsService extends MelisCoreGeneralService
         $arrayParameters = $this->sendEvent('melis_cms_news_get_news_by_id_start', $arrayParameters);
 
         // Service implementation start
+        /** @var \MelisCmsNews\Model\Tables\MelisCmsNewsTable $newsTable */
         $newsTable = $this->getServiceLocator()->get('MelisCmsNewsTable');
 
         foreach ($newsTable->getNews($arrayParameters['newsId'], $arrayParameters['langId']) as $news) {

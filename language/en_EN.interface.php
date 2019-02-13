@@ -34,7 +34,8 @@
 	    'tr_meliscmsnews_save_file_fail' => 'Failed to save file',	    
 	    'tr_meliscmsnews_save_file_success' => 'File has been successfully saved',
 	    'tr_meliscmsnews_remove_file_fail' => 'Failed to remove file',
-	    
+	    'tr_meliscmsnews_empty_site' => 'Please select a site',
+
 	    'tr_meliscmsnews_remove_file_success' => 'The file has been successfully removed',
 	    'tr_meliscmsnews_save_upload_too_big' => 'Uploaded file too big, maximum size is %s',
 	    'tr_meliscmsnews_save_upload_too_small' => 'Uploaded file too small, minimum size is %s',

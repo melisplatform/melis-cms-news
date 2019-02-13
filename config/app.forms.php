@@ -137,8 +137,17 @@ return [
                     'input_filter' => [
                         'cnews_site_id' => [
                             'name' => 'cnews_site_id',
-                            'required' => false,
-                            'validators' => [],
+                            'required' => true,
+                            'validators' => [
+                                [
+                                    'name' => 'NotEmpty',
+                                    'options' => [
+                                        'messages' => [
+                                            \Zend\Validator\NotEmpty::IS_EMPTY => 'tr_meliscmsnews_empty_site',
+                                        ],
+                                    ],
+                                ],
+                            ],
                             'filters' => [],
                         ],
                     ],
