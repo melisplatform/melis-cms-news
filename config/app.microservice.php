@@ -1,503 +1,503 @@
 <?php 
 
-return array(
-	'plugins' => array(
-		'microservice' => array(
+return [
+	'plugins' => [
+		'microservice' => [
 			//Module Name
-			'MelisCmsNews' => array( 
+			'MelisCmsNews' => [ 
 
 				/**
 				 * This service retrieves  a list of news
 				 * MelisCmsNewsService.php
 				 */
-				'MelisCmsNewsService' => array(
+				'MelisCmsNewsService' => [
 
-					'getNewsList' => array(
-						'attributes' => array(
+					'getNewsList' => [
+						'attributes' => [
 							'name' => 'microservice_form',
 							'id'   => 'microservice_form',
 							'method' => 'POST',
 							'action' => $_SERVER['REQUEST_URI']
-						),
+						],
 						'hydrator' => '\Zend\Stdlib\Hydrator\ArraySerializable',
-						'elements' => array(
-							array(
-								'spec' => array(
+						'elements' => [
+							[
+								'spec' => [
 									'name' => 'status',
 									'type' => 'Text',
-									'options' => array(
+									'options' => [
 										'label' => 'status',
-									),
-									'attributes' => array(
+									],
+									'attributes' => [
 										'id' => 'status',
 										'value' => '',
 										'class' => '',
 										'placeholder' => '1',
 										'data-type' => 'bool'
-									),
-								),
-							),
-                            array(
-                                'spec' => array(
+									],
+								],
+							],
+                            [
+                                'spec' => [
                                     'name' => 'langId',
                                     'type' => 'Text',
-                                    'options' => array(
+                                    'options' => [
                                         'label' => 'langId',
-                                    ),
-                                    'attributes' => array(
+                                    ],
+                                    'attributes' => [
                                         'id' => 'langId',
                                         'value' => '',
                                         'class' => '',
                                         'placeholder' => '1',
                                         'data-type' => 'int'
-                                    ),
-                                ),
-                            ),
-							array(
-								'spec' => array(
+                                    ],
+                                ],
+                            ],
+							[
+								'spec' => [
 									'name' => 'dateMin',
 									'type' => 'Text',
-									'options' => array(
+									'options' => [
 										'label' => 'dateMin',
-									),
-									'attributes' => array(
+									],
+									'attributes' => [
 										'id' => 'dateMin',
 										'value' => '',
 										'class' => '',
 										'placeholder' => '2017-04-18',
 										'data-type' => 'date'
-									),
-								),
-							),
-							array(
-								'spec' => array(
+									],
+								],
+							],
+							[
+								'spec' => [
 									'name' => 'dateMax',
 									'type' => 'Text',
-									'options' => array(
+									'options' => [
 										'label' => 'dateMax',
-									),
-									'attributes' => array(
+									],
+									'attributes' => [
 										'id' => 'dateMax',
 										'value' => '',
 										'class' => '',
 										'placeholder' => '2017-04-18',
 										'data-type' => 'date'
-									),
-								),
-							),
-							array(
-								'spec' => array(
+									],
+								],
+							],
+							[
+								'spec' => [
 									'name' => 'publishDateMin',
 									'type' => 'Text',
-									'options' => array(
+									'options' => [
 										'label' => 'publishDateMin',
-									),
-									'attributes' => array(
+									],
+									'attributes' => [
 										'id' => 'publishDateMin',
 										'value' => '',
 										'class' => '',
 										'placeholder' => '2017-04-18',
 										'data-type' => 'date'
-									),
-								),
-							),
-							array(
-								'spec' => array(
+									],
+								],
+							],
+							[
+								'spec' => [
 									'name' => 'publishDateMax',
 									'type' => 'Text',
-									'options' => array(
+									'options' => [
 										'label' => 'publishDateMax',
-									),
-									'attributes' => array(
+									],
+									'attributes' => [
 										'id' => 'publishDateMax',
 										'value' => '',
 										'class' => '',
 										'placeholder' => '2017-04-18',
 										'data-type' => 'date'
-									),
-								),
-							),
-							array(
-								'spec' => array(
+									],
+								],
+							],
+							[
+								'spec' => [
 									'name' => 'unpublishFilter',
 									'type' => 'Text',
-									'options' => array(
+									'options' => [
 										'label' => 'unpublishFilter',
-									),
-									'attributes' => array(
+									],
+									'attributes' => [
 										'id' => 'unpublishFilter',
 										'value' => '',
 										'class' => '',
 										'placeholder' => 'false',
 										'data-type'  => 'bool'
-									),
-								),
-							),
-							array(
-								'spec' => array(
+									],
+								],
+							],
+							[
+								'spec' => [
 									'name' => 'start',
 									'type' => 'Text',
-									'options' => array(
+									'options' => [
 										'label' => 'start',
-									),
-									'attributes' => array(
+									],
+									'attributes' => [
 										'id' => 'start',
 										'value' => '',
 										'class' => '',
 										'placeholder' => '0',
 										'data-type' => 'int'
-									),
-								),
-							),
-							array(
-								'spec' => array(
+									],
+								],
+							],
+							[
+								'spec' => [
 									'name' => 'limit',
 									'type' => 'Text',
-									'options' => array(
+									'options' => [
 										'label' => 'limit',
-									),
-									'attributes' => array(
+									],
+									'attributes' => [
 										'id' => 'limit',
 										'value' => '',
 										'class' => '',
 										'placeholder' => '5',
 										'data-type' => 'int'
-									),
-								),
-							),
-							array(
-								'spec' => array(
+									],
+								],
+							],
+							[
+								'spec' => [
 									'name' => 'orderColumn',
 									'type' => 'Text',
-									'options' => array(
+									'options' => [
 										'label' => 'orderColumn',
-									),
-									'attributes' => array(
+									],
+									'attributes' => [
 										'id' => 'orderColumn',
 										'value' => '',
 										'class' => '',
 										'placeholder' => 'cnews_id',
 										'data-type' => 'string'
-									),
-								),
-							),
-							array(
-								'spec' => array(
+									],
+								],
+							],
+							[
+								'spec' => [
 									'name' => 'order',
 									'type' => 'Text',
-									'options' => array(
+									'options' => [
 										'label' => 'order',
-									),
-									'attributes' => array(
+									],
+									'attributes' => [
 										'id' => 'order',
 										'value' => '',
 										'class' => '',
 										'placeholder' => 'ASC',
 										'data-type' => 'string'
-									),
-								),
-							),
-							array(
-								'spec' => array(
+									],
+								],
+							],
+							[
+								'spec' => [
 									'name' => 'siteId',
 									'type' => 'Text',
-									'options' => array(
+									'options' => [
 										'label' => 'siteId',
-									),
-									'attributes' => array(
+									],
+									'attributes' => [
 										'id' => 'siteId',
 										'value' => '',
 										'class' => '',
 										'placeholder' => '1',
 										'data-type' => 'int'
-									),
-								),
-							),
-							array(
-								'spec' => array(
+									],
+								],
+							],
+							[
+								'spec' => [
 									'name' => 'search',
 									'type' => 'Text',
-									'options' => array(
+									'options' => [
 										'label' => 'search',
-									),
-									'attributes' => array(
+									],
+									'attributes' => [
 										'id' => 'search',
 										'value' => '',
 										'class' => '',
 										'placeholder' => 'fashion',
 										'data-type' => 'string'
-									),
-								),
-							),
-						),
-						'input_filter' => array(
-							'status' => array(
+									],
+								],
+							],
+						],
+						'input_filter' => [
+							'status' => [
 								'name' => 'status',
 								'required' => false,
-								'validators' => array(
-									array(
+								'validators' => [
+									[
 										'name' => 'NotEmpty',
-										'options' => array(
-											'message' => array(
+										'options' => [
+											'message' => [
 												\Zend\Validator\NotEmpty::IS_EMPTY => 'Please enter status'
-											),
-										),
-									),
-								),
-								'filters' => array(
-									array('name' => 'StripTags'),
-									array('name' => 'StringTrim')
-								),
-							),
-							'dateMin' => array(
+											],
+										],
+									],
+								],
+								'filters' => [
+									['name' => 'StripTags'],
+									['name' => 'StringTrim']
+								],
+							],
+							'dateMin' => [
 								'name' => 'dateMin',
 								'required' => false,
-								'validators' => array(
-									array(
+								'validators' => [
+									[
 										'name' => 'NotEmpty',
-										'options' => array(
-											'message' => array(
+										'options' => [
+											'message' => [
 												\Zend\Validator\NotEmpty::IS_EMPTY => 'Please enter minimum date'
-											),
-										),
-									),
-								),
-								'filters' => array(
-									array('name' => 'StripTags'),
-									array('name' => 'StringTrim')
-								),
-							),
-							'dateMax' => array(
+											],
+										],
+									],
+								],
+								'filters' => [
+									['name' => 'StripTags'],
+									['name' => 'StringTrim']
+								],
+							],
+							'dateMax' => [
 								'name' => 'dateMax',
 								'required' => false,
-								'validators' => array(
-									array(
+								'validators' => [
+									[
 										'name' => 'NotEmpty',
-										'options' => array(
-											'message' => array(
+										'options' => [
+											'message' => [
 												\Zend\Validator\NotEmpty::IS_EMPTY => 'Please enter maximum date'
-											),
-										),
-									),
-								),
-								'filters' => array(
-									array('name' => 'StripTags'),
-									array('name' => 'StringTrim')
-								),
-							),
-							'publishDateMin' => array(
+											],
+										],
+									],
+								],
+								'filters' => [
+									['name' => 'StripTags'],
+									['name' => 'StringTrim']
+								],
+							],
+							'publishDateMin' => [
 								'name' => 'publishDateMin',
 								'required' => false,
-								'validators' => array(
-									array(
+								'validators' => [
+									[
 										'name' => 'NotEmpty',
-										'options' => array(
-											'message' => array(
+										'options' => [
+											'message' => [
 												\Zend\Validator\NotEmpty::IS_EMPTY => 'Please enter minimum publish date'
-											),
-										),
-									),
-								),
-								'filters' => array(
-									array('name' => 'StripTags'),
-									array('name' => 'StringTrim')
-								),
-							),
-							'publishDateMax' => array(
+											],
+										],
+									],
+								],
+								'filters' => [
+									['name' => 'StripTags'],
+									['name' => 'StringTrim']
+								],
+							],
+							'publishDateMax' => [
 								'name' => 'publishDateMax',
 								'required' => false,
-								'validators' => array(
-									array(
+								'validators' => [
+									[
 										'name' => 'NotEmpty',
-										'options' => array(
-											'message' => array(
+										'options' => [
+											'message' => [
 												\Zend\Validator\NotEmpty::IS_EMPTY => 'Please enter maximum publish date'
-											),
-										),
-									),
-								),
-								'filters' => array(
-									array('name' => 'StripTags'),
-									array('name' => 'StringTrim')
-								),
-							),
-							'unpublishFilter' => array(
+											],
+										],
+									],
+								],
+								'filters' => [
+									['name' => 'StripTags'],
+									['name' => 'StringTrim']
+								],
+							],
+							'unpublishFilter' => [
 								'name' => 'unpublishFilter',
 								'required' => false,
-								'validators' => array(
-									array(
+								'validators' => [
+									[
 										'name' => 'NotEmpty',
-										'options' => array(
-											'message' => array(
+										'options' => [
+											'message' => [
 												\Zend\Validator\NotEmpty::IS_EMPTY => 'Please enter unpublish Filter'
-											),
-										),
-									),
-								),
-								'filters' => array(
-									array('name' => 'StripTags'),
-									array('name' => 'StringTrim')
-								),
-							),
-							'start' => array(
+											],
+										],
+									],
+								],
+								'filters' => [
+									['name' => 'StripTags'],
+									['name' => 'StringTrim']
+								],
+							],
+							'start' => [
 								'name' => 'start',
 								'required' => false,
-								'validators' => array(
-									array(
+								'validators' => [
+									[
 										'name' => 'NotEmpty',
-										'options' => array(
-											'message' => array(
+										'options' => [
+											'message' => [
 												\Zend\Validator\NotEmpty::IS_EMPTY => 'Please enter start'
-											),
-										),
-									),
-								),
-								'filters' => array(
-									array('name' => 'StripTags'),
-									array('name' => 'StringTrim')
-								),
-							),
-							'limit' => array(
+											],
+										],
+									],
+								],
+								'filters' => [
+									['name' => 'StripTags'],
+									['name' => 'StringTrim']
+								],
+							],
+							'limit' => [
 								'name' => 'limit',
 								'required' => false,
-								'validators' => array(
-									array(
+								'validators' => [
+									[
 										'name' => 'NotEmpty',
-										'options' => array(
-											'message' => array(
+										'options' => [
+											'message' => [
 												\Zend\Validator\NotEmpty::IS_EMPTY => 'Please enter limit'
-											),
-										),
-									),
-								),
-								'filters' => array(
-									array('name' => 'StripTags'),
-									array('name' => 'StringTrim')
-								),
-							),
-							'orderColumn' => array(
+											],
+										],
+									],
+								],
+								'filters' => [
+									['name' => 'StripTags'],
+									['name' => 'StringTrim']
+								],
+							],
+							'orderColumn' => [
 								'name' => 'orderColumn',
 								'required' => false,
-								'validators' => array(
-									array(
+								'validators' => [
+									[
 										'name' => 'NotEmpty',
-										'options' => array(
-											'message' => array(
+										'options' => [
+											'message' => [
 												\Zend\Validator\NotEmpty::IS_EMPTY => 'Please enter column to order'
-											),
-										),
-									),
-								),
-								'filters' => array(
-									array('name' => 'StripTags'),
-									array('name' => 'StringTrim')
-								),
-							),
-							'order' => array(
+											],
+										],
+									],
+								],
+								'filters' => [
+									['name' => 'StripTags'],
+									['name' => 'StringTrim']
+								],
+							],
+							'order' => [
 								'name' => 'order',
 								'required' => false,
-								'validators' => array(
-									array(
+								'validators' => [
+									[
 										'name' => 'NotEmpty',
-										'options' => array(
-											'message' => array(
+										'options' => [
+											'message' => [
 												\Zend\Validator\NotEmpty::IS_EMPTY => 'Please enter order direction'
-											),
-										),
-									),
-								),
-								'filters' => array(
-									array('name' => 'StripTags'),
-									array('name' => 'StringTrim')
-								),
-							),
-							'siteId' => array(
+											],
+										],
+									],
+								],
+								'filters' => [
+									['name' => 'StripTags'],
+									['name' => 'StringTrim']
+								],
+							],
+							'siteId' => [
 								'name' => 'siteId',
 								'required' => false,
-								'validators' => array(
-									array(
+								'validators' => [
+									[
 										'name' => 'IsInt',
-										'options' => array(
-											'message' => array(
+										'options' => [
+											'message' => [
 												\Zend\I18n\Validator\IsInt::INVALID => 'siteId must be an integer'
-											),
-										),
-									),
-								),
-								'filters' => array(
-									array('name' => 'StripTags'),
-									array('name' => 'StringTrim')
-								),
-							),
-							'search' => array(
+											],
+										],
+									],
+								],
+								'filters' => [
+									['name' => 'StripTags'],
+									['name' => 'StringTrim']
+								],
+							],
+							'search' => [
 								'name' => 'search',
 								'required' => false,
-								'validators' => array(
-									array(
+								'validators' => [
+									[
 										'name' => 'NotEmpty',
-										'options' => array(
-											'message' => array(
+										'options' => [
+											'message' => [
 												\Zend\Validator\NotEmpty::IS_EMPTY => 'Search'
-											),
-										),
-									),
-								),
-								'filters' => array(
-									array('name' => 'StripTags'),
-									array('name' => 'StringTrim')
-								),
-							),
-						),
-					),
-					'getNewsById' => array(
-						'attributes' => array(
+											],
+										],
+									],
+								],
+								'filters' => [
+									['name' => 'StripTags'],
+									['name' => 'StringTrim']
+								],
+							],
+						],
+					],
+					'getNewsById' => [
+						'attributes' => [
 							'name' => 'microservice_form',
 							'id'   => 'microservice_form',
 							'method' => 'POST',
 							'action' => $_SERVER['REQUEST_URI']
-						),
+						],
 						'hydrator' => '\Zend\Stdlib\Hydrator\ArraySerializable',
-						'elements' => array(
-							array(
-								'spec' => array(
+						'elements' => [
+							[
+								'spec' => [
 									'name' => 'newsId',
 									'type' => 'Text',
-									'options' => array(
+									'options' => [
 										'label' => 'newsId',
-									),
-									'attributes' => array(
+									],
+									'attributes' => [
 										'id' => 'newsId',
 										'value' => '',
 										'class' => '',
 										'placeholder' => '1',
 										'data-type' => 'int'
-									),
-								),
-							),
-						),
-						'input_filter' => array(
-							'newsId' => array(
+									],
+								],
+							],
+						],
+						'input_filter' => [
+							'newsId' => [
 								'name' => 'newsId',
 								'required' => true,
-								'validators' => array(
-									array(
+								'validators' => [
+									[
 										'name' => 'IsInt',
-										'options' => array(
-											'message' => array(
+										'options' => [
+											'message' => [
 												\Zend\I18n\Validator\IsInt::INVALID => 'newsId must be an integer'
-											),
-										),
-									),
-								),
-								'filters' => array(
-									array('name' => 'StripTags'),
-									array('name' => 'StringTrim')
-								),
-							),
-						),
-					),
-				),
-			),
-		),
-	),
-);
+											],
+										],
+									],
+								],
+								'filters' => [
+									['name' => 'StripTags'],
+									['name' => 'StringTrim']
+								],
+							],
+						],
+					],
+				],
+			],
+		],
+	],
+];
