@@ -167,11 +167,46 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
         if (!empty($formConfig)) {
             foreach ($formConfig as $formKey => $config) {
                 $form = $factory->createForm($config);
+
+                /** Properties Tab: Set the value options for default news */
+                if ($formKey === 'melis_cms_news_list_plugin_template_form') {
+                    $pluginData = $this->getFormData();
+                    $container = new Container('melisplugins');
+                    $langId = $container['melis-plugins-lang-id'];
+
+                    /** @var \MelisEngine\Service\MelisPageService $pageSvc */
+                    $pageSvc = $this->getServiceLocator()->get('MelisEnginePage');
+                    $pageData = $pageSvc->getDatasPage($pluginData['pageId']);
+                    $siteId = (int)$pageData->getMelisTemplate()->tpl_site_id;
+
+                    /** @var \MelisCmsNews\Service\MelisCmsNewsService $newsSvc */
+                    $newsSvc = $this->getServiceLocator()->get('MelisCmsNewsService');
+                    $posts = $newsSvc->getNewsList(
+                        1,
+                        $langId,
+                        null,
+                        null,
+                        null,
+                        null,
+                        1,
+                        null,
+                        null,
+                        'cnews_title',
+                        'ASC',
+                        $siteId,
+                        null
+                    );
+                    $valueOptions = [];
+                    foreach ($posts as $post) {
+                        $valueOptions[$post['cnews_id']] = $post['site_label'] . ' - ' . $post['cnews_title'];
+                    }
+                    $form->get('newsId')->setValueOptions($valueOptions);
+                }
+
                 $request = $this->getServiceLocator()->get('request');
                 $parameters = $request->getQuery()->toArray();
 
                 if (!isset($parameters['validate'])) {
-
                     $form->setData($this->getFormData());
                     $viewModelTab = new ViewModel();
                     $viewModelTab->setTemplate($config['tab_form_layout']);
