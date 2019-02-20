@@ -6,23 +6,6 @@
 return [
     'plugins' => [
         'meliscmsnews' => [
-            'ressources' => [
-                'js' => [],
-                'css' => [],
-                /**
-                 * the "build" configuration compiles all assets into one file to make
-                 * lesser requests
-                 */
-                'build' => [
-                    // lists of assets that will be loaded in the layout
-                    'css' => [
-                        '/MelisCmsComments/build/css/bundle.css',
-                    ],
-                    'js' => [
-                        '/MelisCmsComments/build/js/bundle.js',
-                    ]
-                ]
-            ],
             'interface' => [
                 'meliscmsnews' => [
                     'conf' => [
