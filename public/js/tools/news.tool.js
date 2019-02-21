@@ -180,7 +180,7 @@ $(document).ready(function () {
                          *  because they use the same name ('cnews_title'), & the selector used by the said function
                          *  is the element's/field's name. Resulting into only one title field being highlighted
                          */
-                        var allTitleLabels = $body.find("#" + data.chunk.cnews_id + "_id_meliscmsnews_content_tabs_properties_details_right_paragraphs label[for='cnews_title']");
+                        var allTitleLabels = body.find("#" + data.chunk.cnews_id + "_id_meliscmsnews_content_tabs_properties_details_right_paragraphs label[for='cnews_title']");
                         if (allTitleLabels.length) {
                             allTitleLabels.css("color", "red");
                         }
