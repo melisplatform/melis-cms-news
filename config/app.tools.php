@@ -72,7 +72,7 @@ return array(
                                 'css' => array('width' => '10%', 'padding-right' => '0'),
                                 'sortable' => true,
                             ),
-                            'site_name' => array(
+                            'site_label' => array(
                                 'text' => 'tr_meliscmsnews_site_title',
                                 'css' => array('width' => '10%', 'padding-right' => '0'),
                                 'sortable' => true,

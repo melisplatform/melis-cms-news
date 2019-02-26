@@ -1,55 +1,54 @@
 <?php
 $id = '';
+$newsId = empty($this->newsId) ? 0 : (int)$this->newsId;
 if (!empty($this->zoneconfig['conf']['id'])) {
-    $id .= $this->newsId . '_' . $this->zoneconfig['conf']['id'];
+    $id .= $newsId . '_' . $this->zoneconfig['conf']['id'];
 }
 
 /**
  * Disabling "Medias" & "Comments" tabs during creation
  */
 $zoneConfigInterface = $this->zoneconfig['interface'];
-if (empty($this->newsId)) {
-    unset($zoneConfigInterface['meliscmsnews_content_tabs_medias']);
-    unset($zoneConfigInterface['meliscmsnews_content_tabs_comments']);
-}
-
-/**
- * Disabling tabs when Module is disabled
- */
-if ($this->commentsModuleIsDisabled === true) {
-    unset($zoneConfigInterface['meliscmsnews_content_tabs_comments']);
+if ($newsId === 0) {
+    $tabs = array_keys($zoneConfigInterface);
+    if (in_array('meliscmsnews_content_tabs_medias', $tabs)) {
+        unset($zoneConfigInterface['meliscmsnews_content_tabs_medias']);
+    }
+    if (in_array('meliscmsnews_content_tabs_comments', $tabs)) {
+        unset($zoneConfigInterface['meliscmsnews_content_tabs_comments']);
+    }
 }
 ?>
 <div id="<?= $id ?>" data-melisKey="<?= $this->melisKey; ?>" class="widget widget-tabs widget-tabs-double-2 widget-tabs-responsive">
-	<div class="widget-head nav">
-		<ul class="tabs-label nav-tabs">
-			<?php 
-            	if(!empty($zoneConfigInterface)) {
-            	    foreach($zoneConfigInterface as $keyConfig => $menuConfig) {
-            	        
-            	        $tabId = $this->newsId.'_'.$menuConfig['conf']['id'];
-            	        $tabIcon = $menuConfig['conf']['icon'];
-            	        $tabName = $menuConfig['conf']['name'];
-            	        
-        	            $li= '<li>
-                	            <a class="'.$tabIcon.'" data-toggle="tab" href="#'.$tabId.'" aria-expanded="true">
+    <div class="widget-head nav">
+        <ul class="tabs-label nav-tabs">
+            <?php
+            if (!empty($zoneConfigInterface)) {
+                foreach ($zoneConfigInterface as $keyConfig => $menuConfig) {
+
+                    $tabId = $newsId . '_' . $menuConfig['conf']['id'];
+                    $tabIcon = $menuConfig['conf']['icon'];
+                    $tabName = $menuConfig['conf']['name'];
+
+                    $li = '<li>
+                	            <a class="' . $tabIcon . '" data-toggle="tab" href="#' . $tabId . '" aria-expanded="true">
                             		<i></i>
-                            		<span>'.$this->translate($tabName).'</span>
+                            		<span>' . $this->translate($tabName) . '</span>
                             	</a>
                             </li>';
-        	            echo $li;
-            	    }
-            	}
+                    echo $li;
+                }
+            }
             ?>
-		</ul>
-	</div>
+        </ul>
+    </div>
 </div>
 <div class="tab-content innerAll spacing-x2">
-	<?php 
-    	if(!empty($zoneConfigInterface)) {
-    	    foreach($zoneConfigInterface as $keyConfig => $menuConfig) {
-	           echo $this->$keyConfig.' ';    	        
-    	    }    	    
-    	}
+    <?php
+    if (!empty($zoneConfigInterface)) {
+        foreach ($zoneConfigInterface as $keyConfig => $menuConfig) {
+            echo $this->$keyConfig . ' ';
+        }
+    }
     ?>
 </div>

@@ -87,7 +87,6 @@ return array(
     'form_elements' => array(
         'factories' => array(
             'MelisCmsNewsSelect' => 'MelisCmsNews\Form\Factory\MelisCmsNewsSelectFactory',
-            'MelisCmsSiteNewsSelect' => 'MelisCmsNews\Form\Factory\MelisCmsSiteNewsSelectFactory',
         ),
     ),
     'view_manager' => array(

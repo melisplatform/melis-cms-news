@@ -171,17 +171,20 @@ $(document).ready(function () {
                     toolNews.refreshTable();
                 } else {
                     melisHelper.melisKoNotification(data.textTitle, data.textMessage, data.errors);
-                    melisCoreTool.highlightErrors(data.success, data.errors, activeTabId + " form");
-                    $(".newsPublishDate").prev("label").css("color", "#686868");
-                    $(".newsUnpublishDate").prev("label").css("color", "#686868");
-                    $.each(data.errors, function (key, error) {
-                        if (key == 'cnews_publish_date') {
-                            $(".newsPublishDate").prev("label").css("color", "red");
+                    melisCoreTool.highlightErrors(data.success, data.errors, data.chunk.cnews_id + "_id_meliscmsnews_page form");
+
+                    if (data.errors.hasOwnProperty('cnews_title')) {
+                        /**
+                         * Exceptional case for highlighting errors:
+                         *  "melisCoreTool.highlightErrors()" function cannot be used in highlighting all title fields
+                         *  because they use the same name ('cnews_title'), & the selector used by the said function
+                         *  is the element's/field's name. Resulting into only one title field being highlighted
+                         */
+                        var allTitleLabels = body.find("#" + data.chunk.cnews_id + "_id_meliscmsnews_content_tabs_properties_details_right_paragraphs label[for='cnews_title']");
+                        if (allTitleLabels.length) {
+                            allTitleLabels.css("color", "red");
                         }
-                        if (key == 'cnews_unpublish_date') {
-                            $(".newsUnpublishDate").prev("label").css("color", "red");
-                        }
-                    });
+                    }
                 }
                 melisCore.flashMessenger();
                 melisCoreTool.done(".saveNewsLetter");
@@ -253,7 +256,6 @@ $(document).ready(function () {
         melisCoreTool.pending(saveBtn);
 
         var ajaxUrl = '/melis/MelisCmsNews/MelisCmsNews/saveFileForm';
-        var newsId = $('form#newsFileForm input[name=cnews_id]').val();
         var tmpForm = $('#newsFileForm').get(0);
         var sliderData = new FormData(tmpForm);
 

@@ -9,10 +9,12 @@
 
 namespace MelisCmsNews\Controller\Plugin;
 
+
 use MelisEngine\Controller\Plugin\MelisTemplatingPlugin;
-use Zend\View\Model\ViewModel;
 use Zend\Session\Container;
 use Zend\Stdlib\ArrayUtils;
+use Zend\View\Model\ViewModel;
+
 /**
  * This plugin implements the business logic of the
  * "latestNews" plugin.
@@ -49,7 +51,7 @@ use Zend\Stdlib\ArrayUtils;
 class MelisCmsNewsLatestNewsPlugin extends MelisTemplatingPlugin
 {
 
-    public function __construct($updatesPluginConfig = array())
+    public function __construct($updatesPluginConfig = [])
     {
         $this->configPluginKey = 'meliscmsnews';
         $this->pluginXmlDbKey = 'MelisCmsNewsLatestNews';
@@ -64,87 +66,92 @@ class MelisCmsNewsLatestNewsPlugin extends MelisTemplatingPlugin
     {
         $container = new Container('melisplugins');
         $langId = $container['melis-plugins-lang-id'];
-        
+
         // Get the parameters and config from $this->pluginFrontConfig (default > hardcoded > get > post)
         $data = $this->getFormData();
-        
+
         // Properties
-        $pageIdDetailNews   = !empty($data['pageIdNews']) ? $data['pageIdNews'] : null;
-        $siteId             = !empty($data['site_id'])    ? $data['site_id']    : null;
-        
+        $pageIdDetailNews = !empty($data['pageIdNews']) ? $data['pageIdNews'] : null;
+        $siteId = !empty($data['site_id']) ? $data['site_id'] : null;
+
         // Filters
-        $status             = true;
-        $unpublishFilter    = true;
-        $orderColumn        = !empty($data['column'])   ? $data['column']   : 'cnews_publish_date';
-        $order              = !empty($data['order'])    ? $data['order']    : null;
-        $dateMin            = !empty($data['date_min']) ? $data['date_min'] : null;
-        $dateMax            = !empty($data['date_max']) ? $data['date_max'] : null;
-        $limit              = !empty($data['limit'])    ? $data['limit']    : null;
-        $search             = !empty($data['search'])   ? $data['search']   : null;
-        
+        $status = true;
+        $unpublishFilter = true;
+        $orderColumn = !empty($data['column']) ? $data['column'] : 'cnews_publish_date';
+        $order = !empty($data['order']) ? $data['order'] : null;
+        $dateMin = !empty($data['date_min']) ? $data['date_min'] : null;
+        $dateMax = !empty($data['date_max']) ? $data['date_max'] : null;
+        $limit = !empty($data['limit']) ? $data['limit'] : null;
+        $search = !empty($data['search']) ? $data['search'] : null;
+
         // convert date formats
         $dateMin = (!is_null($dateMin)) ? date('Y-m-d H:i:s', strtotime($dateMin)) : null;
         $dateMax = (!is_null($dateMax)) ? date('Y-m-d H:i:s', strtotime($dateMax)) : null;
-        
+
         $pageTreeService = $this->getServiceLocator()->get('MelisEngineTree');
-        
+
         /**
          * Getting the current page id
          */
         $pageId = (!empty($data['pageId'])) ? $data['pageId'] : $this->getController()->params()->fromRoute('idpage');
-        
+
         // If news deatils page id is null
-        if (is_null($pageIdDetailNews))
-        {
-            
-            
+        if (is_null($pageIdDetailNews)) {
+
+
             $pageIdDetailNews = $pageId;
         }
-        
+
         // Getting the current Site id from current page id
-        if(is_null($siteId))
-        {
+        if (is_null($siteId)) {
             $site = $pageTreeService->getSiteByPageId($pageId);
-            
-            if (!empty($site))
-            {
+
+            if (!empty($site)) {
                 $siteId = $site->site_id;
             }
         }
-        
-        // Retreiving News list using MelisCmsNewsService
+
+        /** @var \MelisCmsNews\Service\MelisCmsNewsService $newsSrv */
         $newsSrv = $this->getServiceLocator()->get('MelisCmsNewsService');
         $newsList = $newsSrv->getNewsList($status, $langId, null, null, $dateMin, $dateMax, $unpublishFilter, null, $limit, $orderColumn, $order, $siteId, $search);
-        
-        $latestNews = array();
-        foreach ($newsList As $key => $val)
-        {
+
+        $latestNews = [];
+        foreach ($newsList as $key => $val) {
             // Getting the News Data from CmsNews entity
             $news = $val;
-            if (!empty($news))
-            {
+            if (!empty($news)) {
                 // Generate link to news
                 $link = $pageTreeService->getPageLink($pageIdDetailNews, false);
                 $news['newsLink'] = $link . '?newsId=' . $news['cnews_id'];
-                
+
                 // date formated of news
-                $news['newsDateFormated'] = date('d M Y',strtotime(($news['cnews_publish_date']) ? $news['cnews_publish_date'] : $news['cnews_creation_date']));
-                
+                $news['newsDateFormated'] = date('d M Y', strtotime(($news['cnews_publish_date']) ? $news['cnews_publish_date'] : $news['cnews_creation_date']));
+
                 // Adding the News Data to result variable
                 array_push($latestNews, $news);
             }
         }
-        
+
         // Create an array with the variables that will be available in the view
-        $viewVariables = array(
+        $viewVariables = [
             'pluginId' => $data['id'],
             'latestNews' => $latestNews
-        );
+        ];
 
         // return the variable array and let the view be created
         return $viewVariables;
     }
 
+    /**
+     * Returns the data to populate the form inside the modals when invoked
+     * @return array|bool|null
+     */
+    public function getFormData()
+    {
+        $data = parent::getFormData();
+
+        return $data;
+    }
 
     /**
      * This function generates the form displayed when editing the parameters of the plugin
@@ -159,7 +166,7 @@ class MelisCmsNewsLatestNewsPlugin extends MelisTemplatingPlugin
         $translator = $this->getServiceLocator()->get('translator');
 
         $response = [];
-        $render   = [];
+        $render = [];
         if (!empty($formConfig)) {
             foreach ($formConfig as $formKey => $config) {
                 $form = $factory->createForm($config);
@@ -172,7 +179,7 @@ class MelisCmsNewsLatestNewsPlugin extends MelisTemplatingPlugin
                     $viewModelTab = new ViewModel();
                     $viewModelTab->setTemplate($config['tab_form_layout']);
                     $viewModelTab->modalForm = $form;
-                    $viewModelTab->formData   = $this->getFormData();
+                    $viewModelTab->formData = $this->getFormData();
                     $viewRender = $this->getServiceLocator()->get('ViewRenderer');
                     $html = $viewRender->render($viewModelTab);
                     array_push($render, [
@@ -181,37 +188,32 @@ class MelisCmsNewsLatestNewsPlugin extends MelisTemplatingPlugin
                             'html' => $html
                         ]
                     );
-                }
-                else {
+                } else {
                     /**
                      * validate the forms and send back an array with errors by tabs
                      */
-                    
+
                     $success = false;
-                    $errors = array();
-                    
+                    $errors = [];
+
                     $post = get_object_vars($request->getPost());
                     $form->setData($post);
-                    
-                    
-                    if ($formKey == 'melis_cms_news_list_plugin_filter_form')
-                    {
-                        if (!empty($post['date_min']) && !empty($post['date_max']))
-                        {
-                            if ($post['date_min'] > $post['date_max'])
-                            {
-                                $errors['date_max'] = array(
+
+
+                    if ($formKey == 'melis_cms_news_list_plugin_filter_form') {
+                        if (!empty($post['date_min']) && !empty($post['date_max'])) {
+                            if ($post['date_min'] > $post['date_max']) {
+                                $errors['date_max'] = [
                                     'label' => $translator->translate('tr_meliscmsnews_plugin_filter_date_range_to'),
                                     'inValidDates' => $translator->translate('tr_meliscmsnews_plugin_invalid_dates'),
-                                );
+                                ];
                             }
                         }
                     }
-                    
+
                     if ($form->isValid()) {
-                        
-                        if (empty($errors))
-                        {
+
+                        if (empty($errors)) {
                             $success = true;
                             array_push($response, [
                                 'name' => $this->pluginBackConfig['modal_form'][$formKey]['tab_title'],
@@ -219,12 +221,9 @@ class MelisCmsNewsLatestNewsPlugin extends MelisTemplatingPlugin
                             ]);
                         }
                     } else {
-                        if (!empty($errors))
-                        {
+                        if (!empty($errors)) {
                             $errors = ArrayUtils::merge($errors, $form->getMessages());
-                        }
-                        else
-                        {
+                        } else {
                             $errors = $form->getMessages();
                         }
                         foreach ($errors as $keyError => $valueError) {
@@ -236,9 +235,8 @@ class MelisCmsNewsLatestNewsPlugin extends MelisTemplatingPlugin
                             }
                         }
                     }
-                    
-                    if (!empty($errors))
-                    {
+
+                    if (!empty($errors)) {
                         array_push($response, [
                             'name' => $this->pluginBackConfig['modal_form'][$formKey]['tab_title'],
                             'success' => $success,
@@ -252,23 +250,10 @@ class MelisCmsNewsLatestNewsPlugin extends MelisTemplatingPlugin
 
         if (!isset($parameters['validate'])) {
             return $render;
-        }
-        else {
+        } else {
             return $response;
         }
 
-    }
-
-
-    /**
-     * Returns the data to populate the form inside the modals when invoked
-     * @return array|bool|null
-     */
-    public function getFormData()
-    {
-        $data = parent::getFormData();
-
-        return $data;
     }
 
     /**
@@ -278,11 +263,10 @@ class MelisCmsNewsLatestNewsPlugin extends MelisTemplatingPlugin
      */
     public function loadDbXmlToPluginConfig()
     {
-        $configValues = array();
+        $configValues = [];
 
         $xml = simplexml_load_string($this->pluginXmlDbValue);
-        if ($xml)
-        {
+        if ($xml) {
             if (!empty($xml->template_path))
                 $configValues['template_path'] = (string)$xml->template_path;
             if (!empty($xml->site_id))
@@ -302,7 +286,7 @@ class MelisCmsNewsLatestNewsPlugin extends MelisTemplatingPlugin
             if (!empty($xml->search))
                 $configValues['filter']['search'] = (string)$xml->search;
         }
-        
+
         return $configValues;
     }
 
@@ -313,27 +297,27 @@ class MelisCmsNewsLatestNewsPlugin extends MelisTemplatingPlugin
     public function savePluginConfigToXml($parameters)
     {
         $xmlValueFormatted = '';
-        
+
         // template_path is mendatory for all plugins
         if (!empty($parameters['template_path']))
             $xmlValueFormatted .= "\t\t" . '<template_path><![CDATA[' . $parameters['template_path'] . ']]></template_path>';
-        if(!empty($parameters['site_id']))
-            $xmlValueFormatted .= "\t\t" . '<site_id><![CDATA['   . $parameters['site_id'] . ']]></site_id>';
+        if (!empty($parameters['site_id']))
+            $xmlValueFormatted .= "\t\t" . '<site_id><![CDATA[' . $parameters['site_id'] . ']]></site_id>';
         if (!empty($parameters['pageIdNews']))
             $xmlValueFormatted .= "\t\t" . '<pageIdNews><![CDATA[' . $parameters['pageIdNews'] . ']]></pageIdNews>';
-        if(!empty($parameters['column']))
-            $xmlValueFormatted .= "\t\t" . '<column><![CDATA['   . $parameters['column'] . ']]></column>';
-        if(!empty($parameters['order']))
-            $xmlValueFormatted .= "\t\t" . '<order><![CDATA['   . $parameters['order'] . ']]></order>';
-        if(!empty($parameters['date_min']))
-            $xmlValueFormatted .= "\t\t" . '<date_min><![CDATA['   . $parameters['date_min'] . ']]></date_min>';
-        if(!empty($parameters['date_max']))
-            $xmlValueFormatted .= "\t\t" . '<date_max><![CDATA['   . $parameters['date_max'] . ']]></date_max>';
-        if(!empty($parameters['limit']))
-            $xmlValueFormatted .= "\t\t" . '<limit><![CDATA['   . $parameters['limit'] . ']]></limit>';
-        if(!empty($parameters['search']))
-            $xmlValueFormatted .= "\t\t" . '<search><![CDATA['   . $parameters['search'] . ']]></search>';
-        
+        if (!empty($parameters['column']))
+            $xmlValueFormatted .= "\t\t" . '<column><![CDATA[' . $parameters['column'] . ']]></column>';
+        if (!empty($parameters['order']))
+            $xmlValueFormatted .= "\t\t" . '<order><![CDATA[' . $parameters['order'] . ']]></order>';
+        if (!empty($parameters['date_min']))
+            $xmlValueFormatted .= "\t\t" . '<date_min><![CDATA[' . $parameters['date_min'] . ']]></date_min>';
+        if (!empty($parameters['date_max']))
+            $xmlValueFormatted .= "\t\t" . '<date_max><![CDATA[' . $parameters['date_max'] . ']]></date_max>';
+        if (!empty($parameters['limit']))
+            $xmlValueFormatted .= "\t\t" . '<limit><![CDATA[' . $parameters['limit'] . ']]></limit>';
+        if (!empty($parameters['search']))
+            $xmlValueFormatted .= "\t\t" . '<search><![CDATA[' . $parameters['search'] . ']]></search>';
+
         // Something has been saved, let's generate an XML for DB
         $xmlValueFormatted = "\t" . '<' . $this->pluginXmlDbKey . ' id="' . $parameters['melisPluginId'] . '">' .
             $xmlValueFormatted .

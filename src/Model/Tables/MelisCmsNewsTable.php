@@ -75,7 +75,7 @@ class MelisCmsNewsTable extends MelisGenericTable
     ) {
         $select = $this->tableGateway->getSql()->select();
 
-        $select->join('melis_cms_site', 'melis_cms_site.site_id = melis_cms_news.cnews_site_id', array('site_name'), $select::JOIN_LEFT);
+        $select->join('melis_cms_site', 'melis_cms_site.site_id = melis_cms_news.cnews_site_id', array('site_name','site_label'), $select::JOIN_LEFT);
         $select->join('melis_cms_news_texts', 'melis_cms_news_texts.cnews_id = melis_cms_news.cnews_id', '*', $select::JOIN_LEFT);
 
         if (!is_null($search)) {

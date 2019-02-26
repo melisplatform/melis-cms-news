@@ -9,9 +9,12 @@
 
 namespace MelisCmsNews\Controller\Plugin;
 
+
 use MelisEngine\Controller\Plugin\MelisTemplatingPlugin;
-use Zend\View\Model\ViewModel;
+use Zend\Form\Factory;
 use Zend\Session\Container;
+use Zend\View\Model\ViewModel;
+
 /**
  * This plugin implements the business logic of the
  * "ShowNews" plugin.
@@ -48,12 +51,13 @@ use Zend\Session\Container;
 class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
 {
 
-    public function __construct($updatesPluginConfig = array())
+    public function __construct($updatesPluginConfig = [])
     {
         $this->configPluginKey = 'meliscmsnews';
         $this->pluginXmlDbKey = 'MelisCmsNewsShowNews';
         parent::__construct($updatesPluginConfig);
     }
+
     /**
      * This function gets the datas and create an array of variables
      * that will be associated with the child view generated.
@@ -62,57 +66,48 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
     {
         // Get the parameters and config from $this->pluginFrontConfig (default > hardcoded > get > post)
         $data = $this->getFormData();
-        
+
         // Properties
-        $active             = true;
-        $filterPublish      = true;
-        $filterUnpublish    = true;
-        $newsId             = !empty($data['newsId']) ? $data['newsId']   : null;
-        
-        $newsData = array();
-        // Retreiving News using MelisCmsNewsService
+        $newsId = !empty($data['newsId']) ? $data['newsId'] : null;
+
+        $newsData = [];
+        /** @var \MelisCmsNews\Service\MelisCmsNewsService $newsSrv */
         $newsSrv = $this->getServiceLocator()->get('MelisCmsNewsService');
-        
+
         $container = new Container('melisplugins');
         $langId = $container['melis-plugins-lang-id'];
-        
-        if(is_null($newsId)){
+
+        if (is_null($newsId)) {
             /**
              * Getting the current page id
              */
             $pageId = (!empty($data['pageId'])) ? $data['pageId'] : $this->getController()->params()->fromRoute('idpage');
-            
+
             /**
-             * Retrieving the page Site id to get the 
+             * Retrieving the page Site id to get the
              * list of the current site news
              */
             $pageTreeService = $this->getServiceLocator()->get('MelisEngineTree');
             $site = $pageTreeService->getSiteByPageId($pageId);
-            
-            if (!empty($site))
-            {
+
+            if (!empty($site)) {
                 // Retrieve most recent news as default
                 $newsData = $newsSrv->getNewsList(1, $langId, null, null, null, date('Y-m-d H:i:s'), true, null, 1, 'cnews_id', 'DESC', $site->site_id);
-                if (!empty($newsData[0]))
-                {
+                if (!empty($newsData[0])) {
                     $newsData = $newsData[0];
                 }
             }
-        }else{
-            
+        } else {
+
             $newsDataRes = $newsSrv->getNewsById($newsId, $langId);
-            
-            if (!empty($newsDataRes))
-            {
+
+            if (!empty($newsDataRes)) {
                 // publish date is not greater than today
-                if (!empty($newsDataRes->cnews_publish_date) && strtotime($newsDataRes->cnews_publish_date) <= strtotime('now'))
-                {
+                if (!empty($newsDataRes->cnews_publish_date) && strtotime($newsDataRes->cnews_publish_date) <= strtotime('now')) {
                     // unpublish date is not greater than today
-                    if (empty($newsDataRes->cnews_unpublish_date) || strtotime($newsDataRes->cnews_unpublish_date) > strtotime('now'))
-                    {
+                    if (empty($newsDataRes->cnews_unpublish_date) || strtotime($newsDataRes->cnews_unpublish_date) > strtotime('now')) {
                         // check if active
-                        if ($newsDataRes->cnews_status)
-                        {
+                        if ($newsDataRes->cnews_status) {
                             $newsData = $newsDataRes;
                         }
                     }
@@ -133,15 +128,26 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
                 $newsData->cnews_author_account = $authorInfo;
             }
         }
-        
+
         // Create an array with the variables that will be available in the view
-        $viewVariables = array(
+        $viewVariables = [
             'pluginId' => $data['id'],
             'news' => $newsData
-        );
+        ];
 
         // return the variable array and let the view be created
         return $viewVariables;
+    }
+
+    /**
+     * Returns the data to populate the form inside the modals when invoked
+     * @return array|bool|null
+     */
+    public function getFormData()
+    {
+        $data = parent::getFormData();
+
+        return $data;
     }
 
     /**
@@ -151,26 +157,61 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
     public function createOptionsForms()
     {
         // construct form
-        $factory = new \Zend\Form\Factory();
+        $factory = new Factory();
         $formElements = $this->getServiceLocator()->get('FormElementManager');
         $factory->setFormElementManager($formElements);
         $formConfig = $this->pluginBackConfig['modal_form'];
 
         $response = [];
-        $render   = [];
+        $render = [];
         if (!empty($formConfig)) {
             foreach ($formConfig as $formKey => $config) {
                 $form = $factory->createForm($config);
+
+                /** Properties Tab: Set the value options for default news */
+                if ($formKey === 'melis_cms_news_list_plugin_template_form') {
+                    $pluginData = $this->getFormData();
+                    $container = new Container('melisplugins');
+                    $langId = $container['melis-plugins-lang-id'];
+
+                    /** @var \MelisEngine\Service\MelisPageService $pageSvc */
+                    $pageSvc = $this->getServiceLocator()->get('MelisEnginePage');
+                    $pageData = $pageSvc->getDatasPage($pluginData['pageId']);
+                    $siteId = (int)$pageData->getMelisTemplate()->tpl_site_id;
+
+                    /** @var \MelisCmsNews\Service\MelisCmsNewsService $newsSvc */
+                    $newsSvc = $this->getServiceLocator()->get('MelisCmsNewsService');
+                    $posts = $newsSvc->getNewsList(
+                        1,
+                        $langId,
+                        null,
+                        null,
+                        null,
+                        null,
+                        1,
+                        null,
+                        null,
+                        'cnews_title',
+                        'ASC',
+                        $siteId,
+                        null
+                    );
+                    $valueOptions = [];
+                    foreach ($posts as $post) {
+                        $valueOptions[$post['cnews_id']] = $post['site_label'] . ' - ' . $post['cnews_title'];
+                    }
+                    $form->get('newsId')->setValueOptions($valueOptions);
+                }
+
                 $request = $this->getServiceLocator()->get('request');
                 $parameters = $request->getQuery()->toArray();
 
                 if (!isset($parameters['validate'])) {
-
                     $form->setData($this->getFormData());
                     $viewModelTab = new ViewModel();
                     $viewModelTab->setTemplate($config['tab_form_layout']);
                     $viewModelTab->modalForm = $form;
-                    $viewModelTab->formData   = $this->getFormData();
+                    $viewModelTab->formData = $this->getFormData();
                     $viewRender = $this->getServiceLocator()->get('ViewRenderer');
                     $html = $viewRender->render($viewModelTab);
                     array_push($render, [
@@ -179,24 +220,20 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
                             'html' => $html
                         ]
                     );
-                }
-                else {
+                } else {
 
                     // validate the forms and send back an array with errors by tabs
                     $post = $request->getPost()->toArray();
                     $success = false;
                     $form->setData($post);
 
-                    $errors = array();
                     if ($form->isValid()) {
-                        $data = $form->getData();
                         $success = true;
                         array_push($response, [
                             'name' => $this->pluginBackConfig['modal_form'][$formKey]['tab_title'],
                             'success' => $success,
                         ]);
                     } else {
-
                         $errors = $form->getMessages();
 
                         foreach ($errors as $keyError => $valueError) {
@@ -207,7 +244,6 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
                                     $errors[$keyError]['label'] = $valueForm['spec']['options']['label'];
                             }
                         }
-
 
                         array_push($response, [
                             'name' => $this->pluginBackConfig['modal_form'][$formKey]['tab_title'],
@@ -223,23 +259,10 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
 
         if (!isset($parameters['validate'])) {
             return $render;
-        }
-        else {
+        } else {
             return $response;
         }
 
-    }
-
-
-    /**
-     * Returns the data to populate the form inside the modals when invoked
-     * @return array|bool|null
-     */
-    public function getFormData()
-    {
-        $data = parent::getFormData();
-        
-        return $data;
     }
 
     /**
@@ -249,17 +272,16 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
      */
     public function loadDbXmlToPluginConfig()
     {
-        $configValues = array();
-        
+        $configValues = [];
+
         $xml = simplexml_load_string($this->pluginXmlDbValue);
-        if ($xml)
-        {
+        if ($xml) {
             if (!empty($xml->template_path))
                 $configValues['template_path'] = (string)$xml->template_path;
             if (!empty($xml->newsId))
                 $configValues['newsId'] = (string)$xml->newsId;
         }
-        
+
         return $configValues;
     }
 
@@ -270,18 +292,18 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
     public function savePluginConfigToXml($parameters)
     {
         $xmlValueFormatted = '';
-        
+
         // template_path is mendatory for all plugins
         if (!empty($parameters['template_path']))
             $xmlValueFormatted .= "\t\t" . '<template_path><![CDATA[' . $parameters['template_path'] . ']]></template_path>';
-        if(!empty($parameters['newsId']))
-            $xmlValueFormatted .= "\t\t" . '<newsId><![CDATA['   . $parameters['newsId'] . ']]></newsId>';
-        
+        if (!empty($parameters['newsId']))
+            $xmlValueFormatted .= "\t\t" . '<newsId><![CDATA[' . $parameters['newsId'] . ']]></newsId>';
+
         // Something has been saved, let's generate an XML for DB
         $xmlValueFormatted = "\t" . '<' . $this->pluginXmlDbKey . ' id="' . $parameters['melisPluginId'] . '">' .
-                            $xmlValueFormatted .
-                        "\t" . '</' . $this->pluginXmlDbKey . '>' . "\n";
-        
+            $xmlValueFormatted .
+            "\t" . '</' . $this->pluginXmlDbKey . '>' . "\n";
+
         return $xmlValueFormatted;
     }
 }

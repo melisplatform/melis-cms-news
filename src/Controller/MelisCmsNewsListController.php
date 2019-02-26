@@ -123,7 +123,8 @@ class MelisCmsNewsListController extends AbstractActionController
         $options = '<option  value="">'.$this->getTool()->getTranslation('tr_meliscmsliderdetails_common_label_choose').'</option>';
         foreach($sites as $site){
             $selected  = ($site->site_id == $siteId)? 'selected' : '';
-            $options .= '<option value="'.$site->site_id.'" '.$selected.'>'.$site->site_name .'</option>';
+            $siteLabel = $site->site_label ?? $site->site_name;
+            $options .= '<option value="'.$site->site_id.'" '.$selected.'>'.$siteLabel .'</option>';
         }
         
         $view =  new ViewModel();
@@ -301,7 +302,7 @@ class MelisCmsNewsListController extends AbstractActionController
                 $tableData[$c]['cnews_creation_date'] = $this->getTool()->dateFormatLocale($new['cnews_creation_date']);
                 $tableData[$c]['cnews_publish_date'] = $this->getTool()->dateFormatLocale($new['cnews_publish_date']);
                 $tableData[$c]['cnews_unpublish_date'] = $this->getTool()->dateFormatLocale($new['cnews_unpublish_date']);
-                $tableData[$c]['site_name'] = $new['site_name'];
+                $tableData[$c]['site_label'] = $new['site_label'];
                 $c++;
             }
 

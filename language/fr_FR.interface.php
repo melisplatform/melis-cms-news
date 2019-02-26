@@ -34,7 +34,8 @@
 	    'tr_meliscmsnews_save_file_fail' => 'Impossible d\'enregistrer le fichier',	    
 	    'tr_meliscmsnews_save_file_success' => 'Le fichier a été enregistré avec succès',
 	    'tr_meliscmsnews_remove_file_fail' => 'Impossible de supprimer le fichier',
-	    
+        'tr_meliscmsnews_empty_site' => 'Veuillez choisir un site',
+
 	    'tr_meliscmsnews_remove_file_success' => 'Le fichier a été supprimé avec succès',
 	    'tr_meliscmsnews_save_upload_too_big' => 'Le fichier uploadé est trop volumineux, la taille maximum est de %s',
 	    'tr_meliscmsnews_save_upload_too_small' => 'Le fichier uploadé est trop petit, la taille minimale est de %s',
@@ -81,7 +82,6 @@
 	    'tr_meliscmsnews_status_status' => 'Statut',
 	    'tr_meliscmsnews_add_file' => 'Fichier',
 	    'tr_meliscmsnews_attach_file' => 'Ajouter un fichier',
-	    'tr_meliscmsnews_add_file' => 'Fichier',
 	    'tr_meliscmsnews_modal_documents_form_image' => 'Image',
 	    'tr_meliscmsnews_attach_image' => 'Ajouter une image',
 	    'tr_meliscmsnews_attach_file_none' => 'Aucune pièce-jointe',
@@ -165,5 +165,8 @@
 	    'tr_meliscmsnews_paragraph2 tooltip' => 'Actualité paragraphe 2',
 	    'tr_meliscmsnews_paragraph3 tooltip' => 'Actualité paragraphe 3',
 	    'tr_meliscmsnews_paragraph4 tooltip' => 'Actualité paragraphe 4',
+
+        // Extending with melis cms comments
+        'tr_meliscms_news_comments_tab_title' => 'Commentaires Actualités',
+        'tr_meliscms_news_comments_tab_icon_title' => 'Actualités',
 	);
-?>
