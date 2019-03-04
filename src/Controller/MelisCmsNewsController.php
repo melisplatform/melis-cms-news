@@ -137,6 +137,7 @@ class MelisCmsNewsController extends AbstractActionController
         $view = new ViewModel();
         $melisKey = $this->params()->fromRoute('melisKey', '');
         $newsId = (int)$this->params()->fromQuery('newsId', 0);
+        $view->activeModules = $this->getServiceLocator()->get('MelisAssetManagerModulesService')->getActiveModules();
         $view->melisKey = $melisKey;
         $view->newsId = $newsId;
 
