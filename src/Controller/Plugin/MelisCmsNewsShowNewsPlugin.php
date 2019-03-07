@@ -132,7 +132,7 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
         // Create an array with the variables that will be available in the view
         $viewVariables = [
             'pluginId' => $data['id'],
-            'news' => $newsData
+            'news' => (array) $newsData
         ];
 
         // return the variable array and let the view be created
