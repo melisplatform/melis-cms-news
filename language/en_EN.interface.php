@@ -44,7 +44,7 @@
 	    'tr_meliscmsnews_save_upload_image_fileIsImageNotDetected' => 'Unknown image format, please upload a valid image',
 	    'tr_meliscmsnews_save_upload_image_fileIsImageNotReadable' => 'Image does not exists, or is not readable',
 	    'tr_meliscmsnews_save_upload_file_path_rights_error' => 'You do not have the rights to execute this action, please contact the administrator',
-	    'tr_meliscmsnews_save_upload_empty_file' => 'Please submit a valid file',
+	    'tr_meliscmsnews_save_upload_empty_file' => 'Please submit an image file',
 	    'tr_meliscmsnews_save_upload_file' => 'File',
 	    
 	    // Common File Attachment and Images Deletion labels and messages

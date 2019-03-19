@@ -44,7 +44,7 @@
 	    'tr_meliscmsnews_save_upload_image_fileIsImageNotDetected' => 'Format d\'image inconnu, veuillez uploader une image valide',
 	    'tr_meliscmsnews_save_upload_image_fileIsImageNotReadable' => 'L\'image n\'existe pas ou n\'est pas lisible',
 	    'tr_meliscmsnews_save_upload_file_path_rights_error' => 'Vous n\'avez pas les droits pour éxécuter cette action, veuillez demander à l\'administrateur',
-	    'tr_meliscmsnews_save_upload_empty_file' => 'Please submit a valid file',
+	    'tr_meliscmsnews_save_upload_empty_file' => 'S\'il vous plaît soumettre un fichier image',
 	    'tr_meliscmsnews_save_upload_file' => 'Fichier',
 	    
 	    // Common File Attachment and Images Deletion labels and messages
