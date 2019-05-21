@@ -152,7 +152,7 @@
 	    'tr_meliscmsnews_plugin_filter_order_creation_date' => 'Date de création',
 	    
 	    'tr_meliscmsnews_content_tabs_medias' => 'Medias',
-	    'tr_meliscmsnews_content_tabs_texts' => 'Texts',
+	    'tr_meliscmsnews_content_tabs_texts' => 'Textes',
 	    
 	    'tr_meliscmsnews_tpl_site_id tooltip' => 'Limitez cette actualité au seul site défini',
 

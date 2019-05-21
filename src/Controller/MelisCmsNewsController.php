@@ -456,6 +456,16 @@ class MelisCmsNewsController extends AbstractActionController
         $view = new ViewModel();
         $melisKey = $this->params()->fromRoute('melisKey', '');
 
+        /** @var \MelisCmsNews\Model\Tables\MelisCmsNewsTable $newsTable */
+        $siteId = null;
+        $newsTable = $this->getServiceLocator()->get('MelisCmsNewsTable');
+        $newsTable = $newsTable->getNews($newsId);
+        if (!empty($newsTable)) {
+            $newsTable = $newsTable->toArray();
+            $newsTable = reset($newsTable);
+            $siteId = empty($newsTable['cnews_site_id']) ? $siteId : $newsTable['cnews_site_id'];
+        }
+
         $view->melisKey = $melisKey;
         $view->newsId = $newsId;
         $view->forms = $forms;
@@ -463,6 +473,7 @@ class MelisCmsNewsController extends AbstractActionController
         $view->lang_id = $lang_id;
         $view->data = $data;
         $view->formsTitleSubtitle = $formsTitleSubtitle;
+        $view->siteId = $siteId;
 
         return $view;
     }
