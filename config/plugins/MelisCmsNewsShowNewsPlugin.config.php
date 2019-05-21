@@ -12,6 +12,7 @@ return [
                         'newsId' => null,
                     ],
                     'melis' => [
+                        'section' => 'MelisCms',
                         'name' => 'tr_MelisCmsNewsShowNewsPlugin_Name',
                         'thumbnail' => '/MelisCmsNews/plugins/images/MelisCmsNewsShowNewsPlugin_thumb.jpg',
                         'description' => 'tr_MelisCmsNewsShowNewsPlugin_Description',

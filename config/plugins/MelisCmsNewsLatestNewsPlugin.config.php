@@ -36,6 +36,8 @@ return array(
                         ),
                     ),
                     'melis' => array(
+                        // this is for sectioning the plugins
+                        'section' => 'MelisCms',
                         'name' => 'tr_MelisCmsNewsLatestNewsPlugin_Name',
                         'thumbnail' => '/MelisCmsNews/plugins/images/MelisCmsNewsLatestNewsPlugin_thumb.jpg',
                         'description' => 'tr_MelisCmsNewsLatestNewsPlugin_Description',
