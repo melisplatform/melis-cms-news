@@ -1126,4 +1126,51 @@ class MelisCmsNewsController extends AbstractActionController
 
         return $newFileName;
     }
+
+    public function previewTabContainerAction()
+    {
+        $melisKey = $this->params()->fromRoute('melisKey', '');
+        $newsId = (int)$this->params()->fromQuery('newsId', '');
+
+        $view = new ViewModel();
+        $view->newsId = $newsId;
+        $view->melisKey = $melisKey;
+
+        return $view;
+    }
+
+    public function previewTabContentContainerAction()
+    {
+        $melisKey = $this->params()->fromRoute('melisKey', '');
+        $newsId = (int)$this->params()->fromQuery('newsId', '');
+
+        $view = new ViewModel();
+        $view->newsId = $newsId;
+        $view->melisKey = $melisKey;
+
+        return $view;
+    }
+
+    public function previewTabHeaderAction()
+    {
+        $melisKey = $this->params()->fromRoute('melisKey', '');
+        $newsId = (int)$this->params()->fromQuery('newsId', '');
+        $tool = $this->getTool();
+
+        /** Get 'news title' via news ID */
+        $newsSvc = $this->getServiceLocator()->get("MelisCmsNews\Model\Tables\MelisCmsNewsTextsTable");
+
+        $labels = [
+            'seeInTab' => $tool->getTranslation('tr_meliscmsnews_preview_load_intab'),
+            'seeInNewTab' => $tool->getTranslation('tr_meliscmsnews_preview_load_newtab'),
+            'newsTitle' => $tool->getTranslation('Preview of news '),
+        ];
+
+        $view = new ViewModel();
+        $view->labels = $labels;
+        $view->newsId = $newsId;
+        $view->melisKey = $melisKey;
+
+        return $view;
+    }
 }

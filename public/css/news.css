@@ -187,3 +187,8 @@
 img.imgDocThumbnail {
 	min-height: 20px;
 }
+
+/* News preview */
+.news-preview-btns a{
+	margin: 0 0 8px 0;
+}

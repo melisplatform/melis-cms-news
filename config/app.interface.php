@@ -697,6 +697,50 @@ return [
                                                 ],
                                             ],
                                         ],
+                                        'meliscmsnews_content_tabs_comments' => [],
+                                        /**
+                                         *  Start of news preview
+                                         */
+                                        'meliscmsnews_tabs_preview' => [
+                                            'conf' => [
+                                                'id' => 'id_meliscmsnews_tabs_preview',
+                                                'melisKey' => 'meliscmsnews_tabs_preview',
+                                                'name' => 'tr_meliscmsnews_preview_tab_name',
+                                                'icon' => 'glyphicons eye_open',
+                                            ],
+                                            'forward' => [
+                                                'module' => 'MelisCmsNews',
+                                                'controller' => 'MelisCmsNews',
+                                                'action' => 'preview-tab-container',
+                                            ],
+                                            'interface' => [
+                                                'meliscmsnews_tabs_preview_content' => [
+                                                    'conf' => [
+                                                        'id' => 'id_meliscmsnews_tabs_preview_content',
+                                                        'melisKey' => 'meliscmsnews_tabs_preview_content',
+                                                    ],
+                                                    'forward' => [
+                                                        'module' => 'MelisCmsNews',
+                                                        'controller' => 'MelisCmsNews',
+                                                        'action' => 'preview-tab-content-container',
+                                                    ],
+                                                    'interface' => [
+                                                        'meliscmsnews_tabs_preview_header' => [
+                                                            'conf' => [
+                                                                'id' => 'id_meliscmsnews_tabs_preview_header',
+                                                                'melisKey' => 'meliscmsnews_tabs_preview_header',
+                                                            ],
+                                                            'forward' => [
+                                                                'module' => 'MelisCmsNews',
+                                                                'controller' => 'MelisCmsNews',
+                                                                'action' => 'preview-tab-header',
+                                                            ],
+                                                        ],
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                        /** End of news preview */
                                     ],
                                 ],
                             ],

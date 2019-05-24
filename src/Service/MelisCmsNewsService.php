@@ -181,4 +181,36 @@ class MelisCmsNewsService extends MelisCoreGeneralService
 
         return $arrayParameters['results'];
     }
+
+    /**
+     * Returns text via news ID
+     * @param int|null $newsId
+     * @return mixed
+     */
+    public function getPostText(int $newsId = null)
+    {
+        // Event parameters prepare
+        $arrayParameters = $this->makeArrayFromParameters(__METHOD__, func_get_args());
+        $results = [];
+
+        // Sending service start event
+        $arrayParameters = $this->sendEvent('melis_cms_news_get_post_text_start', $arrayParameters);
+
+        $newsId = (int)$arrayParameters['where'];
+
+        if (!empty($where['cnews_id'])) {
+            $newsTextTable = $this->getServiceLocator()->get('MelisCmsNews\Model\Tables\MelisCmsNewsTextsTable');
+            try {
+                $results = $newsTextTable->getEntryByField('cnews_id', $newsId);
+            } catch (\Exception $e) {
+                echo $e->getMessage();
+            }
+        }
+        // Adding results to parameters for events treatment if needed
+        $arrayParameters['results'] = $results;
+        // Sending service end event
+        $arrayParameters = $this->sendEvent('melis_cms_news_get_post_text_end', $arrayParameters);
+
+        return $arrayParameters['results'];
+    }
 }
