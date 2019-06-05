@@ -174,10 +174,7 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
                     $container = new Container('melisplugins');
                     $langId = $container['melis-plugins-lang-id'];
 
-                    /** @var \MelisEngine\Service\MelisPageService $pageSvc */
-                    $pageSvc = $this->getServiceLocator()->get('MelisEnginePage');
-                    $pageData = $pageSvc->getDatasPage($pluginData['pageId']);
-                    $siteId = (int)$pageData->getMelisTemplate()->tpl_site_id;
+                    $siteId = $this->getSiteIdByPageId($pluginData['pageId']);
 
                     /** @var \MelisCmsNews\Service\MelisCmsNewsService $newsSvc */
                     $newsSvc = $this->getServiceLocator()->get('MelisCmsNewsService');
@@ -305,5 +302,43 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
             "\t" . '</' . $this->pluginXmlDbKey . '>' . "\n";
 
         return $xmlValueFormatted;
+    }
+
+    /**
+     * Get the correct site id
+     *
+     * @param $pageId
+     * @return int
+     */
+    private function getSiteIdByPageId($pageId)
+    {
+        $siteId = 0;
+
+        $pageSaved = $this->getServiceLocator()->get('MelisEngineTablePageSaved');
+        $pagePublished = $this->getServiceLocator()->get('MelisEngineTablePagePublished');
+        $template = $this->getServiceLocator()->get('MelisEngineTableTemplate');
+
+        if(!empty($pageId)){
+            /**
+             * check first if there is data on page saved
+             */
+            $pageSavedData = $pageSaved->getEntryById($pageId)->current();
+            if(!empty($pageSavedData)){
+                $tplId = $pageSavedData->page_tpl_id;
+            }else{
+                //try to get the data from the page published
+                $pagePublishedData = $pagePublished->getEntryById($pageId)->current();
+                $tplId = $pagePublishedData->page_tpl_id;
+            }
+
+            if(!empty($tplId)){
+                $tplData = $template->getEntryById($tplId)->current();
+                if(!empty($tplData)){
+                    $siteId = $tplData->tpl_site_id;
+                }
+            }
+        }
+
+        return $siteId;
     }
 }
