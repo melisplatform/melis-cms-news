@@ -180,7 +180,7 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
                     $newsSvc = $this->getServiceLocator()->get('MelisCmsNewsService');
                     $posts = $newsSvc->getNewsList(
                         1,
-                        $langId,
+                        null,
                         null,
                         null,
                         null,
@@ -193,6 +193,9 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
                         $siteId,
                         null
                     );
+
+                    $posts = $this->processNewsLists($posts, $langId);
+
                     $valueOptions = [];
                     foreach ($posts as $post) {
                         $valueOptions[$post['cnews_id']] = $post['site_label'] . ' - ' . $post['cnews_title'];
@@ -305,7 +308,52 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
     }
 
     /**
-     * Get the correct site id
+     * Function to reprocess the news lists
+     * according to correct language
+     *
+     * @param $lists
+     * @param $langId
+     * @return array
+     */
+    private function processNewsLists($lists, $langId){
+        $newsCorrectLang = [];
+        $newsDiffLang = [];
+
+        /**
+         * separate the correct news (language)
+         */
+        foreach($lists as $key => $news){
+            if($langId == $news['cnews_lang_id']){
+                array_push($newsCorrectLang, $news);
+            }else{
+                array_push($newsDiffLang, $news);
+            }
+        }
+
+        /**
+         * remove other news from other language
+         */
+        foreach($newsDiffLang as $key => $diffNews){
+            foreach($newsCorrectLang as $k => $corrNews){
+                if($diffNews['cnews_id'] == $corrNews['cnews_id']){
+                    unset($newsDiffLang[$key]);
+                }
+            }
+        }
+
+        /**
+         * merge and sort the final lists
+         */
+        $finalNewsLists = array_merge($newsCorrectLang, $newsDiffLang);
+        usort($finalNewsLists, function($a, $b) {
+            return $a['cnews_title'] <=> $b['cnews_title'];
+        });
+
+        return $finalNewsLists;
+    }
+
+    /**
+     * Get site id
      *
      * @param $pageId
      * @return int
