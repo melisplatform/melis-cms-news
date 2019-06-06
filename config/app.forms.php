@@ -312,6 +312,31 @@ return [
                         ],
                     ],
                 ],
+                'meliscmsnews_page_detail_selector' => [
+                    'attributes' => [
+                        'name' => 'newsDetailsPageSelectorForm',
+                        'id' => 'newsDetailsPageSelectorForm',
+                        'method' => 'POST',
+                        'action' => '',
+                    ],
+                    'hydrator' => 'Zend\Stdlib\Hydrator\ArraySerializable',
+                    'elements' => [
+                        [
+                            'spec' => [
+                                'name' => 'page-id',
+                                'type' => 'select',
+                                'options' => [
+                                    'empty_option' => 'tr_meliscmsnews_preview_page_select',
+                                    'disable_inarray_validator' => true,
+                                ],
+                                'attributes' => [
+                                    'id' => 'page-id',
+                                    'value' => '',
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
             ],
         ],
     ],

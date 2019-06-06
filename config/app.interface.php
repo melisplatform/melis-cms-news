@@ -698,9 +698,8 @@ return [
                                             ],
                                         ],
                                         'meliscmsnews_content_tabs_comments' => [],
-                                        /**
-                                         *  Start of news preview
-                                         */
+
+                                        /** Start of news preview */
                                         'meliscmsnews_tabs_preview' => [
                                             'conf' => [
                                                 'id' => 'id_meliscmsnews_tabs_preview',
@@ -725,15 +724,26 @@ return [
                                                         'action' => 'preview-tab-content-container',
                                                     ],
                                                     'interface' => [
-                                                        'meliscmsnews_tabs_preview_header' => [
+//                                                        'meliscmsnews_tabs_preview_header' => [
+//                                                            'conf' => [
+//                                                                'id' => 'id_meliscmsnews_tabs_preview_header',
+//                                                                'melisKey' => 'meliscmsnews_tabs_preview_header',
+//                                                            ],
+//                                                            'forward' => [
+//                                                                'module' => 'MelisCmsNews',
+//                                                                'controller' => 'MelisCmsNews',
+//                                                                'action' => 'preview-tab-header',
+//                                                            ],
+//                                                        ],
+                                                        'meliscmsnews_tabs_preview_content' => [
                                                             'conf' => [
-                                                                'id' => 'id_meliscmsnews_tabs_preview_header',
-                                                                'melisKey' => 'meliscmsnews_tabs_preview_header',
+                                                                'id' => 'id_meliscmsnews_tabs_preview_content',
+                                                                'melisKey' => 'meliscmsnews_tabs_preview_content',
                                                             ],
                                                             'forward' => [
                                                                 'module' => 'MelisCmsNews',
                                                                 'controller' => 'MelisCmsNews',
-                                                                'action' => 'preview-tab-header',
+                                                                'action' => 'preview-tab-content',
                                                             ],
                                                         ],
                                                     ],
