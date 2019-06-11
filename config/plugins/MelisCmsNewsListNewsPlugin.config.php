@@ -48,6 +48,7 @@ return array(
                     ),
                     'melis' => array(
                         'name' => 'tr_MelisCmsNewsListNewsPlugin_Name',
+                        'section' => 'MelisCms',
                         'thumbnail' => '/MelisCmsNews/plugins/images/MelisCmsNewsListNewsPlugin_thumb.jpg',
                         'description' => 'tr_MelisCmsNewsListNewsPlugin_Description',
                         // List the files to be automatically included for the correct display of the plugin
