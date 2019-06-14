@@ -205,6 +205,18 @@ img.imgDocThumbnail {
 }
 
 /* News preview */
+.news-preview-title {
+    padding: 0 !important;
+}
+
+.news-preview-title .col-md-12 h4 {
+    margin-bottom: 17.5px;
+}
+
+.news-preview-btns {
+    padding: 0 !important;
+}
+
 .news-preview-btns a {
     margin: 0 0 5px 0;
 }
