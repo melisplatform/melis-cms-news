@@ -1221,22 +1221,22 @@ class MelisCmsNewsController extends AbstractActionController
                 $valueOptions[$page['page_id']] = $page['page_id'] . " - " . $page['page_name'];
             }
             $newsDetailPageSelector->get('page-id')->setValueOptions($valueOptions);
-        } else {
+
+            /** Set news id, & namespace attributes for the selector */
             $pageData = current($detailPages);
-            $pageId = $pageData['page_id'];
-            if (!empty($pageId)) {
-                /**
-                 * Case: Only 1 'Page - News details' found, && Page ID is available
-                 * - Hide "News details page" selector, & load the page in iFrame
-                 * @var \MelisEngine\Model\Tables\MelisTemplateTable $melisTemplate
-                 */
-                $melisTemplate = $this->getServiceLocator()->get('MelisEngineTableTemplate');
-                $melisTemplate = $melisTemplate->getEntryById($pageData['tpl_id'])->toArray();
-                if (!empty($melisTemplate)) {
-                    $melisTemplate = current($melisTemplate);
-                    $namespace = empty($melisTemplate['tpl_zf2_website_folder']) ? $namespace : $melisTemplate['tpl_zf2_website_folder'];
-                }
+            $namespace = empty($pageData['tpl_zf2_website_folder']) ? $namespace : $pageData['tpl_zf2_website_folder'];
+            if (!empty($newsId) && !empty($namespace)) {
+                $newsDetailPageSelector->get('page-id')->setAttribute('data-news-id', $newsId);
+                $newsDetailPageSelector->get('page-id')->setAttribute('data-name-space', $namespace);
             }
+        } else {
+            /**
+             * Case: Only 1 'Page - News details' found, && Page ID is available
+             * - Hide "News details page" selector, & load the page in iFrame
+             */
+            $pageData = current($detailPages);
+            $pageId = empty($pageData['page_id']) ? null : $pageData['page_id'];
+            $namespace = empty($pageData['tpl_zf2_website_folder']) ? $namespace : $pageData['tpl_zf2_website_folder'];
         }
 
         if (!empty($pageId) && !empty($namespace) && !empty($newsId)) {
@@ -1249,6 +1249,22 @@ class MelisCmsNewsController extends AbstractActionController
         $view->melisKey = $melisKey;
         $view->noPageDetails = $noPageDetails;
         $view->newsDetailPageSelector = $newsDetailPageSelector;
+
+        return $view;
+    }
+
+    /**
+     * Provides zone reloading functionality inside the Preview Tab
+     * @return ViewModel
+     */
+    public function previewTabIframeAction()
+    {
+        $melisKey = $this->params()->fromRoute('melisKey', '');
+        $newsId = (int)$this->params()->fromQuery('newsId', '');
+
+        $view = new ViewModel();
+        $view->newsId = $newsId;
+        $view->melisKey = $melisKey;
 
         return $view;
     }

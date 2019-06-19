@@ -23,7 +23,7 @@ $(document).ready(function () {
         var dataString = [];
         dataString.push({
             name: 'newsId',
-            value: newsId,
+            value: newsId
         });
         melisCoreTool.pending(".newsDelete");
 
@@ -38,7 +38,7 @@ $(document).ready(function () {
                     url: ajaxUrl,
                     data: dataString,
                     dataType: 'json',
-                    encode: true,
+                    encode: true
                 }).success(function (data) {
                     if (data.success) {
                         melisHelper.melisOkNotification(data.textTitle, data.textMessage);
@@ -64,15 +64,15 @@ $(document).ready(function () {
         var dataString = [];
         dataString.push({
             name: 'newsId',
-            value: newsId,
+            value: newsId
         });
         dataString.push({
             name: 'column',
-            value: column,
+            value: column
         });
         dataString.push({
             name: 'type',
-            value: type,
+            value: type
         });
 
         melisCoreTool.pending(".removeAttachFile");
@@ -88,7 +88,7 @@ $(document).ready(function () {
                     url: ajaxUrl,
                     data: dataString,
                     dataType: 'json',
-                    encode: true,
+                    encode: true
                 }).success(function (data) {
                     if (data.success) {
                         melisHelper.melisOkNotification(data.textTitle, data.textMessage);
@@ -107,7 +107,7 @@ $(document).ready(function () {
     });
 
     body.on("click", ".saveNewsLetter", function () {
-        if ($(this).attr('disabled') == undefined) {
+        if ($(this).attr('disabled') === undefined) {
             melisCoreTool.pending(".saveNewsLetter");
             var ajaxUrl = '/melis/MelisCmsNews/MelisCmsNews/saveNewsLetter';
             var newsPage = $(this).closest('.container-level-a');
@@ -118,8 +118,8 @@ $(document).ready(function () {
 
             //newsSiteTitleSubtitleForm
             var forms = $('#' + newsId + '_id_meliscmsnews_content_tabs_properties_details_right_paragraphs form#newsSiteTitleSubtitleForm');
-            ctr = 0
-            len = 1;
+            var ctr = 0;
+            var len = 1;
             forms.each(function () {
                 dataString.push({
                     name: 'cnews_title[' + ctr + ']',
@@ -162,7 +162,7 @@ $(document).ready(function () {
                 url: ajaxUrl,
                 data: dataString,
                 dataType: 'json',
-                encode: true,
+                encode: true
             }).success(function (data) {
                 if (data.success) {
                     toolNews.tabClose(newsId);
@@ -200,9 +200,9 @@ $(document).ready(function () {
         var newsId = $(this).data('newsid');
         var type = $(this).data('filetype');
         // initialation of local variable
-        zoneId = 'id_meliscmsnews_modal_documents_form';
-        melisKey = 'meliscmsnews_modal_documents_form';
-        modalUrl = '/melis/MelisCmsNews/MelisCmsNews/renderModal';
+        var zoneId = 'id_meliscmsnews_modal_documents_form';
+        var melisKey = 'meliscmsnews_modal_documents_form';
+        var modalUrl = '/melis/MelisCmsNews/MelisCmsNews/renderModal';
         // requesitng to create modal and display after
         melisHelper.createModal(zoneId, melisKey, false, {
             'newsId': newsId,
@@ -218,9 +218,9 @@ $(document).ready(function () {
         var newsId = $(this).data('newsid');
         var type = $(this).data('filetype');
         // initialation of local variable
-        zoneId = 'id_meliscmsnews_modal_documents_form_image';
-        melisKey = 'meliscmsnews_modal_documents_form_image';
-        modalUrl = '/melis/MelisCmsNews/MelisCmsNews/renderModal';
+        var zoneId = 'id_meliscmsnews_modal_documents_form_image';
+        var melisKey = 'meliscmsnews_modal_documents_form_image';
+        var modalUrl = '/melis/MelisCmsNews/MelisCmsNews/renderModal';
         // requesitng to create modal and display after
         melisHelper.createModal(zoneId, melisKey, false, {
             'newsId': newsId,
@@ -237,9 +237,9 @@ $(document).ready(function () {
         var type = $(this).data('filetype');
         var column = $(this).data('column');
         // initialation of local variable
-        zoneId = 'id_meliscmsnews_modal_documents_form_image';
-        melisKey = 'meliscmsnews_modal_documents_form_image';
-        modalUrl = '/melis/MelisCmsNews/MelisCmsNews/renderModal';
+        var zoneId = 'id_meliscmsnews_modal_documents_form_image';
+        var melisKey = 'meliscmsnews_modal_documents_form_image';
+        var modalUrl = '/melis/MelisCmsNews/MelisCmsNews/renderModal';
         // requesitng to create modal and display after
         melisHelper.createModal(zoneId, melisKey, false, {
             'newsId': newsId,
@@ -274,10 +274,10 @@ $(document).ready(function () {
                     fileXhr.upload.addEventListener('progress', toolNews.progress, false);
                 }
                 return fileXhr;
-            },
+            }
         }).success(function (data) {
             if (data.success) {
-                if (data.chunk.type == 'image') {
+                if (data.chunk.type === 'image') {
                     toolNews.imageModal(data.chunk);
                 } else {
                     toolNews.fileModal(data.chunk);
@@ -290,7 +290,7 @@ $(document).ready(function () {
             }
             $("div.progressContent").addClass("hidden");
             melisCoreTool.done(saveBtn);
-        }).error(function (event, xhr, options, exc) {
+        }).error(function (event, xhr) {
             console.log('failed', JSON.parse(xhr.responseText));
             melisCoreTool.done(saveBtn);
         });
@@ -301,6 +301,38 @@ $(document).ready(function () {
         $("#" + tableId).DataTable().ajax.reload();
     });
 
+    /**
+     * Preview tab: News details page selector
+     */
+    body.on("change", ".mcnews-page-details", function () {
+        /** Get news ID, create the URI for "see-in-new-tab" button & iFrame src. */
+        var pageId = this.value;
+        var selectorData = $(this).data();
+
+        if (typeof selectorData.newsId !== "undefined" && selectorData.newsId > 0 &&
+            typeof selectorData.nameSpace.length !== "undefined" && selectorData.nameSpace.length > 0 &&
+            typeof pageId !== "undefined" && pageId > 0) {
+            var uri = "/id/" + pageId + "/preview?melisSite=" + selectorData.nameSpace + "&newsId=" + selectorData.newsId;
+
+            /** Change href attributes for "Display below" & "Display in a new tab" buttons */
+            var seeBelow = body.find("#" + selectorData.newsId + "-see-below");
+            var seeNewTab = body.find("#" + selectorData.newsId + "-see-in-new-tab");
+            seeBelow.attr({"data-uri": uri, "disabled": false});
+            seeNewTab.attr({"href": uri, "disabled": false});
+        }
+    });
+
+    /**
+     * Preview tab: Display below event
+     */
+    body.on("click", ".preview-tab-see-below", function () {
+        /** Load iFrame area using the URI as src */
+        var displayBelow = $(this).data();
+        if (typeof displayBelow.uri !== "undefined" && displayBelow.uri > 0) {
+            console.log("URI: ", displayBelow.uri);
+            // melisHelper.zoneReload("", "", {uri: });
+        }
+    });
 });
 var toolNews = {
 
@@ -333,47 +365,52 @@ var toolNews = {
         text = $.trim(text);
 
         if (text.length > maxLength) {
-            text = text.substring(0, maxLength - ellipsis.length)
+            text = text.substring(0, maxLength - ellipsis.length);
             return text.substring(0, text.lastIndexOf(" ")) + ellipsis;
         }
-        else
+        else {
             return text;
+        }
     },
 
     progress: function progress(e) {
-        $("div.progressContent").removeClass("hidden");
-        $("div.progressContent > div.progress > div.progress-bar").attr("aria-valuenow", 0);
-        $("div.progressContent > div.progress > div.progress-bar").css("width", '0%');
-        $("div.progressContent > div.progress > span.status").html("");
+        var progressContent = $("div.progressContent");
+        progressContent.removeClass("hidden");
+        var progressBar = $("div.progressContent > div.progress > div.progress-bar");
+        progressBar.attr("aria-valuenow", 0);
+        progressBar.css("width", '0%');
+        var status = $("div.progressContent > div.progress > span.status");
+        status.html("");
         if (e.lengthComputable) {
             var max = e.total;
             var current = e.loaded;
             var percentage = (current * 100) / max;
-            $("div.progressContent > div.progress > div.progress-bar").attr("aria-valuenow", percentage);
-            $("div.progressContent > div.progress > div.progress-bar").css("width", percentage + "%");
+            progressBar.attr("aria-valuenow", percentage);
+            progressBar.css("width", percentage + "%");
 
             if (percentage > 100) {
-                $("div.progressContent").addClass("hidden");
+                progressContent.addClass("hidden");
             }
             else {
-                $("div.progressContent > div.progress > span.status").html(Math.round(percentage) + "%");
+                status.html(Math.round(percentage) + "%");
             }
         }
     }
 
-}
+};
 window.newsImagePreview = function (id, fileInput) {
     if (fileInput.files && fileInput.files[0]) {
         var reader = new FileReader();
         reader.onload = function (e) {
             $(id).attr('src', e.target.result);
-        }
+        };
         reader.readAsDataURL(fileInput.files[0]);
     }
-}
+};
 
-window.initNewsList = function (data, tblSettings) {
-    if ($('#newsSiteSelect').length) {
-        data.cnews_site_id = $('#newsSiteSelect').val();
+window.initNewsList = function (data) {
+    var siteSelect = $("#newsSiteSelect");
+    if (siteSelect.length) {
+        data.cnews_site_id = siteSelect.val();
     }
-}
+};

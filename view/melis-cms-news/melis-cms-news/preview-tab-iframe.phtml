@@ -1,0 +1,10 @@
+<?php
+$id = '';
+if (!empty($this->zoneconfig['conf']['id'])) {
+    $id .= $this->newsId . '_' . $this->zoneconfig['conf']['id'];
+}
+
+?>
+<div class="row" id="<?= $id ?>" data-melisKey="<?= $this->melisKey; ?>">
+    <h4>iFrame loads news preview here</h4>
+</div>

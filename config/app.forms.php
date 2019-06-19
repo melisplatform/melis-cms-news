@@ -331,7 +331,10 @@ return [
                                 ],
                                 'attributes' => [
                                     'id' => 'page-id',
+                                    'class' => 'mcnews-page-details',
                                     'value' => '',
+                                    'data-news-id' => '',
+                                    'data-name-space' => '',
                                 ],
                             ],
                         ],
