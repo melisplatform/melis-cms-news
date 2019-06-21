@@ -122,7 +122,7 @@ return [
                                 'name' => 'cnews_site_id',
                                 'type' => 'MelisCoreSiteSelect',
                                 'options' => [
-                                    'label' => 'tr_meliscms_tool_templates_tpl_site_id',
+                                    'label' => 'tr_meliscms_tool_news_site_id',
                                     'tooltip' => 'tr_meliscmsnews_tpl_site_id tooltip',
                                     'empty_option' => 'tr_meliscmsliderdetails_common_label_choose',
                                     'disable_inarray_validator' => true,
