@@ -4,7 +4,7 @@ if (!empty($this->zoneconfig['conf']['id'])) {
     $id .= $this->newsId . '_' . $this->zoneconfig['conf']['id'];
 }
 ?>
-<div class="row" id="<?= $id ?>" data-melisKey="<?= $this->melisKey; ?>">
+<div id="<?= $id ?>" data-melisKey="<?= $this->melisKey; ?>">
 <?php if (!empty($this->newsURI)): ?>
     <div id="<?= $this->newsId; ?>_news-preview-iframe-container" class="col-md-12">
         <div id="loadingZone" class="overlay-loader">

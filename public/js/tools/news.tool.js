@@ -327,13 +327,13 @@ $(document).ready(function () {
      */
     body.on("click", ".preview-tab-see-below", function () {
         /** Load iFrame area using the URI as src */
-        var btn = $(this);
-        var displayBelow = btn.data();
+        var newsId = this.id;
+        var btn = this.dataset;
 
-        if (typeof displayBelow.uri !== "undefined" && displayBelow.uri) {
-            var newsId = btn.attr("id").split("-")[0];
+        if (typeof btn.uri !== "undefined" && btn.uri) {
+            newsId = newsId.split("-")[0];
             if (newsId) {
-                melisHelper.zoneReload(newsId + "_id_meliscmsnews_tabs_preview_iframe", "meliscmsnews_tabs_preview_iframe", {newsId: newsId, newsUri: displayBelow.uri});
+                melisHelper.zoneReload(newsId + "_id_meliscmsnews_tabs_preview_iframe", "meliscmsnews_tabs_preview_iframe", {newsId: newsId, newsUri: btn.uri});
             }
         }
     });
