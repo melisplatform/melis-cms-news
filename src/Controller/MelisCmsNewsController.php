@@ -1238,7 +1238,7 @@ class MelisCmsNewsController extends AbstractActionController
         }
 
         if (!empty($pageId) && !empty($namespace) && !empty($newsId)) {
-            $newsURI = "/id/$pageId/preview?melisSite=$namespace&newsId=$newsId";
+            $newsURI = "/id/$pageId/preview?melisSite=$namespace&newsId=$newsId&renderMode=previewtab";
         }
 
         $view->labels = $labels;
@@ -1294,7 +1294,7 @@ class MelisCmsNewsController extends AbstractActionController
                 $pageId = empty($pageData['page_id']) ? null : $pageData['page_id'];
                 $namespace = empty($pageData['tpl_zf2_website_folder']) ? $namespace : $pageData['tpl_zf2_website_folder'];
                 if (!empty($pageId) && !empty($namespace) && !empty($newsId)) {
-                    $newsURI = "/id/$pageId/preview?melisSite=$namespace&newsId=$newsId";
+                    $newsURI = "/id/$pageId/preview?melisSite=$namespace&newsId=$newsId&renderMode=previewtab";
                 }
             }
         }

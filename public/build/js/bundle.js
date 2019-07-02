@@ -312,7 +312,7 @@ $(document).ready(function () {
         if (typeof selectorData.newsId !== "undefined" && selectorData.newsId > 0 &&
             typeof selectorData.nameSpace.length !== "undefined" && selectorData.nameSpace.length > 0 &&
             typeof pageId !== "undefined" && pageId > 0) {
-            var uri = "/id/" + pageId + "/preview?melisSite=" + selectorData.nameSpace + "&newsId=" + selectorData.newsId;
+            var uri = "/id/" + pageId + "/preview?melisSite=" + selectorData.nameSpace + "&newsId=" + selectorData.newsId + "&renderMode=previewtab";
 
             /** Change href attributes for "Display below" & "Display in a new tab" buttons */
             var seeBelow = body.find("#" + selectorData.newsId + "-see-below");
