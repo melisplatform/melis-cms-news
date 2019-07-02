@@ -370,10 +370,13 @@ class MelisCmsNewsController extends AbstractActionController
         $melisCoreConfig = $this->serviceLocator->get('MelisCoreConfig');
 
         $appConfigForm = $melisCoreConfig->getFormMergedAndOrdered('MelisCmsNews/forms/meliscmsnews_site_select_form', 'meliscmsnews_site_select_form');
-        $factory = new \Zend\Form\Factory();
+        $factory = new Factory();
         $formElements = $this->serviceLocator->get('FormElementManager');
         $factory->setFormElementManager($formElements);
         $form = $factory->createForm($appConfigForm);
+
+        /** Emphasizing site as a mandatory field by adding an asterisk */
+        $form->get('cnews_site_id')->setLabel($form->get('cnews_site_id')->getLabel() . ' *');
 
         if (!empty($this->layout()->news)) {
             $form->setData((array)$this->layout()->news);

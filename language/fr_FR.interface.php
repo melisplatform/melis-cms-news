@@ -18,7 +18,7 @@ return [
     'tr_meliscmsnews_list_header_left' => 'Header left zone',
     'tr_meliscmsnews_list_content' => 'Content',
     'tr_meliscmsnews_list_content_table' => 'Content table',
-    'tr_meliscms_tool_news_site_id' => 'Site*',
+    'tr_meliscms_tool_news_site_id' => 'Site',
 
     'tr_meliscmsnews_common_label_yes' => 'Oui',
     'tr_meliscmsnews_common_label_no' => 'Non',
@@ -88,7 +88,7 @@ return [
     'tr_meliscmsnews_attach_file_none' => 'Aucune pièce-jointe',
     'tr_meliscmsnews_image_none' => 'Aucune image',
     'tr_meliscmsnews_sites_title' => 'Sites',
-    'tr_meliscmsnews_site_title' => 'Site*',
+    'tr_meliscmsnews_site_title' => 'Site',
     'tr_meliscmsnews_form_publish' => 'Date de publication',
     'tr_meliscmsnews_form_publish tooltip' => 'La date de publication correspond à la date à laquelle sera publiée l&#39;actualité, cependant elle ne dispense pas de changer le statut de l&#39;actualité à actif',
     'tr_meliscmsnews_form_unpublish' => 'Date de dépublication',
