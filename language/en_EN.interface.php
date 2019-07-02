@@ -18,6 +18,7 @@ return [
     'tr_meliscmsnews_list_header_left' => 'Header left zone',
     'tr_meliscmsnews_list_content' => 'Content',
     'tr_meliscmsnews_list_content_table' => 'Content table',
+    'tr_meliscms_tool_news_site_id' => 'Site*',
 
     'tr_meliscmsnews_common_label_yes' => 'Yes',
     'tr_meliscmsnews_common_label_no' => 'No',
