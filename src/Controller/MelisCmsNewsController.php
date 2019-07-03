@@ -370,10 +370,13 @@ class MelisCmsNewsController extends AbstractActionController
         $melisCoreConfig = $this->serviceLocator->get('MelisCoreConfig');
 
         $appConfigForm = $melisCoreConfig->getFormMergedAndOrdered('MelisCmsNews/forms/meliscmsnews_site_select_form', 'meliscmsnews_site_select_form');
-        $factory = new \Zend\Form\Factory();
+        $factory = new Factory();
         $formElements = $this->serviceLocator->get('FormElementManager');
         $factory->setFormElementManager($formElements);
         $form = $factory->createForm($appConfigForm);
+
+        /** Emphasizing site as a mandatory field by adding an asterisk */
+        $form->get('cnews_site_id')->setLabel($form->get('cnews_site_id')->getLabel() . ' *');
 
         if (!empty($this->layout()->news)) {
             $form->setData((array)$this->layout()->news);
@@ -1125,5 +1128,184 @@ class MelisCmsNewsController extends AbstractActionController
         $newFileName = $file;
 
         return $newFileName;
+    }
+
+    /**
+     * Preview tab container view
+     * @return ViewModel
+     */
+    public function previewTabContainerAction()
+    {
+        $melisKey = $this->params()->fromRoute('melisKey', '');
+        $newsId = (int)$this->params()->fromQuery('newsId', '');
+
+        $view = new ViewModel();
+        $view->newsId = $newsId;
+        $view->melisKey = $melisKey;
+
+        return $view;
+    }
+
+    /**
+     * Preview tab content container view
+     * @return ViewModel
+     */
+    public function previewTabContentContainerAction()
+    {
+        $melisKey = $this->params()->fromRoute('melisKey', '');
+        $newsId = (int)$this->params()->fromQuery('newsId', '');
+
+        $view = new ViewModel();
+        $view->newsId = $newsId;
+        $view->melisKey = $melisKey;
+
+        return $view;
+    }
+
+    /**
+     * Preview tab's header
+     * @return ViewModel
+     */
+    public function previewTabContentAction()
+    {
+        $melisKey = $this->params()->fromRoute('melisKey', '');
+        $newsId = (int)$this->params()->fromQuery('newsId', '');
+        $pageId = (int)$this->params()->fromQuery('pageId', '');
+        $tool = $this->getTool();
+        $view = new ViewModel();
+        $namespace = '';
+        $newsURI = null;
+
+        $labels = [
+            'seeInTab' => $tool->getTranslation('tr_meliscmsnews_preview_load_intab'),
+            'seeInNewTab' => $tool->getTranslation('tr_meliscmsnews_preview_load_newtab'),
+            'newsTitlePrefix' => $tool->getTranslation('tr_meliscmsnews_preview_title_prefix'),
+        ];
+
+        /** @var \MelisCmsNews\Service\MelisCmsNewsService $newsSvc */
+        $newsSvc = $this->getServiceLocator()->get('MelisCmsNewsService');
+        $detailPages = [];
+
+        if (!empty($newsId)) {
+            /** Get 'news title' via news ID */
+            $newsDetails = $newsSvc->getNewsById($newsId);
+            if (!empty($newsDetails->cnews_title)) {
+                $labels['newsTitle'] = $newsDetails->cnews_title;
+            }
+
+            /** Get pages of 'news detail' type via site id */
+            $siteId = empty($newsDetails->cnews_site_id) ? null : $newsDetails->cnews_site_id;
+            if (!empty($siteId)) {
+                $detailPages = $newsSvc->getNewsDetailsPagesBySite($siteId)->toArray();
+            }
+        }
+
+        $newsDetailPageSelector = null;
+        if (count($detailPages) > 1) {
+            /**
+             * Case: Multiple 'Page - News details' found
+             *  - Build & show the "News details page" selector
+             * @var \Zend\Form\Form $form
+             */
+            $melisCoreConfig = $this->serviceLocator->get('MelisCoreConfig');
+            $appConfigForm = $melisCoreConfig->getFormMergedAndOrdered('MelisCmsNews/forms/meliscmsnews_page_detail_selector', 'meliscmsnews_page_detail_selector');
+            $factory = new Factory();
+            $formElements = $this->serviceLocator->get('FormElementManager');
+            $factory->setFormElementManager($formElements);
+            $newsDetailPageSelector = $factory->createForm($appConfigForm);
+
+            $valueOptions = [];
+            foreach ($detailPages as $page) {
+                $valueOptions[$page['page_id']] = $page['page_id'] . " - " . $page['page_name'];
+            }
+            $newsDetailPageSelector->get('page-id')->setValueOptions($valueOptions);
+
+            /** Set news id, & namespace attributes for the selector */
+            $pageData = current($detailPages);
+            $namespace = empty($pageData['tpl_zf2_website_folder']) ? $namespace : $pageData['tpl_zf2_website_folder'];
+            if (!empty($newsId) && !empty($namespace)) {
+                $newsDetailPageSelector->get('page-id')->setAttribute('data-news-id', $newsId);
+                $newsDetailPageSelector->get('page-id')->setAttribute('data-name-space', $namespace);
+            }
+        } elseif (count($detailPages) === 1) {
+            /**
+             * Case: Only 1 'Page - News details' found, && Page ID is available
+             * - Hide "News details page" selector, & load the page in iFrame
+             */
+            $pageData = current($detailPages);
+            $pageId = empty($pageData['page_id']) ? null : $pageData['page_id'];
+            $namespace = empty($pageData['tpl_zf2_website_folder']) ? $namespace : $pageData['tpl_zf2_website_folder'];
+        }
+
+        if (!empty($pageId) && !empty($namespace) && !empty($newsId)) {
+            $newsURI = "/id/$pageId/preview?melisSite=$namespace&newsId=$newsId&renderMode=previewtab";
+        }
+
+        $view->labels = $labels;
+        $view->newsId = $newsId;
+        $view->newsURI = $newsURI;
+        $view->melisKey = $melisKey;
+        $view->newsDetailPageSelector = $newsDetailPageSelector;
+
+        return $view;
+    }
+
+    /**
+     * Provides zone reloading functionality inside the Preview Tab
+     * @return ViewModel
+     */
+    public function previewTabIframeAction()
+    {
+        $melisKey = $this->params()->fromRoute('melisKey', '');
+        $newsId = (int)$this->params()->fromQuery('newsId', '');
+        $newsURI = $this->params()->fromQuery('newsUri', '');
+
+        $noPageDetails = false;
+        $tool = $this->getTool();
+        $labels = [
+            'noPageNewsDetails' => $tool->getTranslation('tr_meliscmsnews_preview_no_pages_found'),
+        ];
+
+        if (empty($newsURI)) {
+
+            /** @var \MelisCmsNews\Service\MelisCmsNewsService $newsSvc */
+            $newsSvc = $this->getServiceLocator()->get('MelisCmsNewsService');
+            $detailPages = [];
+            $namespace = '';
+
+            if (!empty($newsId)) {
+                /** Get pages of 'news detail' type via site id */
+                $newsDetails = $newsSvc->getNewsById($newsId);
+                $siteId = empty($newsDetails->cnews_site_id) ? null : $newsDetails->cnews_site_id;
+                if (!empty($siteId)) {
+                    $detailPages = $newsSvc->getNewsDetailsPagesBySite($siteId)->toArray();
+                }
+            }
+
+            if (empty($detailPages)) {
+                /** Case: "No Page - News details found." */
+                $noPageDetails = true;
+            } elseif (count($detailPages) === 1) {
+                /**
+                 * Case: Only 1 'Page - News details' found, && Page ID is available
+                 * - Hide "News details page" selector, & load the page in iFrame
+                 */
+                $pageData = current($detailPages);
+                $pageId = empty($pageData['page_id']) ? null : $pageData['page_id'];
+                $namespace = empty($pageData['tpl_zf2_website_folder']) ? $namespace : $pageData['tpl_zf2_website_folder'];
+                if (!empty($pageId) && !empty($namespace) && !empty($newsId)) {
+                    $newsURI = "/id/$pageId/preview?melisSite=$namespace&newsId=$newsId&renderMode=previewtab";
+                }
+            }
+        }
+
+        $view = new ViewModel();
+        $view->labels = $labels;
+        $view->newsId = $newsId;
+        $view->melisKey = $melisKey;
+        $view->newsURI = $newsURI;
+        $view->noPageDetails = $noPageDetails;
+
+        return $view;
     }
 }

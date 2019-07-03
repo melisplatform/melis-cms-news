@@ -1,0 +1,60 @@
+<?php
+$id = '';
+if (!empty($this->zoneconfig['conf']['id'])) {
+    $id .= $this->newsId . '_' . $this->zoneconfig['conf']['id'];
+}
+?>
+<div class="news-preview-tab" id="<?= $id ?>" data-melisKey="<?= $this->melisKey; ?>">
+    <div class="row">
+        <div class="col-md-6 col-xs-12 news-preview-title">
+            <div class="col-md-12"><h4><?= $this->labels['newsTitlePrefix']; ?> <em>"<?= $this->labels['newsTitle']; ?>"</em></h4></div>
+            <div class="col-md-12">
+                <?php
+                if (!empty($this->newsDetailPageSelector)):
+                    echo $this->form()->openTag($this->newsDetailPageSelector);
+                    echo $this->melisFieldCollection($this->newsDetailPageSelector);
+                    echo $this->form()->closeTag();
+                    ?>
+                    <script type="text/javascript">
+                        (function () {
+                            var pageSelector = $body.find("#newsDetailsPageSelectorForm #page-id");
+                            if (pageSelector.length > 0) {
+                                pageSelector.select2({
+                                    width: '100%',
+                                    minimumResultsForSearch: -1,
+                                    placeholder: translations.tr_meliscmsnews_preview_page_select
+                                });
+                            }
+                        })();
+                    </script>
+                <?php endif; ?>
+            </div>
+        </div>
+        <div class="col-md-6 col-xs-12 news-preview-btns ">
+            <?php if (!empty($this->newsDetailPageSelector)): ?>
+            <div class="col-md-12">
+                <a id="<?= $this->newsId; ?>-see-below" class="btn btn-info pull-right preview-tab-see-below" title="<?= $this->labels['seeInTab']; ?>"
+                    <?= empty($this->newsURI) ? 'disabled' : ' data-uri="' . $this->newsURI . '"'; ?>>
+                    <?= $this->labels['seeInTab']; ?>
+                </a>
+            </div>
+            <?php endif; ?>
+            <div class="col-md-12">
+                <a id="<?= $this->newsId; ?>-see-in-new-tab" class="btn btn-info pull-right" title="<?= $this->labels['seeInNewTab']; ?>" target="_blank"
+                    <?= empty($this->newsURI) ? 'disabled' : ' href="' . $this->newsURI . '"'; ?>>
+                    <?= $this->labels['seeInNewTab']; ?>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <?php
+        if (!empty($this->zoneconfig['interface'])) {
+            foreach ($this->zoneconfig['interface'] as $keyConfig => $menuConfig) {
+                echo $this->$keyConfig;
+            }
+        }
+        ?>
+    </div>
+</div>

@@ -18,6 +18,8 @@ use MelisCore\Service\MelisCoreGeneralService;
  */
 class MelisCmsNewsService extends MelisCoreGeneralService
 {
+    const PAGE_TYPE_NEWS_DETAIL = 'NEWS_DETAIL';
+
     /**
      * Retrieves a list of news
      *
@@ -178,6 +180,65 @@ class MelisCmsNewsService extends MelisCoreGeneralService
         $arrayParameters['results'] = $results;
         // Sending service end event
         $arrayParameters = $this->sendEvent('melis_cms_news__delete_news_by_id_end', $arrayParameters);
+
+        return $arrayParameters['results'];
+    }
+
+    /**
+     * Returns text via news ID
+     * @param int|null $newsId
+     * @return mixed
+     */
+    public function getPostText(int $newsId = null)
+    {
+        // Event parameters prepare
+        $arrayParameters = $this->makeArrayFromParameters(__METHOD__, func_get_args());
+        $results = [];
+
+        // Sending service start event
+        $arrayParameters = $this->sendEvent('melis_cms_news_get_post_text_start', $arrayParameters);
+
+        $newsId = (int)$arrayParameters['newsId'];
+
+        if (!empty($where['cnews_id'])) {
+            $newsTextTable = $this->getServiceLocator()->get('MelisCmsNews\Model\Tables\MelisCmsNewsTextsTable');
+            try {
+                $results = $newsTextTable->getEntryByField('cnews_id', $newsId);
+            } catch (\Exception $e) {
+                echo $e->getMessage();
+            }
+        }
+        // Adding results to parameters for events treatment if needed
+        $arrayParameters['results'] = $results;
+        // Sending service end event
+        $arrayParameters = $this->sendEvent('melis_cms_news_get_post_text_end', $arrayParameters);
+
+        return $arrayParameters['results'];
+    }
+
+    /**
+     * Provides value options for "News details page selector"
+     * - Pages with type: Page – News details
+     * @param int|null $siteId
+     * @return mixed
+     */
+    public function getNewsDetailsPagesBySite(int $siteId = null)
+    {
+        // Event parameters prepare
+        $arrayParameters = $this->makeArrayFromParameters(__METHOD__, func_get_args());
+
+        // Sending service start event
+        $arrayParameters = $this->sendEvent('melis_cms_news_get_news_details_pages_start', $arrayParameters);
+
+        /** @var \MelisEngine\Model\Tables\MelisPagePublishedTable $publishedPages */
+        $siteId = (int)$arrayParameters['siteId'];
+        $publishedPages = $this->getServiceLocator()->get('MelisEngineTablePagePublished');
+        $detailPages = $publishedPages->getPagesByType(self::PAGE_TYPE_NEWS_DETAIL, $siteId);
+
+        // Adding results to parameters for events treatment if needed
+        $arrayParameters['results'] = $detailPages;
+        // Sending service end event
+        $arrayParameters = $this->sendEvent('melis_cms_news_get_news_details_pages_end', $arrayParameters);
 
         return $arrayParameters['results'];
     }

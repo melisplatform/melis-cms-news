@@ -98,7 +98,6 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
                 }
             }
         } else {
-
             $newsDataRes = $newsSrv->getNewsById($newsId, $langId);
 
             if (!empty($newsDataRes)) {
@@ -112,6 +111,11 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
                         }
                     }
                 }
+            }
+
+            /** Return news data for Preview Tab */
+            if (!empty($data['renderMode']) && $data['renderMode'] === "previewtab") {
+                $newsData = $newsDataRes;
             }
         }
         # add user account

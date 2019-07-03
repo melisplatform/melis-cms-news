@@ -10,6 +10,7 @@ return [
                         'id' => 'shownews',
                         // News Id
                         'newsId' => null,
+                        'renderMode' => null,
                     ],
                     'melis' => [
                         'section' => 'MelisCms',

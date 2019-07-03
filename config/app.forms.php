@@ -122,7 +122,7 @@ return [
                                 'name' => 'cnews_site_id',
                                 'type' => 'MelisCoreSiteSelect',
                                 'options' => [
-                                    'label' => 'tr_meliscms_tool_templates_tpl_site_id',
+                                    'label' => 'tr_meliscms_tool_news_site_id',
                                     'tooltip' => 'tr_meliscmsnews_tpl_site_id tooltip',
                                     'empty_option' => 'tr_meliscmsliderdetails_common_label_choose',
                                     'disable_inarray_validator' => true,
@@ -308,6 +308,34 @@ return [
                             'filters' => [
                                 ['name' => 'StripTags'],
                                 ['name' => 'StringTrim'],
+                            ],
+                        ],
+                    ],
+                ],
+                'meliscmsnews_page_detail_selector' => [
+                    'attributes' => [
+                        'name' => 'newsDetailsPageSelectorForm',
+                        'id' => 'newsDetailsPageSelectorForm',
+                        'method' => 'POST',
+                        'action' => '',
+                    ],
+                    'hydrator' => 'Zend\Stdlib\Hydrator\ArraySerializable',
+                    'elements' => [
+                        [
+                            'spec' => [
+                                'name' => 'page-id',
+                                'type' => 'select',
+                                'options' => [
+                                    'empty_option' => 'tr_meliscmsnews_preview_page_select',
+                                    'disable_inarray_validator' => true,
+                                ],
+                                'attributes' => [
+                                    'id' => 'page-id',
+                                    'class' => 'mcnews-page-details',
+                                    'value' => '',
+                                    'data-news-id' => '',
+                                    'data-name-space' => '',
+                                ],
                             ],
                         ],
                     ],
