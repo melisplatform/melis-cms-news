@@ -131,6 +131,7 @@ class MelisCmsNewsService extends MelisCoreGeneralService
         $arrayParameters = $this->sendEvent('melis_cms_news_save_news_start', $arrayParameters);
 
         // Service implementation start
+        /** @var \MelisCmsNews\Model\Tables\MelisCmsNewsTable $newsTable */
         $newsTable = $this->getServiceLocator()->get('MelisCmsNewsTable');
         try {
             $results = $newsTable->save($arrayParameters['news'], $arrayParameters['newsId']);

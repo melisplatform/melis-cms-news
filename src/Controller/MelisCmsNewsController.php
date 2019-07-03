@@ -612,7 +612,9 @@ class MelisCmsNewsController extends AbstractActionController
                 $lang_id = $this->getLangId();
                 $data['cnews_title'] = '';
 
-                if ($data['cnews_id']) {
+                if (!empty($data['cnews_id'])) {
+                    /** @var \MelisCmsNews\Model\Tables\MelisCmsNewsTextsTable $newsTextsTable */
+                    $newsTextsTable = $this->getServiceLocator()->get('MelisCmsNewsTextsTable');
                     for ($i = 0; $i < (int)$postValues['formCount']; $i++) {
                         if ($postValues['cnews_lang_id'][$i] == $lang_id) {
                             $data['cnews_title'] = $postValues['cnews_title'][$i];
@@ -632,17 +634,8 @@ class MelisCmsNewsController extends AbstractActionController
                             $data['cnews_title'] = !empty($postValues['cnews_title'][0]) ? $postValues['cnews_title'][0] : $postValues['cnews_title'][1];
                         }
 
-                        /** @var \MelisCmsNews\Model\Tables\MelisCmsNewsTable $newsTable */
-                        $newsTable = $this->getServiceLocator()->get('MelisCmsNewsTable');
-                        /** @var \MelisCmsNews\Model\Tables\MelisCmsNewsTextsTable $newsTextsTable */
-                        $newsTextsTable = $this->getServiceLocator()->get('MelisCmsNewsTextsTable');
-
-                        $lastNews = $newsTable->getLastNews()->current();
-
                         if (empty($postValues['cnews_id'])) {
-                            $lastNews = (array)$lastNews;
-                            $newsTxt['cnews_id'] = $lastNews['cnews_id'];
-
+                            $newsTxt['cnews_id'] = $data['cnews_id'];
                             $newsTextsTable->save($newsTxt);
                         } else {
                             $newsTextsTable->updateNewsText(
@@ -653,14 +646,16 @@ class MelisCmsNewsController extends AbstractActionController
                             );
                         }
                     }
-                }
 
-                if ($data['cnews_id']) {
+                    /** Updating post values for the listener: "meliscmsnews_get_postvalues" */
+                    if (!empty($postValues['cnews_id'])) {
+                        $postValues['cnews_id'] = $data['cnews_id'];
+                    }
+
                     $id = $data['cnews_id'];
                     $textMessage = 'tr_meliscmsnews_save_success';
                     $success = 1;
                 }
-
             } else {
                 $formErrors = $form->getMessages();
                 foreach ($formErrors as $fieldName => $fieldErrors) {
