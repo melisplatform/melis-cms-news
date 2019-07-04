@@ -6,6 +6,9 @@
 return [
     'plugins' => [
         'meliscmscomments' => [
+            'conf' => [
+                'rightsDisplay' => 'none'
+            ],
             'dashboard-plugins' => [
                 'LatestCommentsPlugin' => [
                     'PostTypes' => [
