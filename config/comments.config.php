@@ -6,6 +6,9 @@
 return [
     'plugins' => [
         'meliscmsnews' => [
+            'conf' => [
+                'rightsDisplay' => 'none'
+            ],
             'interface' => [
                 'meliscmsnews' => [
                     'conf' => [
