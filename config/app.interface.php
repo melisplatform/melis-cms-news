@@ -705,7 +705,7 @@ return [
                                                 'id' => 'id_meliscmsnews_tabs_preview',
                                                 'melisKey' => 'meliscmsnews_tabs_preview',
                                                 'name' => 'tr_meliscmsnews_preview_tab_name',
-                                                'icon' => 'glyphicons eye_open',
+                                                'icon' => 'glyphicons imac',
                                             ],
                                             'forward' => [
                                                 'module' => 'MelisCmsNews',
@@ -713,10 +713,10 @@ return [
                                                 'action' => 'preview-tab-container',
                                             ],
                                             'interface' => [
-                                                'meliscmsnews_tabs_preview_content' => [
+                                                'meliscmsnews_tabs_preview_content_container' => [
                                                     'conf' => [
-                                                        'id' => 'id_meliscmsnews_tabs_preview_content',
-                                                        'melisKey' => 'meliscmsnews_tabs_preview_content',
+                                                        'id' => 'id_meliscmsnews_tabs_preview_content_container',
+                                                        'melisKey' => 'meliscmsnews_tabs_preview_content_container',
                                                     ],
                                                     'forward' => [
                                                         'module' => 'MelisCmsNews',
