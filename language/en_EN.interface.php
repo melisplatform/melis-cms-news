@@ -178,5 +178,5 @@ return [
     'tr_meliscmsnews_preview_load_newtab' => 'Display in a new tab',
     'tr_meliscmsnews_preview_page_type' => 'Page – News details',
     'tr_meliscmsnews_preview_title_prefix' => 'Preview for',
-    'tr_meliscmsnews_preview_no_pages_found' => 'No \'Page - News details\' found.',
+    'tr_meliscmsnews_preview_no_pages_found' => 'No page with the type "Page - news details" found.',
 ];

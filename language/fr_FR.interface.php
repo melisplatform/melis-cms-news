@@ -178,5 +178,5 @@ return [
     'tr_meliscmsnews_preview_load_newtab' => 'Afficher dans un nouvel onglet',
     'tr_meliscmsnews_preview_page_type' => 'Page – détails actualité',
     'tr_meliscmsnews_preview_title_prefix' => 'Apreçu de',
-    'tr_meliscmsnews_preview_no_pages_found' => 'No \'Page - News details\' found.',
+    'tr_meliscmsnews_preview_no_pages_found' => 'Aucune page avec le type "Page - détails actualité" trouvée.',
 ];
