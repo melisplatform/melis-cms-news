@@ -1196,7 +1196,7 @@ class MelisCmsNewsController extends AbstractActionController
             /** Get pages of 'news detail' type via site id */
             $siteId = empty($newsDetails->cnews_site_id) ? null : $newsDetails->cnews_site_id;
             if (!empty($siteId)) {
-                $detailPages = $newsSvc->getNewsDetailsPagesBySite($siteId)->toArray();
+                $detailPages = $newsSvc->getNewsDetailsPagesBySite($siteId);
             }
         }
 
@@ -1280,7 +1280,7 @@ class MelisCmsNewsController extends AbstractActionController
                 $newsDetails = $newsSvc->getNewsById($newsId);
                 $siteId = empty($newsDetails->cnews_site_id) ? null : $newsDetails->cnews_site_id;
                 if (!empty($siteId)) {
-                    $detailPages = $newsSvc->getNewsDetailsPagesBySite($siteId)->toArray();
+                    $detailPages = $newsSvc->getNewsDetailsPagesBySite($siteId);
                 }
             }
 
