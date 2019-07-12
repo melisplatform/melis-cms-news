@@ -179,4 +179,7 @@ return [
     'tr_meliscmsnews_preview_page_type' => 'Page – détails actualité',
     'tr_meliscmsnews_preview_title_prefix' => 'Apreçu de',
     'tr_meliscmsnews_preview_no_pages_found' => 'No \'Page - News details\' found.',
+
+    // Table column text
+    'tr_meliscmsnews_news_title' => 'Actualités',
 ];
