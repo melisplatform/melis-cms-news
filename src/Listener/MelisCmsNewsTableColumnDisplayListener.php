@@ -12,6 +12,7 @@ namespace MelisCmsNews\Listener;
 use Zend\EventManager\EventManagerInterface;
 use Zend\EventManager\ListenerAggregateInterface;
 use MelisCore\Listener\MelisCoreGeneralListener;
+use Zend\Session\Container;
 
 class MelisCmsNewsTableColumnDisplayListener extends MelisCoreGeneralListener implements ListenerAggregateInterface
 {
@@ -38,7 +39,39 @@ class MelisCmsNewsTableColumnDisplayListener extends MelisCoreGeneralListener im
                 $sm = $e->getTarget()->getServiceLocator();
                 $params = $e->getParams();
 
-                $params['data'] = '<span class="text-'.($params['data'] ? 'success' : 'danger').'"><i class="fa fa-fw fa-circle"></i></span>';
+                $newsTitle = $params['data'];
+
+                $container = new Container('meliscore');
+                $coreLangId = $container['melis-lang-id'];
+                $langId = $coreLangId;
+
+                $melisEngineLangTable = $sm->get('MelisEngineTableCmsLang');
+                $locale = $container['melis-lang-locale'];
+                $currentLangData = $melisEngineLangTable->getEntryByField('lang_cms_locale', $locale);
+                $currentLang = $currentLangData->current();
+                if (!empty($currentLang))
+                    $langId = $currentLang->lang_cms_id;
+
+                $newsSrv = $sm->get('MelisCmsNewsTextsTable');
+                $newsData = $newsSrv->getEntryByField('cnews_id', $params['data'])->toArray();
+
+                $newsTitleTmp = '';
+                if (!empty($newsData)){
+                    foreach ($newsData As $data)
+                        if ($data['cnews_lang_id'] == $langId && !empty($data['cnews_title'])){
+                            $newsTitleTmp = $data['cnews_title'];
+                        }
+                }
+
+                if (empty($newsTitleTmp)){
+                    foreach ($newsData As $data)
+                        if (!empty($data['cnews_title'])){
+                            $newsTitleTmp = $data['cnews_title'];
+                            break;
+                        }
+                }
+
+                $params['data'] = $newsTitleTmp;
             }
         );
     }
