@@ -1180,6 +1180,7 @@ class MelisCmsNewsController extends AbstractActionController
             'seeInTab' => $tool->getTranslation('tr_meliscmsnews_preview_load_intab'),
             'seeInNewTab' => $tool->getTranslation('tr_meliscmsnews_preview_load_newtab'),
             'newsTitlePrefix' => $tool->getTranslation('tr_meliscmsnews_preview_title_prefix'),
+            'newsTitle' => '',
         ];
 
         /** @var \MelisCmsNews\Service\MelisCmsNewsService $newsSvc */
@@ -1188,7 +1189,7 @@ class MelisCmsNewsController extends AbstractActionController
 
         if (!empty($newsId)) {
             /** Get 'news title' via news ID */
-            $newsDetails = $newsSvc->getNewsById($newsId);
+            $newsDetails = $newsSvc->getNewsById($newsId, $this->getLangId());
             if (!empty($newsDetails->cnews_title)) {
                 $labels['newsTitle'] = $newsDetails->cnews_title;
             }
@@ -1277,7 +1278,7 @@ class MelisCmsNewsController extends AbstractActionController
 
             if (!empty($newsId)) {
                 /** Get pages of 'news detail' type via site id */
-                $newsDetails = $newsSvc->getNewsById($newsId);
+                $newsDetails = $newsSvc->getNewsById($newsId, $this->getLangId());
                 $siteId = empty($newsDetails->cnews_site_id) ? null : $newsDetails->cnews_site_id;
                 if (!empty($siteId)) {
                     $detailPages = $newsSvc->getNewsDetailsPagesBySite($siteId);

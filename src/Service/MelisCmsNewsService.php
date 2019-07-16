@@ -230,7 +230,6 @@ class MelisCmsNewsService extends MelisCoreGeneralService
         // Sending service start event
         $arrayParameters = $this->sendEvent('melis_cms_news_get_news_details_pages_start', $arrayParameters);
 
-        $detailPages = [];
         $published = [];
         $saved = [];
 
