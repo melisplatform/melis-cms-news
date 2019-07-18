@@ -49,7 +49,7 @@ class Module
             // attach listeners for Melis
             $eventManager->attach(new MelisCmsNewsSliderDeletedListener());
             $eventManager->attach(new MelisCmsNewsFlashMessengerListener());
-            $eventManager->attach(new MelisCmsNewsPreviewTypeListener());
+            //$eventManager->attach(new MelisCmsNewsPreviewTypeListener());
         }
     }
     
