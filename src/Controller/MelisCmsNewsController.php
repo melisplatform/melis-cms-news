@@ -611,7 +611,6 @@ class MelisCmsNewsController extends AbstractActionController
 
                 $lang_id = $this->getLangId();
                 $data['cnews_title'] = '';
-
                 if (!empty($data['cnews_id'])) {
                     /** @var \MelisCmsNews\Model\Tables\MelisCmsNewsTextsTable $newsTextsTable */
                     $newsTextsTable = $this->getServiceLocator()->get('MelisCmsNewsTextsTable');
@@ -638,15 +637,32 @@ class MelisCmsNewsController extends AbstractActionController
                             $newsTxt['cnews_id'] = $data['cnews_id'];
                             $newsTextsTable->save($newsTxt);
                         } else {
-                            $newsTextsTable->updateNewsText(
-                                $newsTxt, [
-                                    'cnews_id' => $postValues['cnews_id'],
-                                    'cnews_lang_id' => $newsTxt['cnews_lang_id']
-                                ]
-                            );
+                            // check for current record of news texts
+                            $currentData = $newsTextsTable->getEntryByField('cnews_id',$postValues['cnews_id'])->toArray();
+                            // check record for every language
+                            $textId = null;
+                            if (! empty($currentData)) {
+                                foreach ($currentData as $idx => $val) {
+                                    if ($val['cnews_lang_id'] == $newsTxt['cnews_lang_id']) {
+                                        $textId = $val['cnews_text_id'];
+                                    }
+                                }
+                            }
+                            if (!is_null($textId)) {
+                                // update the text
+                                $newsTextsTable->updateNewsText(
+                                    $newsTxt, [
+                                        'cnews_id' => $postValues['cnews_id'],
+                                        'cnews_lang_id' => $newsTxt['cnews_lang_id']
+                                    ]
+                                );
+                            } else {
+                                // make a new record
+                                $newsTxt['cnews_id'] = $postValues['cnews_id'];
+                                $newsTextsTable->save($newsTxt);
+                            }
                         }
                     }
-
                     /** Updating post values for the listener: "meliscmsnews_get_postvalues" */
                     if (!empty($postValues['cnews_id'])) {
                         $postValues['cnews_id'] = $data['cnews_id'];
