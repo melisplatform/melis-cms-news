@@ -1188,9 +1188,33 @@ class MelisCmsNewsController extends AbstractActionController
         $detailPages = [];
 
         if (!empty($newsId)) {
-            /** Get 'news title' via news ID */
-            $newsDetails = $newsSvc->getNewsById($newsId, $this->getLangId());
-            if (!empty($newsDetails->cnews_title)) {
+            $langId = $this->getLangId();
+            $newsDetails = $newsSvc->getNewsById($newsId, $langId);
+
+            if (empty($newsDetails->cnews_title)) {
+                /**
+                 * Get the post's title, preferably that of the platform's language
+                 */
+                $postText = $newsSvc->getPostText(['cnews_id' => $newsId])->toArray();
+
+                foreach ($postText as $text) {
+                    if ($text['cnews_lang_id'] === $langId) {
+                        $labels['newsTitle'] = $text['cnews_title'];
+                        break;
+                    }
+                }
+                /**
+                 * Get the fallback title = the next language with a title maintained
+                 */
+                if (empty($labels['newsTitle'])) {
+                    foreach ($postText as $text) {
+                        if (!empty($text['cnews_title'])) {
+                            $labels['newsTitle'] = $text['cnews_title'];
+                            break;
+                        }
+                    }
+                }
+            } else {
                 $labels['newsTitle'] = $newsDetails->cnews_title;
             }
 
