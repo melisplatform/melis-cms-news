@@ -200,7 +200,7 @@ class MelisCmsNewsService extends MelisCoreGeneralService
 
         $newsId = (int)$arrayParameters['newsId'];
 
-        if (!empty($where['cnews_id'])) {
+        if (!empty($newsId)) {
             $newsTextTable = $this->getServiceLocator()->get('MelisCmsNews\Model\Tables\MelisCmsNewsTextsTable');
             try {
                 $results = $newsTextTable->getEntryByField('cnews_id', $newsId);

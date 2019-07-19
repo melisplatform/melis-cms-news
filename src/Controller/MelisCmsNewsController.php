@@ -1195,7 +1195,7 @@ class MelisCmsNewsController extends AbstractActionController
                 /**
                  * Get the post's title, preferably that of the platform's language
                  */
-                $postText = $newsSvc->getPostText(['cnews_id' => $newsId])->toArray();
+                $postText = $newsSvc->getPostText($newsId)->toArray();
 
                 foreach ($postText as $text) {
                     if ($text['cnews_lang_id'] === $langId) {
