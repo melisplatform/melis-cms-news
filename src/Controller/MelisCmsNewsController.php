@@ -294,7 +294,7 @@ class MelisCmsNewsController extends AbstractActionController
         $melisCoreConfig = $this->serviceLocator->get('MelisCoreConfig');
         $tool = $this->getServiceLocator()->get('MelisCoreTool');
         $appConfigForm = $melisCoreConfig->getFormMergedAndOrdered('MelisCmsNews/forms/meliscmsnews_properties_form', 'meliscmsnews_properties_form');
-        $factory = new \Zend\Form\Factory();
+        $factory = new Factory();
         $formElements = $this->serviceLocator->get('FormElementManager');
         $factory->setFormElementManager($formElements);
         $form = $factory->createForm($appConfigForm);
@@ -443,7 +443,7 @@ class MelisCmsNewsController extends AbstractActionController
         $titleFormConfig = $melisCoreConfig->getFormMergedAndOrdered('MelisCmsNews/forms/meliscmsnews_site_title_subtitle_form', 'meliscmsnews_site_title_subtitle_form');
         $titleLabel = $titleFormConfig['elements'][0]['spec']['options']['label'];
         $titleFormConfig['elements'][0]['spec']['options']['label'] = $titleLabel . ' *';
-        $factory = new \Zend\Form\Factory();
+        $factory = new Factory();
         $formElements = $this->serviceLocator->get('FormElementManager');
         $factory->setFormElementManager($formElements);
         $formsTitleSubtitle = $factory->createForm($titleFormConfig);
@@ -1191,6 +1191,7 @@ class MelisCmsNewsController extends AbstractActionController
             'seeInTab' => $tool->getTranslation('tr_meliscmsnews_preview_load_intab'),
             'seeInNewTab' => $tool->getTranslation('tr_meliscmsnews_preview_load_newtab'),
             'newsTitlePrefix' => $tool->getTranslation('tr_meliscmsnews_preview_title_prefix'),
+            'newsTitle' => '',
         ];
 
         /** @var \MelisCmsNews\Service\MelisCmsNewsService $newsSvc */
@@ -1198,31 +1199,56 @@ class MelisCmsNewsController extends AbstractActionController
         $detailPages = [];
 
         if (!empty($newsId)) {
-            /** Get 'news title' via news ID */
-            $newsDetails = $newsSvc->getNewsById($newsId);
-            if (!empty($newsDetails->cnews_title)) {
+            $langId = $this->getLangId();
+            $newsDetails = $newsSvc->getNewsById($newsId, $langId);
+
+            if (empty($newsDetails->cnews_title)) {
+                /**
+                 * Get the post's title, preferably that of the platform's language
+                 */
+                $postText = $newsSvc->getPostText($newsId)->toArray();
+
+                foreach ($postText as $text) {
+                    if ($text['cnews_lang_id'] === $langId) {
+                        $labels['newsTitle'] = $text['cnews_title'];
+                        break;
+                    }
+                }
+                /**
+                 * Get the fallback title = the next language with a title maintained
+                 */
+                if (empty($labels['newsTitle'])) {
+                    foreach ($postText as $text) {
+                        if (!empty($text['cnews_title'])) {
+                            $labels['newsTitle'] = $text['cnews_title'];
+                            break;
+                        }
+                    }
+                }
+            } else {
                 $labels['newsTitle'] = $newsDetails->cnews_title;
             }
 
             /** Get pages of 'news detail' type via site id */
             $siteId = empty($newsDetails->cnews_site_id) ? null : $newsDetails->cnews_site_id;
             if (!empty($siteId)) {
-                $detailPages = $newsSvc->getNewsDetailsPagesBySite($siteId)->toArray();
+                $detailPages = $newsSvc->getNewsDetailsPagesBySite($siteId);
             }
         }
 
         $newsDetailPageSelector = null;
-        if (count($detailPages) > 1) {
+        $detailPagesCount = count($detailPages);
+        if ($detailPagesCount > 1) {
             /**
              * Case: Multiple 'Page - News details' found
              *  - Build & show the "News details page" selector
-             * @var \Zend\Form\Form $form
              */
             $melisCoreConfig = $this->serviceLocator->get('MelisCoreConfig');
             $appConfigForm = $melisCoreConfig->getFormMergedAndOrdered('MelisCmsNews/forms/meliscmsnews_page_detail_selector', 'meliscmsnews_page_detail_selector');
             $factory = new Factory();
             $formElements = $this->serviceLocator->get('FormElementManager');
             $factory->setFormElementManager($formElements);
+            /** @var \Zend\Form\Form $newsDetailPageSelector */
             $newsDetailPageSelector = $factory->createForm($appConfigForm);
 
             $valueOptions = [];
@@ -1238,7 +1264,7 @@ class MelisCmsNewsController extends AbstractActionController
                 $newsDetailPageSelector->get('page-id')->setAttribute('data-news-id', $newsId);
                 $newsDetailPageSelector->get('page-id')->setAttribute('data-name-space', $namespace);
             }
-        } elseif (count($detailPages) === 1) {
+        } elseif ($detailPagesCount === 1) {
             /**
              * Case: Only 1 'Page - News details' found, && Page ID is available
              * - Hide "News details page" selector, & load the page in iFrame
@@ -1256,6 +1282,7 @@ class MelisCmsNewsController extends AbstractActionController
         $view->newsId = $newsId;
         $view->newsURI = $newsURI;
         $view->melisKey = $melisKey;
+        $view->detailPagesCount = $detailPagesCount;
         $view->newsDetailPageSelector = $newsDetailPageSelector;
 
         return $view;
@@ -1286,10 +1313,10 @@ class MelisCmsNewsController extends AbstractActionController
 
             if (!empty($newsId)) {
                 /** Get pages of 'news detail' type via site id */
-                $newsDetails = $newsSvc->getNewsById($newsId);
+                $newsDetails = $newsSvc->getNewsById($newsId, $this->getLangId());
                 $siteId = empty($newsDetails->cnews_site_id) ? null : $newsDetails->cnews_site_id;
                 if (!empty($siteId)) {
-                    $detailPages = $newsSvc->getNewsDetailsPagesBySite($siteId)->toArray();
+                    $detailPages = $newsSvc->getNewsDetailsPagesBySite($siteId);
                 }
             }
 

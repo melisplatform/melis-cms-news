@@ -201,7 +201,7 @@ class MelisCmsNewsService extends MelisCoreGeneralService
 
         $newsId = (int)$arrayParameters['newsId'];
 
-        if (!empty($where['cnews_id'])) {
+        if (!empty($newsId)) {
             $newsTextTable = $this->getServiceLocator()->get('MelisCmsNews\Model\Tables\MelisCmsNewsTextsTable');
             try {
                 $results = $newsTextTable->getEntryByField('cnews_id', $newsId);
@@ -231,10 +231,35 @@ class MelisCmsNewsService extends MelisCoreGeneralService
         // Sending service start event
         $arrayParameters = $this->sendEvent('melis_cms_news_get_news_details_pages_start', $arrayParameters);
 
+        $published = [];
+        $saved = [];
+
         /** @var \MelisEngine\Model\Tables\MelisPagePublishedTable $publishedPages */
+        /** @var \MelisEngine\Model\Tables\MelisPageSavedTable $savedPages */
         $siteId = (int)$arrayParameters['siteId'];
         $publishedPages = $this->getServiceLocator()->get('MelisEngineTablePagePublished');
-        $detailPages = $publishedPages->getPagesByType(self::PAGE_TYPE_NEWS_DETAIL, $siteId);
+        $savedPages = $this->getServiceLocator()->get('MelisEngineTablePageSaved');
+        $publishedPages = $publishedPages->getPagesByType(self::PAGE_TYPE_NEWS_DETAIL, $siteId);
+        $savedPages = $savedPages->getPagesByType(self::PAGE_TYPE_NEWS_DETAIL, $siteId);
+
+        if ($publishedPages->count()) {
+            foreach ($publishedPages->toArray() as $index => $page) {
+                $published[$page['page_id']] = $page;
+            }
+        }
+
+        if ($savedPages->count()) {
+            foreach ($savedPages->toArray() as $index => $page) {
+                $saved[$page['page_id']] = $page;
+            }
+        }
+
+        /**
+         * "Array Union Operator"
+         * The array union operator (+) can also be used to merge arrays. If keys in the arrays match, values earlier in
+         * the expression will overwrite those later in the expression. This is true for both numeric and string keys.
+         */
+        $detailPages = $saved + $published;
 
         // Adding results to parameters for events treatment if needed
         $arrayParameters['results'] = $detailPages;
