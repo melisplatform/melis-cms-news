@@ -10,9 +10,9 @@
 namespace MelisCmsNews\Listener;
 
 
+use MelisCore\Listener\MelisCoreGeneralListener;
 use Zend\EventManager\EventManagerInterface;
 use Zend\EventManager\ListenerAggregateInterface;
-use MelisCore\Listener\MelisCoreGeneralListener;
 
 /**
  * This listener listens to MelisCmsNews events in order to add entries in the
@@ -34,28 +34,28 @@ class MelisCmsNewsPreviewTypeListener extends MelisCoreGeneralListener implement
             '*',
             'modify_page_properties_form_config',
             function ($e) {
-                $params = $e->getParams();
-
                 /**
                  * Add NEWS_DETAIL option under page type form element
                  *  'NEWS_DETAIL' => 'tr_meliscmsnews_preview_page_type'
                  */
-                if (!empty($params['appConfigForm'])) {
-                    foreach ($params['appConfigForm']['elements'] as $index => $element) {
+                $appConfigForm = $e->getParam('appConfigForm');
+                if (!empty($appConfigForm)) {
+                    foreach ($appConfigForm['elements'] as $idx => $element) {
                         if ($element['spec']['name'] === 'page_type') {
                             /** @var \Zend\ServiceManager\ServiceLocatorInterface $sm */
                             $sm = $e->getTarget()->getServiceLocator();
                             $translator = $sm->get('translator');
-                            $params['appConfigForm']['elements'][$index]['spec']['options']['value_options']['NEWS_DETAIL'] = $translator->translate('tr_meliscmsnews_preview_page_type');
+                            $appConfigForm['elements'][$idx]['spec']['options']['value_options']['NEWS_DETAIL'] = $translator->translate('tr_meliscmsnews_preview_page_type');
+                            $e->setParam('appConfigForm', $appConfigForm);
 
                             break;
                         }
                     }
                 }
 
-                return $params['appConfigForm'];
+                return $e->getParam('appConfigForm');
             },
-            100
+            200
         );
 
         $this->listeners[] = $callBackHandler;
