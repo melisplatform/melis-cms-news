@@ -38,13 +38,16 @@ if (!empty($this->zoneconfig['conf']['id'])) {
                     <?= $this->labels['seeInTab']; ?>
                 </a>
             </div>
-            <?php endif; ?>
+            <?php endif;
+
+            if ($this->detailPagesCount): ?>
             <div class="col-md-12">
                 <a id="<?= $this->newsId; ?>-see-in-new-tab" class="btn btn-info pull-right" title="<?= $this->labels['seeInNewTab']; ?>" target="_blank"
                     <?= empty($this->newsURI) ? 'disabled' : ' href="' . $this->newsURI . '"'; ?>>
                     <?= $this->labels['seeInNewTab']; ?>
                 </a>
             </div>
+            <?php endif; ?>
         </div>
     </div>
 
