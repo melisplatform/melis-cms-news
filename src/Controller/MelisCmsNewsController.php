@@ -28,7 +28,7 @@ class MelisCmsNewsController extends AbstractActionController
      */
     public function renderNewsPageAction()
     {
-
+ 
         $view = new ViewModel();
         $melisKey = $this->params()->fromRoute('melisKey', '');
         $newsId = (int)$this->params()->fromQuery('newsId', '');
