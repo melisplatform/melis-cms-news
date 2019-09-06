@@ -61,9 +61,11 @@
     </div>
 </div>
 <script type="text/javascript">
-    let tinyMceOption = {
-        height: 300,
-        templates: '/melis/MelisCore/MelisTinyMce/getTinyTemplates?siteId=<?= $this->siteId; ?>'
-    };
-    melisTinyMCE.createTinyMCE("tool", ".editme", tinyMceOption);
+    $(function() {
+        let tinyMceOption = {
+            height: 300,
+            templates: '/melis/MelisCore/MelisTinyMce/getTinyTemplates?siteId=<?= $this->siteId; ?>'
+        };
+        melisTinyMCE.createTinyMCE("tool", ".editme", tinyMceOption);
+    });
 </script>
