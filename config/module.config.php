@@ -92,6 +92,7 @@ return array(
     'view_helpers' => [
         'factories' => [
             'MelisCmsNewsListPlugin' => 'MelisCmsNews\View\Helper\Factory\MelisCmsNewsListHelperFactory',
+            'MelisCmsNewsLatestPlugin' => 'MelisCmsNews\View\Helper\Factory\MelisCmsNewsLatestHelperFactory',
         ],
     ],
     'view_manager' => array(

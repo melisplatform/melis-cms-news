@@ -14,10 +14,10 @@ use Zend\Session\Container;
 use Zend\View\Model\ViewModel;
 
 /**
- * Creates a List of News
+ * Creates a list of Latest News
  *
  */
-class MelisCmsNewsListHelper extends AbstractHelper
+class MelisCmsNewsLatestHelper extends AbstractHelper
 {
 	public $serviceManager;
 	public $renderMode;
@@ -33,7 +33,7 @@ class MelisCmsNewsListHelper extends AbstractHelper
 	
 	public function __invoke($newsListParameters)
 	{
-        $newsListPlugin = $this->serviceManager->get('ControllerPluginManager')->get('MelisCmsNewsListNewsPlugin');
+        $newsListPlugin = $this->serviceManager->get('ControllerPluginManager')->get('MelisCmsNewsLatestNewsPlugin');
 	    $newsListPluginView = $newsListPlugin->render($newsListParameters);
 	    
 	    $viewRender = $this->serviceManager->get('ViewRenderer');
