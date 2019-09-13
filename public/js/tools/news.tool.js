@@ -9,8 +9,9 @@ $(function() {
         });
 
         $body.on("click", '.newsEdit', function() {
-            var newsId  = $(this).closest('tr').attr('id'),
-                name    = $(this).closest('tr').find("td:nth-child(3)").text();
+            var $this   = $(this),
+                newsId  = $this.closest('tr').attr('id'),
+                name    = $this.closest('tr').find("td:nth-child(3)").text();
 
                 toolNews.tabOpen(name, newsId);
         });
@@ -20,10 +21,10 @@ $(function() {
         });
 
         $body.on("click", ".newsDelete", function() {
-            var $this = $(this),
-                newsId = $this.closest('tr').attr('id'),
-                ajaxUrl = '/melis/MelisCmsNews/MelisCmsNewsList/deleteNews',
-                dataString = [];
+            var $this       = $(this),
+                newsId      = $this.closest('tr').attr('id'),
+                ajaxUrl     = '/melis/MelisCmsNews/MelisCmsNewsList/deleteNews',
+                dataString  = [];
 
                 dataString.push({
                     name: 'newsId',
@@ -133,82 +134,82 @@ $(function() {
                         ctr     = 0,
                         len     = 1;
 
-                    forms.each(function () {
-                        dataString.push({
-                            name: 'cnews_title[' + ctr + ']',
-                            value: $('#' + newsId + '_id_meliscmsnews_content_tabs_properties_details_right_paragraphs #cnews_' + len + ' ' + '#cnews_title').val()
-                        });
-
-                        dataString.push({
-                            name: 'cnews_subtitle[' + ctr + ']',
-                            value: $('#' + newsId + '_id_meliscmsnews_content_tabs_properties_details_right_paragraphs #cnews_' + len + ' ' + '#cnews_subtitle').val()
-                        });
-
-                        dataString.push({
-                            name: 'cnews_lang_id' + "[" + ctr + "]",
-                            value: $('#' + newsId + '_id_meliscmsnews_content_tabs_properties_details_right_paragraphs .product-text-tab #news_cms_lang_' + len).attr("data-lang-id")
-                        });
-
-                        for (var i = 1; i <= 4; i++) {
+                        forms.each(function () {
                             dataString.push({
-                                name: 'cnews_paragraph' + i + "[" + ctr + "]",
-                                value: $('#' + newsId + '_id_meliscmsnews_content_tabs_properties_details_right_paragraphs #cnews_' + len + ' ' + '#cnews_paragraph' + i).val()
+                                name: 'cnews_title[' + ctr + ']',
+                                value: $('#' + newsId + '_id_meliscmsnews_content_tabs_properties_details_right_paragraphs #cnews_' + len + ' ' + '#cnews_title').val()
                             });
-                        }
-                        ctr++;
-                        len++;
-                    });
 
-                    dataString.push({name: 'formCount', value: forms.length});
-                    //end
+                            dataString.push({
+                                name: 'cnews_subtitle[' + ctr + ']',
+                                value: $('#' + newsId + '_id_meliscmsnews_content_tabs_properties_details_right_paragraphs #cnews_' + len + ' ' + '#cnews_subtitle').val()
+                            });
 
-                    newsPage.find('.make-switch div').each(function () {
-                        var $this       = $(this),
-                            field       = $this.find('input').attr('name'),
-                            status      = $this.hasClass('switch-on'),
-                            saveStatus  = (status) ? 1 : 0;
+                            dataString.push({
+                                name: 'cnews_lang_id' + "[" + ctr + "]",
+                                value: $('#' + newsId + '_id_meliscmsnews_content_tabs_properties_details_right_paragraphs .product-text-tab #news_cms_lang_' + len).attr("data-lang-id")
+                            });
 
-                            dataString.push({name: field, value: saveStatus});
-                    });
+                            for (var i = 1; i <= 4; i++) {
+                                dataString.push({
+                                    name: 'cnews_paragraph' + i + "[" + ctr + "]",
+                                    value: $('#' + newsId + '_id_meliscmsnews_content_tabs_properties_details_right_paragraphs #cnews_' + len + ' ' + '#cnews_paragraph' + i).val()
+                                });
+                            }
+                            ctr++;
+                            len++;
+                        });
 
-                    dataString.push({name: 'cnews_slider_id', value: selectedSlider});
-                    dataString.push({name: 'cnews_site_id', value: selectedSite});
+                        dataString.push({name: 'formCount', value: forms.length});
+                        //end
 
-                    $.ajax({
-                        type: 'POST',
-                        url: ajaxUrl,
-                        data: dataString,
-                        dataType: 'json',
-                        encode: true
-                    }).done(function (data) {
-                        if (data.success) {
-                            toolNews.tabClose(newsId);
-                            melisHelper.melisOkNotification(data.textTitle, data.textMessage);
-                            toolNews.tabOpen(data.chunk.cnews_title, data.chunk.cnews_id);
-                            toolNews.refreshTable();
-                        } else {
-                            melisHelper.melisKoNotification(data.textTitle, data.textMessage, data.errors);
-                            melisCoreTool.highlightErrors(data.success, data.errors, data.chunk.cnews_id + "_id_meliscmsnews_page form");
+                        newsPage.find('.make-switch div').each(function () {
+                            var $this       = $(this),
+                                field       = $this.find('input').attr('name'),
+                                status      = $this.hasClass('switch-on'),
+                                saveStatus  = (status) ? 1 : 0;
 
-                            if (data.errors.hasOwnProperty('cnews_title')) {
-                                /**
-                                 * Exceptional case for highlighting errors:
-                                 *  "melisCoreTool.highlightErrors()" function cannot be used in highlighting all title fields
-                                 *  because they use the same name ('cnews_title'), & the selector used by the said function
-                                 *  is the element's/field's name. Resulting into only one title field being highlighted
-                                 */
-                                var allTitleLabels = $body.find("#" + data.chunk.cnews_id + "_id_meliscmsnews_content_tabs_properties_details_right_paragraphs label[for='cnews_title']");
-                                if (allTitleLabels.length) {
-                                    allTitleLabels.css("color", "red");
+                                dataString.push({name: field, value: saveStatus});
+                        });
+
+                        dataString.push({name: 'cnews_slider_id', value: selectedSlider});
+                        dataString.push({name: 'cnews_site_id', value: selectedSite});
+
+                        $.ajax({
+                            type: 'POST',
+                            url: ajaxUrl,
+                            data: dataString,
+                            dataType: 'json',
+                            encode: true
+                        }).done(function (data) {
+                            if (data.success) {
+                                toolNews.tabClose(newsId);
+                                melisHelper.melisOkNotification(data.textTitle, data.textMessage);
+                                toolNews.tabOpen(data.chunk.cnews_title, data.chunk.cnews_id);
+                                toolNews.refreshTable();
+                            } else {
+                                melisHelper.melisKoNotification(data.textTitle, data.textMessage, data.errors);
+                                melisCoreTool.highlightErrors(data.success, data.errors, data.chunk.cnews_id + "_id_meliscmsnews_page form");
+
+                                if (data.errors.hasOwnProperty('cnews_title')) {
+                                    /**
+                                     * Exceptional case for highlighting errors:
+                                     *  "melisCoreTool.highlightErrors()" function cannot be used in highlighting all title fields
+                                     *  because they use the same name ('cnews_title'), & the selector used by the said function
+                                     *  is the element's/field's name. Resulting into only one title field being highlighted
+                                     */
+                                    var allTitleLabels = $body.find("#" + data.chunk.cnews_id + "_id_meliscmsnews_content_tabs_properties_details_right_paragraphs label[for='cnews_title']");
+                                    if (allTitleLabels.length) {
+                                        allTitleLabels.css("color", "red");
+                                    }
                                 }
                             }
-                        }
-                        melisCore.flashMessenger();
-                        melisCoreTool.done(".saveNewsLetter");
-                    }).fail(function () {
-                        melisCoreTool.done(".saveNewsLetter");
-                        alert( translations.tr_meliscore_error_message );
-                    });
+                            melisCore.flashMessenger();
+                            melisCoreTool.done(".saveNewsLetter");
+                        }).fail(function () {
+                            melisCoreTool.done(".saveNewsLetter");
+                            alert( translations.tr_meliscore_error_message );
+                        });
                 }
         });
 
