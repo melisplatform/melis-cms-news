@@ -36,8 +36,8 @@
                             <h1 class="text-center"><?= $this->news['cnews_title']; ?></h1>
                         </div>
                         <?php if (!empty($this->news['cnews_image1'])) { ?>
-                            <div class="pull-left col-md-4 col-xs-12 thumb-contenido">
-                                <img class="center-block img-responsive" src="<?= $this->news['cnews_image1'] ?>"/>
+                            <div class="float-left col-md-4 col-xs-12 thumb-contenido">
+                                <img class="center-block img-fluid" src="<?= $this->news['cnews_image1'] ?>"/>
                             </div>
                         <?php } ?>
                         <div class="">
@@ -63,7 +63,7 @@
                                     <div class="news-details-author-data">
                                         <p><span>Email :</span> <?=$userAccountData['uac_email']?></p>
                                         <?php if (! empty($userAccountData['uac_picture'])) {?>
-                                            <img src="data:image/jpge;base64,<?=  base64_encode($userAccountData['uac_picture']) ?>" class="img-circle">
+                                            <img src="data:image/jpge;base64,<?=  base64_encode($userAccountData['uac_picture']) ?>" class="rounded-circle">
                                         <?php } else {?>
                                             <img src="MelisCore/images/profile/default_picture.jpg" alt="">
                                         <?php }?>
