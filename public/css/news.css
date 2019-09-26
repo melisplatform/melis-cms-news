@@ -224,3 +224,7 @@ img.imgDocThumbnail {
 .news-preview-tab .col-md-12 {
     padding: 0;
 }
+
+.mcn-width-100 {
+    width: 100%;
+}
