@@ -206,9 +206,6 @@ $(function() {
                             }
                             melisCore.flashMessenger();
                             melisCoreTool.done(".saveNewsLetter");
-                        }).fail(function () {
-                            melisCoreTool.done(".saveNewsLetter");
-                            alert( translations.tr_meliscore_error_message );
                         });
                 }
         });
