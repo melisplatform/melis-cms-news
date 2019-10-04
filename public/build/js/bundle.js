@@ -130,34 +130,34 @@ $(function() {
                         selectedSite    = newsPage.find('select[name=cnews_site_id]').val();
 
                     //newsSiteTitleSubtitleForm
-                    var forms   = $('#' + newsId + '_id_meliscmsnews_content_tabs_properties_details_right_paragraphs form#newsSiteTitleSubtitleForm'),
-                        ctr     = 0,
-                        len     = 1;
+                    var forms   = $('#' + newsId + '_id_meliscmsnews_content_tabs_properties_details_right_paragraphs .news-post-text-form'),
+                        ctr     = 0;
 
                         forms.each(function () {
+                            var formContainer = $(this);
+
                             dataString.push({
                                 name: 'cnews_title[' + ctr + ']',
-                                value: $('#' + newsId + '_id_meliscmsnews_content_tabs_properties_details_right_paragraphs #cnews_' + len + ' ' + '#cnews_title').val()
+                                value: formContainer.find('#cnews_title').val()
                             });
 
                             dataString.push({
                                 name: 'cnews_subtitle[' + ctr + ']',
-                                value: $('#' + newsId + '_id_meliscmsnews_content_tabs_properties_details_right_paragraphs #cnews_' + len + ' ' + '#cnews_subtitle').val()
+                                value: formContainer.find('#cnews_subtitle').val()
                             });
 
                             dataString.push({
                                 name: 'cnews_lang_id' + "[" + ctr + "]",
-                                value: $('#' + newsId + '_id_meliscmsnews_content_tabs_properties_details_right_paragraphs .product-text-tab #news_cms_lang_' + len).attr("data-lang-id")
+                                value: formContainer.data("langId")
                             });
 
                             for (var i = 1; i <= 4; i++) {
                                 dataString.push({
                                     name: 'cnews_paragraph' + i + "[" + ctr + "]",
-                                    value: $('#' + newsId + '_id_meliscmsnews_content_tabs_properties_details_right_paragraphs #cnews_' + len + ' ' + '#cnews_paragraph' + i).val()
+                                    value: formContainer.find("#cnews_paragraph" + i).val()
                                 });
                             }
                             ctr++;
-                            len++;
                         });
 
                         dataString.push({name: 'formCount', value: forms.length});

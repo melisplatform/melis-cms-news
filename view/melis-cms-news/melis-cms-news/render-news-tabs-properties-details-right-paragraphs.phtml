@@ -36,7 +36,7 @@
                                     <div class="bg-white">
                                         <h4 class=""><i class="fa fa-language" aria-hidden="true"></i> <?= $lang['lang_cms_name']; ?></h4>
                                     </div>
-                                    <div id="cnews_<?= $lang['lang_cms_id']; ?>">
+                                    <div id="cnews_<?= $lang['lang_cms_id']; ?>" class="news-post-text-form" data-lang-id="<?= $lang['lang_cms_id']; ?>">
                                         <?php
                                             $form = clone $this->formsTitleSubtitle;
                                             if ($this->data) {
