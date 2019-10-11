@@ -93,6 +93,7 @@ return array(
         'factories' => [
             'MelisCmsNewsListPlugin' => 'MelisCmsNews\View\Helper\Factory\MelisCmsNewsListHelperFactory',
             'MelisCmsNewsLatestPlugin' => 'MelisCmsNews\View\Helper\Factory\MelisCmsNewsLatestHelperFactory',
+            'MelisCmsNewsShowNewsPlugin' => 'MelisCmsNews\View\Helper\Factory\MelisCmsNewsShowNewsHelperFactory',
         ],
     ],
     'view_manager' => array(
