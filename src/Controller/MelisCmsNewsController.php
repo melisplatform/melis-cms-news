@@ -1313,7 +1313,7 @@ class MelisCmsNewsController extends AbstractActionController
 
             if (!empty($newsId)) {
                 /** Get pages of 'news detail' type via site id */
-                $newsDetails = $newsSvc->getNewsById($newsId, $this->getLangId());
+                $newsDetails = $newsSvc->getNewsById($newsId);
                 $siteId = empty($newsDetails->cnews_site_id) ? null : $newsDetails->cnews_site_id;
                 if (!empty($siteId)) {
                     $detailPages = $newsSvc->getNewsDetailsPagesBySite($siteId);
