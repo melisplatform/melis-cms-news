@@ -89,6 +89,13 @@ return array(
             'MelisCmsNewsSelect' => 'MelisCmsNews\Form\Factory\MelisCmsNewsSelectFactory',
         ),
     ),
+    'view_helpers' => [
+        'factories' => [
+            'MelisCmsNewsListPlugin' => 'MelisCmsNews\View\Helper\Factory\MelisCmsNewsListHelperFactory',
+            'MelisCmsNewsLatestPlugin' => 'MelisCmsNews\View\Helper\Factory\MelisCmsNewsLatestHelperFactory',
+            'MelisCmsNewsShowNewsPlugin' => 'MelisCmsNews\View\Helper\Factory\MelisCmsNewsShowNewsHelperFactory',
+        ],
+    ],
     'view_manager' => array(
         'display_not_found_reason' => true,
         'display_exceptions'       => true,
