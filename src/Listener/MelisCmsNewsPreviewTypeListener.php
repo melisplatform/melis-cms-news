@@ -46,6 +46,12 @@ class MelisCmsNewsPreviewTypeListener extends MelisCoreGeneralListener implement
                             $sm = $e->getTarget()->getServiceLocator();
                             $translator = $sm->get('translator');
                             $appConfigForm['elements'][$idx]['spec']['options']['value_options']['NEWS_DETAIL'] = $translator->translate('tr_meliscmsnews_preview_page_type');
+
+                            /** Add the News Details option in the validator's haystack */
+                            $haystack = $appConfigForm['input_filter'][$idx]['validators'][1]['options']['haystack'];
+                            if (!in_array('NEWS_DETAIL', $haystack)) {
+                                $appConfigForm['input_filter'][$idx]['validators'][1]['options']['haystack'][] = 'NEWS_DETAIL';
+                            }
                             $e->setParam('appConfigForm', $appConfigForm);
 
                             break;
