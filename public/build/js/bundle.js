@@ -455,11 +455,6 @@ window.initNewsList = function (data) {
             data.cnews_site_id = siteSelect.val();
         }
 };
-
-window.paginateDataTables = function() {
-    // paginate dataTables data
-    melisCore.paginateDataTables();
-};
 /*! ============================================================
  * bootstrapSwitch v1.8 by Larentis Mattia @SpiritualGuru
  * http://www.larentis.eu/

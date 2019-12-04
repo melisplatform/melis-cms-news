@@ -455,8 +455,3 @@ window.initNewsList = function (data) {
             data.cnews_site_id = siteSelect.val();
         }
 };
-
-window.paginateDataTables = function() {
-    // paginate dataTables data
-    melisCore.paginateDataTables();
-};
