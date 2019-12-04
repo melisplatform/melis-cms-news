@@ -9,7 +9,7 @@ return array(
                         'target' => '#newsList',
                         'ajaxUrl' => '/melis/MelisCmsNews/MelisCmsNewsList/renderNewsListData',
                         'dataFunction' => 'initNewsList',
-                        'ajaxCallback' => 'paginateDataTables()',
+                        'ajaxCallback' => '',
                         'filters' => array(
                             'left' => array(
                                 'news-list-news-filter-limit' => array(
