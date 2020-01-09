@@ -366,6 +366,31 @@ $(function() {
                     }
                 }
         });
+        // auto adjust height of iframe on preview
+        $(window).scroll(function(){
+            // get hte news id
+            let newsId = activeTabId.split('_')[0];
+            // preview container
+            let previewNews = $("#" + newsId + "_news-preview-iframe-container");
+            // trigger only when the container is visible
+            if (previewNews.is(':visible') === true) {
+               // find iframe
+               let iframe = previewNews.find('iframe');
+               // get current iframe hieght
+               let iframeHeight = iframe.height();
+               // get loader
+               let loader = previewNews.find(".overlay-loader");
+               // trigger only after loading the iframe
+               if (loader.length === 0) {
+                   // adjust height if the current height is below to the min-height
+                   if (iframeHeight <= 800) {
+                       // adjust iframe height
+                       iframe.height(iframe.contents().height());
+                   }
+               }
+            }
+        });
+
 });
 
 var toolNews = {
@@ -434,7 +459,7 @@ var toolNews = {
                         status.html(Math.round(percentage) + "%");
                     }
             }
-    }
+    },
 };
 
 window.newsImagePreview = function (id, fileInput) {
