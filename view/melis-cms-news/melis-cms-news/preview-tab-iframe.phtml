@@ -10,12 +10,15 @@ if (!empty($this->zoneconfig['conf']['id'])) {
         <div id="loadingZone" class="overlay-loader">
             <img class="loader-icon spinning-cog" src="/MelisCore/assets/images/cog12.svg" data-cog="cog12">
         </div>
-        <iframe style="min-height: 800px;width:100%"
+        <iframe style="min-height: 800px;width:100%" class="news-prev-iframe"
                 src="<?= $this->newsURI; ?>"
-                scrolling="no" onload="(function() {
+                scrolling="no"
+                onload="(function() {
                     // Fixes height issue of the iFrame
                     melisHelper.removeLoadingZone($body.find('#<?= $this->newsId; ?>_news-preview-iframe-container'));
-                    $('html,body').animate({ scrollTop: $('html').scrollTop() + 1 }, 500);
+                    var previewFrame = $body.find('#<?= $this->newsId; ?>_news-preview-iframe-container .news-prev-iframe');
+                    var height = previewFrame.contents().height();
+                    previewFrame.css('height', height);
                 })();">
 
         </iframe>
