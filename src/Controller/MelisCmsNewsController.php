@@ -1200,7 +1200,7 @@ class MelisCmsNewsController extends AbstractActionController
 
         if (!empty($newsId)) {
             $langId = $this->getLangId();
-            $newsDetails = $newsSvc->getNewsById($newsId, $langId);
+            $newsDetails = $newsSvc->getNewsById($newsId);
 
             if (empty($newsDetails->cnews_title)) {
                 /**
@@ -1278,6 +1278,7 @@ class MelisCmsNewsController extends AbstractActionController
             $newsURI = "/id/$pageId/preview?melisSite=$namespace&newsId=$newsId&renderMode=previewtab";
         }
 
+
         $view->labels = $labels;
         $view->newsId = $newsId;
         $view->newsURI = $newsURI;
@@ -1313,7 +1314,7 @@ class MelisCmsNewsController extends AbstractActionController
 
             if (!empty($newsId)) {
                 /** Get pages of 'news detail' type via site id */
-                $newsDetails = $newsSvc->getNewsById($newsId, $this->getLangId());
+                $newsDetails = $newsSvc->getNewsById($newsId);
                 $siteId = empty($newsDetails->cnews_site_id) ? null : $newsDetails->cnews_site_id;
                 if (!empty($siteId)) {
                     $detailPages = $newsSvc->getNewsDetailsPagesBySite($siteId);
@@ -1336,6 +1337,7 @@ class MelisCmsNewsController extends AbstractActionController
                 }
             }
         }
+
 
         $view = new ViewModel();
         $view->labels = $labels;
