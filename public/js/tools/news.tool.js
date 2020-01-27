@@ -367,6 +367,17 @@ $(function() {
                 }
         });
 
+        /**
+         * Comments tab
+         */
+        $body.on("click", ".comments", function() {
+            var $this 		= $(this),
+                href 		= $this.attr("href"),
+                $tabContent = $(href);
+
+                $tabContent.find(".comments-table-refresh").trigger("click");
+        });
+
         // auto adjust height of iframe on preview
         $(window).on("scroll", function() {
             // get hte news id
