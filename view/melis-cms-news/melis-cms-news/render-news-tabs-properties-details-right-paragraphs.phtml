@@ -21,7 +21,7 @@
 
                                         <?php 
                                             $img = $lang['lang_cms_locale'];
-                                            echo '<span class="pull-right"><img src="/MelisCms/images/lang-flags/'.$img.'.png" class="imgDisplay pull-right"/></span>';
+                                            echo '<span class="float-right"><img src="/MelisCms/images/lang-flags/'.$img.'.png" class="imgDisplay float-right"/></span>';
                                         ?>
                                         </a>
                                     </li>
@@ -36,7 +36,7 @@
                                     <div class="bg-white">
                                         <h4 class=""><i class="fa fa-language" aria-hidden="true"></i> <?= $lang['lang_cms_name']; ?></h4>
                                     </div>
-                                    <div id="cnews_<?= $lang['lang_cms_id']; ?>">
+                                    <div id="cnews_<?= $lang['lang_cms_id']; ?>" class="news-post-text-form" data-lang-id="<?= $lang['lang_cms_id']; ?>">
                                         <?php
                                             $form = clone $this->formsTitleSubtitle;
                                             if ($this->data) {
@@ -61,9 +61,11 @@
     </div>
 </div>
 <script type="text/javascript">
-    let tinyMceOption = {
-        height: 300,
-        templates: '/melis/MelisCore/MelisTinyMce/getTinyTemplates?siteId=<?= $this->siteId; ?>'
-    };
-    melisTinyMCE.createTinyMCE("tool", ".editme", tinyMceOption);
+    $(function() {
+        let tinyMceOption = {
+            height: 300,
+            templates: '/melis/MelisCore/MelisTinyMce/getTinyTemplates?siteId=<?= $this->siteId; ?>'
+        };
+        melisTinyMCE.createTinyMCE("tool", ".editme", tinyMceOption);
+    });
 </script>

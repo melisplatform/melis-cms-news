@@ -1,27 +1,27 @@
-<div id="<?php echo $this->pluginId?>">
-	<?php if (!empty($this->latestNews)){?>
-    <div id="news-latest-plugin">
-        <div class="row">
-        	<?php foreach ($this->latestNews As $val){?>
-              	<div class="col-sm-6 col-lg-12">
-                    <div class="thumbnail">
-                    	<?php if(!empty($val->cnews_image1)){?>
-                      		<img src="<?php echo $val->cnews_image1 ?>" alt="...">
-                      	<?php }?>
-                      	<div class="caption">
-                      		<a href="<?php echo $val->newsLink?>">
-                            	<h3><?php echo $val->cnews_title ?></h3>
-                            </a>
-                            <p><?php echo $val->cnews_paragraph1 ?></p>
-                      	</div>
+<div id="<?= $this->pluginId ?>">
+	<?php if (! empty($this->latestNews)) : ?>
+        <div id="news-latest-plugin">
+            <div class="row">
+                <?php foreach ($this->latestNews as $key => $news){?>
+                    <div class="col-sm-6 col-lg-12">
+                        <div class="thumbnail">
+                            <?php if(! empty($news['cnews_image1'])){?>
+                                <img src="<?= $news['cnews_image1'] ?>" alt="...">
+                            <?php }?>
+                            <div class="caption">
+                                <a href="<?= $news['newsLink'] ?>">
+                                    <h3><?= $news['cnews_title'] ?></h3>
+                                </a>
+                                <p><?= $news['cnews_paragraph1'] ?></p>
+                            </div>
+                        </div>
                     </div>
-              	</div>
-          	<?php }?>
+                <?php }?>
+            </div>
         </div>
-    </div>
-    <?php }else{?>
+    <?php else : ?>
 		<div class="alert alert-warning" role="alert">
 			No result
 		</div>
-  	<?php }?>
+  	<?php endif; ?>
 </div>

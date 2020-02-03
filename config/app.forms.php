@@ -23,6 +23,7 @@ return [
                                 'options' => [
                                     'label' => 'tr_meliscmsnews_form_publish',
                                     'tooltip' => 'tr_meliscmsnews_form_publish tooltip',
+                                    'class' => 'd-flex flex-row justify-content-between',
                                 ],
                                 'attributes' => [
                                     'dateId' => 'newsPublishDate',
@@ -36,6 +37,7 @@ return [
                                 'options' => [
                                     'label' => 'tr_meliscmsnews_form_unpublish',
                                     'tooltip' => 'tr_meliscmsnews_form_unpublish tooltip',
+                                    'class' => 'd-flex flex-row justify-content-between',
                                 ],
                                 'attributes' => [
                                     'dateId' => 'newsUnpublishDate',

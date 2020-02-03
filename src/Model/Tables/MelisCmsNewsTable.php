@@ -125,7 +125,9 @@ class MelisCmsNewsTable extends MelisGenericTable
         }
 
         if (!is_null($orderColumn) && !is_null($order)) {
-            if (in_array($orderColumn, $this->cnews_text_cols)) {
+            if ($orderColumn == 'site_label') {
+                $select->order('melis_cms_site.' . $orderColumn . ' ' . $order);
+            } elseif (in_array($orderColumn, $this->cnews_text_cols)) {
                 $select->order('melis_cms_news_texts.' . $orderColumn . ' ' . $order);
             } else {
                 $select->order('melis_cms_news.' . $orderColumn . ' ' . $order);

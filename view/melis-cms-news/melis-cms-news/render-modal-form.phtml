@@ -44,14 +44,14 @@ if (!empty($this->zoneconfig['conf']['id']))
                                             <div class="progressContent hidden">
                                                 <?= $this->translate('tr_meliscmsnews_input_file_uploading'); ?>
                                                 <div class="progress">
-                                                	<span class="status pull-right text-danger hidden">0%</span>
+                                                	<span class="status float-right text-danger hidden">0%</span>
                                                   <div class="progress-bar progress-bar-danger progress-bar-striped" role="progressbar" aria-valuenow=0 aria-valuemin="0" aria-valuemax="100" style="width: 0%">
                                                   </div>
                                                 </div><br/>
                         					</div>  
                                          <br> 	                
-                                 	<div align="right">
-                                 		<button data-dismiss="modal" class="btn btn-danger pull-left"><i class="fa fa-times"></i> <?php echo $this->translate('tr_meliscmsnews_form_btn_cancel')?></button>
+                                    <div class="footer-modal d-flex flex-row justify-content-between">
+                                 		<button data-dismiss="modal" class="btn btn-danger float-left"><i class="fa fa-times"></i> <?php echo $this->translate('tr_meliscmsnews_form_btn_cancel')?></button>
                                  		<button class="btn btn-success" id="newsAttachment"><i class="fa fa-save"></i>  <?php echo $this->translate('tr_meliscmsnews_header_right_save') ?></button>
                                  	</div>                                 	
                             	</div>

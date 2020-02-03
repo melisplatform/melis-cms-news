@@ -33,7 +33,7 @@ if (!empty($this->zoneconfig['conf']['id'])) {
         <div class="col-md-6 col-xs-12 news-preview-btns ">
             <?php if (!empty($this->newsDetailPageSelector)): ?>
             <div class="col-md-12">
-                <a id="<?= $this->newsId; ?>-see-below" class="btn btn-info pull-right preview-tab-see-below" title="<?= $this->labels['seeInTab']; ?>"
+                <a id="<?= $this->newsId; ?>-see-below" class="btn btn-info float-right preview-tab-see-below" title="<?= $this->labels['seeInTab']; ?>"
                     <?= empty($this->newsURI) ? 'disabled' : ' data-uri="' . $this->newsURI . '"'; ?>>
                     <?= $this->labels['seeInTab']; ?>
                 </a>
@@ -42,7 +42,7 @@ if (!empty($this->zoneconfig['conf']['id'])) {
 
             if ($this->detailPagesCount): ?>
             <div class="col-md-12">
-                <a id="<?= $this->newsId; ?>-see-in-new-tab" class="btn btn-info pull-right" title="<?= $this->labels['seeInNewTab']; ?>" target="_blank"
+                <a id="<?= $this->newsId; ?>-see-in-new-tab" class="btn btn-info float-right" title="<?= $this->labels['seeInNewTab']; ?>" target="_blank"
                     <?= empty($this->newsURI) ? 'disabled' : ' href="' . $this->newsURI . '"'; ?>>
                     <?= $this->labels['seeInNewTab']; ?>
                 </a>
