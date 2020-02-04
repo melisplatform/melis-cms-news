@@ -208,7 +208,7 @@ class MelisCmsNewsTable extends MelisGenericTable
         
         $select->where('MONTH(cnews_publish_date) = '.$month);
         $select->where('YEAR(cnews_publish_date) ='.$year);
-        
+        $select->group("melis_cms_news.cnews_id");
         $select->where->nest->greaterThan('cnews_unpublish_date', date('Y-m-d H:i:s', strtotime("now")))->or->isNull('cnews_unpublish_date')->unnest;
         
         $select->order(array('cnews_publish_date' => 'DESC'));
