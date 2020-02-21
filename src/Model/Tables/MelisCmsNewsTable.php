@@ -194,11 +194,18 @@ class MelisCmsNewsTable extends MelisGenericTable
         return $resultData;
     }
     
-    public function getNewsByMonthYear($month, $year, $limit = null, $siteId = null)
+    public function getNewsByMonthYear($month, $year, $langId, $limit = null, $siteId = null)
     {
         $select = $this->tableGateway->getSql()->select();
 
-        $select->join('melis_cms_news_texts', 'melis_cms_news_texts.cnews_id = melis_cms_news.cnews_id', array('cnews_id', 'cnews_title'), $select::JOIN_LEFT);
+
+        if (!is_null($langId)) {
+            $join = new Expression('melis_cms_news_texts.cnews_id = melis_cms_news.'.$this->idField.' AND cnews_lang_id ='.$langId);
+        } else {
+            $join = new Expression('melis_cms_news_texts.cnews_id = melis_cms_news.'.$this->idField.' AND cnews_title IS NOT NULL');
+        }
+
+        $select->join('melis_cms_news_texts', $join, array('cnews_id', 'cnews_title'), $select::JOIN_LEFT);
 
         $select->where(array('cnews_status' => '1'));
         
@@ -206,9 +213,8 @@ class MelisCmsNewsTable extends MelisGenericTable
             $select->where->equalTo('cnews_site_id', $siteId);
         }
         
-        $select->where('MONTH(cnews_publish_date) = '.$month);
+        $select->where('MONTH(cnews_publish_date) ='.$month);
         $select->where('YEAR(cnews_publish_date) ='.$year);
-        $select->group("melis_cms_news.cnews_id");
         $select->where->nest->greaterThan('cnews_unpublish_date', date('Y-m-d H:i:s', strtotime("now")))->or->isNull('cnews_unpublish_date')->unnest;
         
         $select->order(array('cnews_publish_date' => 'DESC'));
@@ -217,7 +223,7 @@ class MelisCmsNewsTable extends MelisGenericTable
         }
 
         $resultData = $this->tableGateway->selectWith($select);
-
+        
         return $resultData;
     }
 
