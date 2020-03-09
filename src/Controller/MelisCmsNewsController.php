@@ -28,7 +28,7 @@ class MelisCmsNewsController extends AbstractActionController
      */
     public function renderNewsPageAction()
     {
- 
+
         $view = new ViewModel();
         $melisKey = $this->params()->fromRoute('melisKey', '');
         $newsId = (int)$this->params()->fromQuery('newsId', '');
@@ -193,8 +193,8 @@ class MelisCmsNewsController extends AbstractActionController
     public function renderNewsTabsContentHeaderStatusAction()
     {
         $status = '';
-        if (!empty($this->layout()->news)) {
-            if ($this->layout()->news->cnews_status) {
+        if (!empty($this->layout()->news) && is_array($this->layout()->news)) {
+            if ($this->layout()->news[0]->cnews_status) {
                 $status = 'checked';
             }
         }
@@ -299,8 +299,8 @@ class MelisCmsNewsController extends AbstractActionController
         $factory->setFormElementManager($formElements);
         $form = $factory->createForm($appConfigForm);
 
-        if (!empty($this->layout()->news)) {
-            $newsData = (array)$this->layout()->news;
+        if (!empty($this->layout()->news) && is_array($this->layout()->news)) {
+            $newsData = (array)$this->layout()->news[0];
             $newsData['cnews_publish_date'] = $tool->dateFormatLocale($newsData['cnews_publish_date']);
             $newsData['cnews_unpublish_date'] = $tool->dateFormatLocale($newsData['cnews_unpublish_date']);
             $form->setData($newsData);
@@ -335,13 +335,13 @@ class MelisCmsNewsController extends AbstractActionController
         $name = $parConf['name'];
         $documents = [];
 
-        if (!empty($this->layout()->news)) {
+        if (!empty($this->layout()->news) && is_array($this->layout()->news)) {
             for ($c = 1; $c <= $limit; $c++) {
                 $tmp = $name . $c;
-                if ($this->layout()->news->$tmp) {
+                if ($this->layout()->news[0]->$tmp) {
                     $i = array(
-                        'cnews_id' => $this->layout()->news->cnews_id,
-                        'documents' => $this->layout()->news->$tmp,
+                        'cnews_id' => $this->layout()->news[0]->cnews_id,
+                        'documents' => $this->layout()->news[0]->$tmp,
                         'column' => $tmp,
                     );
                     $documents[] = $i;
@@ -378,8 +378,8 @@ class MelisCmsNewsController extends AbstractActionController
         /** Emphasizing site as a mandatory field by adding an asterisk */
         $form->get('cnews_site_id')->setLabel($form->get('cnews_site_id')->getLabel() . ' *');
 
-        if (!empty($this->layout()->news)) {
-            $form->setData((array)$this->layout()->news);
+        if (!empty($this->layout()->news) && is_array($this->layout()->news)) {
+            $form->setData((array)$this->layout()->news[0]);
         }
 
         $view = new ViewModel();
@@ -405,13 +405,13 @@ class MelisCmsNewsController extends AbstractActionController
         $name = $parConf['name'];
         $images = [];
 
-        if (!empty($this->layout()->news)) {
+        if (!empty($this->layout()->news) && is_array($this->layout()->news)) {
             for ($c = 1; $c <= $limit; $c++) {
                 $tmp = $name . $c;
-                if ($this->layout()->news->$tmp) {
+                if ($this->layout()->news[0]->$tmp) {
                     $i = array(
-                        'cnews_id' => $this->layout()->news->cnews_id,
-                        'image' => $this->layout()->news->$tmp,
+                        'cnews_id' => $this->layout()->news[0]->cnews_id,
+                        'image' => $this->layout()->news[0]->$tmp,
                         'column' => $tmp,
                     );
                     $images[] = $i;
@@ -772,7 +772,7 @@ class MelisCmsNewsController extends AbstractActionController
 
         if (!$isNew) {
             $this->setTableVariables($newsId);
-            $file = $this->layout()->news->$column;
+            $file = $this->layout()->news[0]->$column;
         }
 
         $data = [
@@ -820,6 +820,9 @@ class MelisCmsNewsController extends AbstractActionController
             if (empty($file['errors'])) {
                 $id = $postValues['cnews_id'];
                 $news = $newsSvc->getNewsById($postValues['cnews_id']);
+
+                if (!empty($news) && is_array($news))
+                    $news = $news[0];
 
                 //check for image or file type
                 if ($file['type'] == 'file') {
@@ -1055,6 +1058,11 @@ class MelisCmsNewsController extends AbstractActionController
             }
 
             $tmp = $newsSvc->getNewsById($postValues['newsId']);
+
+            if (!empty($tmp) && is_array($tmp)) {
+                $tmp = $tmp[0];
+            }
+
             $data = [
                 $postValues['column'] => ''
             ];
