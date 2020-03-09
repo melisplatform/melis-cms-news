@@ -101,7 +101,7 @@ class MelisCmsNewsService extends MelisCoreGeneralService
         $newsTable = $this->getServiceLocator()->get('MelisCmsNewsTable');
 
         foreach ($newsTable->getNews($arrayParameters['newsId'], $arrayParameters['langId']) as $news) {
-            $results = $news;
+            $results[] = $news;
         }
 
         // Service implementation end
