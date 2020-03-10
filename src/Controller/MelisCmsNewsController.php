@@ -1210,6 +1210,10 @@ class MelisCmsNewsController extends AbstractActionController
             $langId = $this->getLangId();
             $newsDetails = $newsSvc->getNewsById($newsId);
 
+            if (!empty($newsDetails) && is_array($newsDetails)) {
+                $newsDetails = $newsDetails[0];
+            }
+
             if (empty($newsDetails->cnews_title)) {
                 /**
                  * Get the post's title, preferably that of the platform's language
@@ -1323,6 +1327,11 @@ class MelisCmsNewsController extends AbstractActionController
             if (!empty($newsId)) {
                 /** Get pages of 'news detail' type via site id */
                 $newsDetails = $newsSvc->getNewsById($newsId);
+
+                if (!empty($newsDetails) && is_array($newsDetails)) {
+                    $newsDetails = $newsDetails[0];
+                }
+
                 $siteId = empty($newsDetails->cnews_site_id) ? null : $newsDetails->cnews_site_id;
                 if (!empty($siteId)) {
                     $detailPages = $newsSvc->getNewsDetailsPagesBySite($siteId);
