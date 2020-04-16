@@ -9,39 +9,44 @@
 
 namespace MelisCmsNews\Listener;
 
-use Zend\EventManager\EventManagerInterface;
-use Zend\EventManager\ListenerAggregateInterface;
+use Laminas\EventManager\EventInterface;
+use Laminas\EventManager\EventManagerInterface;
+use Laminas\EventManager\ListenerAggregateInterface;
 use MelisCore\Listener\MelisCoreGeneralListener;
 
 class MelisCmsNewsFlashMessengerListener extends MelisCoreGeneralListener implements ListenerAggregateInterface
 {
-	
-    public function attach(EventManagerInterface $events)
+    /**
+     * @param EventManagerInterface $events
+     */
+    public function attach(EventManagerInterface $events, $priority = 1)
     {
         $sharedEvents      = $events->getSharedManager();
-        
-        $callBackHandler = $sharedEvents->attach(
-        	'MelisCmsNews',
-        	array(
-        	    'meliscmsnews_delete_news_end',
-        	    'meliscmsnews_save_news_letter_end',
-        	    'meliscmsnews_save_news_file_end',
-        	    'meliscmsnews_delete_news_file_end',
-        	    
-        	),
-        	function($e){
+        $identifier = 'MelisCmsNews';
+        $eventsName = [
+            'meliscmsnews_delete_news_end',
+        	'meliscmsnews_save_news_letter_end',
+        	'meliscmsnews_save_news_file_end',
+        	'meliscmsnews_delete_news_file_end',
+        ];
 
-        		$sm = $e->getTarget()->getServiceLocator();
-        		
-        		$flashMessenger = $sm->get('MelisCoreFlashMessenger');
-        		$params = $e->getParams();
-        		$results = $e->getTarget()->forward()->dispatch(
-        		    'MelisCore\Controller\MelisFlashMessenger',
-        		    array_merge(array('action' => 'log'), $params))->getVariables();
+        $priority = -1000;
 
-        	},
-        -1000);
-        
-        $this->listeners[] = $callBackHandler;
+        foreach ($eventsName As $event)
+            $this->listeners[] = $sharedEvents->attach($identifier, $event, [$this, 'logMessages'], $priority);
+    }
+
+    /**
+     * @param EventInterface $event
+     */
+    public function logMessages(EventInterface $event)
+    {
+        $sm = $event->getTarget()->getServiceManager();
+
+        $flashMessenger = $sm->get('MelisCoreFlashMessenger');
+        $params = $event->getParams();
+        $results = $event->getTarget()->forward()->dispatch(
+            \MelisCore\Controller\MelisFlashMessengerController::class,
+            array_merge(array('action' => 'log'), $params))->getVariables();
     }
 }

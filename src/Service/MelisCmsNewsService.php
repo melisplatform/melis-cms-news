@@ -9,14 +9,14 @@
 
 namespace MelisCmsNews\Service;
 
-use MelisCore\Service\MelisCoreGeneralService;
+use MelisCore\Service\MelisGeneralService;
 
 /**
  *
  * This service handles the slider system of Melis.
  *
  */
-class MelisCmsNewsService extends MelisCoreGeneralService
+class MelisCmsNewsService extends MelisGeneralService
 {
     const PAGE_TYPE_NEWS_DETAIL = 'NEWS_DETAIL';
 
@@ -61,7 +61,7 @@ class MelisCmsNewsService extends MelisCoreGeneralService
         $arrayParameters = $this->sendEvent('melis_cms_news_get_news_list_start', $arrayParameters);
 
         // Service implementation start
-        $newsTable = $this->getServiceLocator()->get('MelisCmsNewsTable');
+        $newsTable = $this->getServiceManager()->get('MelisCmsNewsTable');
 
         $news = $newsTable->getNewsList(
             $arrayParameters['status'], $arrayParameters['langId'], $arrayParameters['dateMin'], $arrayParameters['dateMax'], $arrayParameters['publishDateMin'],
@@ -103,7 +103,7 @@ class MelisCmsNewsService extends MelisCoreGeneralService
 
         // Service implementation start
         /** @var \MelisCmsNews\Model\Tables\MelisCmsNewsTable $newsTable */
-        $newsTable = $this->getServiceLocator()->get('MelisCmsNewsTable');
+        $newsTable = $this->getServiceManager()->get('MelisCmsNewsTable');
 
         foreach ($newsTable->getNews($arrayParameters['newsId'], $arrayParameters['langId']) as $news) {
             if (empty($langId)) {
@@ -141,7 +141,7 @@ class MelisCmsNewsService extends MelisCoreGeneralService
 
         // Service implementation start
         /** @var \MelisCmsNews\Model\Tables\MelisCmsNewsTable $newsTable */
-        $newsTable = $this->getServiceLocator()->get('MelisCmsNewsTable');
+        $newsTable = $this->getServiceManager()->get('MelisCmsNewsTable');
         try {
             $results = $newsTable->save($arrayParameters['news'], $arrayParameters['newsId']);
         } catch (\Exception $e) {
@@ -173,8 +173,8 @@ class MelisCmsNewsService extends MelisCoreGeneralService
         $arrayParameters = $this->sendEvent('melis_cms_news__delete_news_by_id_start', $arrayParameters);
 
         // Service implementation start
-        $newsTable = $this->getServiceLocator()->get('MelisCmsNewsTable');
-        $newsTextTable = $this->getServiceLocator()->get('MelisCmsNewsTextsTable');
+        $newsTable = $this->getServiceManager()->get('MelisCmsNewsTable');
+        $newsTextTable = $this->getServiceManager()->get('MelisCmsNewsTextsTable');
         try {
             if ($newsTable->deleteById($arrayParameters['newsId'])) {
                 // Remove news text
@@ -211,7 +211,7 @@ class MelisCmsNewsService extends MelisCoreGeneralService
         $newsId = (int)$arrayParameters['newsId'];
 
         if (!empty($newsId)) {
-            $newsTextTable = $this->getServiceLocator()->get('MelisCmsNews\Model\Tables\MelisCmsNewsTextsTable');
+            $newsTextTable = $this->getServiceManager()->get('MelisCmsNews\Model\Tables\MelisCmsNewsTextsTable');
             try {
                 $results = $newsTextTable->getEntryByField('cnews_id', $newsId);
             } catch (\Exception $e) {
@@ -246,8 +246,8 @@ class MelisCmsNewsService extends MelisCoreGeneralService
         /** @var \MelisEngine\Model\Tables\MelisPagePublishedTable $publishedPages */
         /** @var \MelisEngine\Model\Tables\MelisPageSavedTable $savedPages */
         $siteId = (int)$arrayParameters['siteId'];
-        $publishedPages = $this->getServiceLocator()->get('MelisEngineTablePagePublished');
-        $savedPages = $this->getServiceLocator()->get('MelisEngineTablePageSaved');
+        $publishedPages = $this->getServiceManager()->get('MelisEngineTablePagePublished');
+        $savedPages = $this->getServiceManager()->get('MelisEngineTablePageSaved');
         $publishedPages = $publishedPages->getPagesByType(self::PAGE_TYPE_NEWS_DETAIL, $siteId);
         $savedPages = $savedPages->getPagesByType(self::PAGE_TYPE_NEWS_DETAIL, $siteId);
 

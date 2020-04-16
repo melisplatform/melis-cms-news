@@ -9,14 +9,14 @@
 
 namespace MelisCmsNews\Listener;
 
-use Zend\EventManager\EventManagerInterface;
-use Zend\EventManager\ListenerAggregateInterface;
+use Laminas\EventManager\EventManagerInterface;
+use Laminas\EventManager\ListenerAggregateInterface;
 use MelisCore\Listener\MelisCoreGeneralListener;
-use Zend\Session\Container;
+use Laminas\Session\Container;
 
 class MelisCmsNewsTableColumnDisplayListener extends MelisCoreGeneralListener implements ListenerAggregateInterface
 {
-    public function attach(EventManagerInterface $events)
+    public function attach(EventManagerInterface $events, $priority = 1)
     {
         $sharedEvents      = $events->getSharedManager();
 
@@ -25,7 +25,7 @@ class MelisCmsNewsTableColumnDisplayListener extends MelisCoreGeneralListener im
             'melis_toolcreator_col_display_options',
             function ($e) {
 
-                $sm = $e->getTarget()->getServiceLocator();
+                $sm = $e->getTarget()->getServiceManager();
                 $params = $e->getParams();
                 $params['valueOptions']['news_title'] = $sm->get('translator')->translate('tr_meliscmsnews_news_title');
             }
@@ -36,7 +36,7 @@ class MelisCmsNewsTableColumnDisplayListener extends MelisCoreGeneralListener im
             'melis_tool_column_display_news_title',
             function($e){
 
-                $sm = $e->getTarget()->getServiceLocator();
+                $sm = $e->getTarget()->getServiceManager();
                 $params = $e->getParams();
 
                 $newsTitle = $params['data'];

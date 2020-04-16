@@ -12,11 +12,11 @@ namespace MelisCmsNews;
 use MelisCmsNews\Form\Factory\MelisCmsNewsBOSelectFactory;
 use MelisCmsNews\Listener\MelisCmsNewsTableColumnDisplayListener;
 use MelisCmsNews\Listener\MelisCmsNewsToolCreatorEditionTypeListener;
-use Zend\Mvc\ModuleRouteListener;
-use Zend\Mvc\MvcEvent;
-use Zend\ModuleManager\ModuleManager;
-use Zend\Stdlib\ArrayUtils;
-use Zend\Session\Container;
+use Laminas\Mvc\ModuleRouteListener;
+use Laminas\Mvc\MvcEvent;
+use Laminas\ModuleManager\ModuleManager;
+use Laminas\Stdlib\ArrayUtils;
+use Laminas\Session\Container;
 
 use MelisCmsNews\Listener\MelisCmsNewsSliderDeletedListener;
 use MelisCmsNews\Listener\MelisCmsNewsFlashMessengerListener;
@@ -50,11 +50,11 @@ class Module
         if ($melisRoute)
         {
             // attach listeners for Melis
-            $eventManager->attach(new MelisCmsNewsSliderDeletedListener());
-            $eventManager->attach(new MelisCmsNewsFlashMessengerListener());
-            $eventManager->attach(new MelisCmsNewsPreviewTypeListener());
-            $eventManager->attach(new MelisCmsNewsTableColumnDisplayListener());
-            $eventManager->attach(new MelisCmsNewsToolCreatorEditionTypeListener());
+            (new MelisCmsNewsSliderDeletedListener())->attach($eventManager);
+            (new MelisCmsNewsFlashMessengerListener())->attach($eventManager);
+            (new MelisCmsNewsPreviewTypeListener())->attach($eventManager);
+            (new MelisCmsNewsTableColumnDisplayListener())->attach($eventManager);
+            (new MelisCmsNewsToolCreatorEditionTypeListener())->attach($eventManager);
         }
     }
     

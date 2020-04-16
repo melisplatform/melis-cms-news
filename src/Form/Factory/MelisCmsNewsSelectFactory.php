@@ -9,19 +9,18 @@
 
 namespace MelisCmsNews\Form\Factory;
 
-use Zend\ServiceManager\ServiceLocatorInterface;
+use Laminas\ServiceManager\ServiceManager;
+use Laminas\Session\Container;
 use MelisCore\Form\Factory\MelisSelectFactory;
-use Zend\Session\Container;
 
 /**
  * MelisCms news select factory
  */
 class MelisCmsNewsSelectFactory extends MelisSelectFactory
 {
-	protected function loadValueOptions(ServiceLocatorInterface $formElementManager)
+	protected function loadValueOptions(ServiceManager $serviceManager)
 	{
 		$sliders = array();
-	    $serviceManager = $formElementManager->getServiceLocator();		
 		$newsSvc        = $serviceManager->get('MelisCmsNewsService');
 		$newsData       = [];
 		

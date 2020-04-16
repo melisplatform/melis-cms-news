@@ -88,7 +88,7 @@ class MelisCmsNewsLatestNewsPlugin extends MelisTemplatingPlugin
         $dateMin = (!is_null($dateMin)) ? date('Y-m-d H:i:s', strtotime($dateMin)) : null;
         $dateMax = (!is_null($dateMax)) ? date('Y-m-d H:i:s', strtotime($dateMax)) : null;
 
-        $pageTreeService = $this->getServiceLocator()->get('MelisEngineTree');
+        $pageTreeService = $this->getServiceManager()->get('MelisEngineTree');
 
         /**
          * Getting the current page id
@@ -112,7 +112,7 @@ class MelisCmsNewsLatestNewsPlugin extends MelisTemplatingPlugin
         }
 
         /** @var \MelisCmsNews\Service\MelisCmsNewsService $newsSrv */
-        $newsSrv = $this->getServiceLocator()->get('MelisCmsNewsService');
+        $newsSrv = $this->getServiceManager()->get('MelisCmsNewsService');
         $newsList = $newsSrv->getNewsList($status, $langId, null, null, $dateMin, $dateMax, $unpublishFilter, null, $limit, $orderColumn, $order, $siteId, $search);
 
         $latestNews = [];
@@ -160,17 +160,17 @@ class MelisCmsNewsLatestNewsPlugin extends MelisTemplatingPlugin
     {
         // construct form
         $factory = new \Zend\Form\Factory();
-        $formElements = $this->getServiceLocator()->get('FormElementManager');
+        $formElements = $this->getServiceManager()->get('FormElementManager');
         $factory->setFormElementManager($formElements);
         $formConfig = $this->pluginBackConfig['modal_form'];
-        $translator = $this->getServiceLocator()->get('translator');
+        $translator = $this->getServiceManager()->get('translator');
 
         $response = [];
         $render = [];
         if (!empty($formConfig)) {
             foreach ($formConfig as $formKey => $config) {
                 $form = $factory->createForm($config);
-                $request = $this->getServiceLocator()->get('request');
+                $request = $this->getServiceManager()->get('request');
                 $parameters = $request->getQuery()->toArray();
 
                 if (!isset($parameters['validate'])) {
@@ -180,7 +180,7 @@ class MelisCmsNewsLatestNewsPlugin extends MelisTemplatingPlugin
                     $viewModelTab->setTemplate($config['tab_form_layout']);
                     $viewModelTab->modalForm = $form;
                     $viewModelTab->formData = $this->getFormData();
-                    $viewRender = $this->getServiceLocator()->get('ViewRenderer');
+                    $viewRender = $this->getServiceManager()->get('ViewRenderer');
                     $html = $viewRender->render($viewModelTab);
                     array_push($render, [
                             'name' => $config['tab_title'],

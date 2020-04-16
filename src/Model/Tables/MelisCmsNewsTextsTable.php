@@ -15,15 +15,28 @@ use MelisEngine\Model\Tables\MelisGenericTable;
 
 class MelisCmsNewsTextsTable extends MelisGenericTable 
 {
-    protected $tableGateway;
-    protected $idField;
-    
-    public function __construct(TableGateway $tableGateway)
+    /**
+     * Table name
+     */
+    const TABLE = 'melis_cms_news_texts';
+    /**
+     * Primary key
+     */
+    const PRIMARY_KEY = 'cnews_text_id';
+
+    /**
+     * MelisCmsNewsTextsTable constructor.
+     */
+    public function __construct()
     {
-        parent::__construct($tableGateway);
-        $this->idField = 'cnews_text_id';
+        $this->idField = self::PRIMARY_KEY;
     }
 
+    /**
+     * @param $set
+     * @param $where
+     * @return mixed
+     */
     public function updateNewsText($set, $where)
     {
         $update = $this->tableGateway->getSql()->update();

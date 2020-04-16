@@ -9,10 +9,10 @@
 
 namespace MelisCmsNews\Form\Factory;
 
-use Zend\ServiceManager\ServiceLocatorInterface;
+use Laminas\ServiceManager\ServiceManager;
+use Laminas\Session\Container;
 use MelisCore\Form\Factory\MelisSelectFactory;
-use Zend\Session\Container;
-use Zend\Form\Element\Select;
+use Psr\Container\ContainerInterface;
 
 /**
  * MelisCms news select factory
@@ -20,19 +20,25 @@ use Zend\Form\Element\Select;
 class MelisCmsNewsBOSelectFactory extends MelisSelectFactory
 {
 
-    public function createService(ServiceLocatorInterface $formElementManager)
+    /**
+     * @param ContainerInterface $container
+     * @param $requestedName
+     * @return \Laminas\Form\Element\Select|Select
+     */
+    public function __invoke(ContainerInterface $container, $requestedName)
     {
-        $serviceManager = $formElementManager->getServiceLocator();
-
         $element = new Select;
-        $element->setValueOptions($this->loadValueOptions($formElementManager));
-        $element->setEmptyOption($serviceManager->get('translator')->translate('tr_meliscore_common_choose'));
+        $element->setValueOptions($this->loadValueOptions($container));
+        $element->setEmptyOption($container->get('translator')->translate('tr_meliscore_common_choose'));
         return $element;
     }
 
-	protected function loadValueOptions(ServiceLocatorInterface $formElementManager)
+    /**
+     * @param ServiceManager $serviceManager
+     * @return array
+     */
+	protected function loadValueOptions(ServiceManager $serviceManager)
 	{
-	    $serviceManager = $formElementManager->getServiceLocator();
 		$newsSvc        = $serviceManager->get('MelisCmsNewsService');
 		$newsData       = [];
 		
