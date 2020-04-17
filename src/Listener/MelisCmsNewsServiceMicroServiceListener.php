@@ -11,9 +11,9 @@ namespace MelisCmsNews\Listener;
 
 use Zend\EventManager\EventManagerInterface;
 use Zend\EventManager\ListenerAggregateInterface;
-use MelisCore\Listener\MelisCoreGeneralListener;
+use MelisCore\Listener\MelisGeneralListener;
 
-class MelisCmsNewsServiceMicroServiceListener extends MelisCoreGeneralListener implements ListenerAggregateInterface
+class MelisCmsNewsServiceMicroServiceListener extends MelisGeneralListener implements ListenerAggregateInterface
 {
 
     public function attach(EventManagerInterface $events)

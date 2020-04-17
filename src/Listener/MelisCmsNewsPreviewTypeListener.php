@@ -10,15 +10,15 @@
 namespace MelisCmsNews\Listener;
 
 
-use MelisCore\Listener\MelisCoreGeneralListener;
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
+use MelisCore\Listener\MelisGeneralListener;
 
 /**
  * This listener listens to MelisCmsNews events in order to add entries in the
  * flash messenger
  */
-class MelisCmsNewsPreviewTypeListener extends MelisCoreGeneralListener implements ListenerAggregateInterface
+class MelisCmsNewsPreviewTypeListener extends MelisGeneralListener implements ListenerAggregateInterface
 {
 
     /**

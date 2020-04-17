@@ -11,9 +11,9 @@ namespace MelisCmsNews\Listener;
 
 use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
-use MelisCore\Listener\MelisCoreGeneralListener;
+use MelisCore\Listener\MelisGeneralListener;
 
-class MelisCmsNewsToolCreatorEditionTypeListener extends MelisCoreGeneralListener implements ListenerAggregateInterface
+class MelisCmsNewsToolCreatorEditionTypeListener extends MelisGeneralListener implements ListenerAggregateInterface
 {
     public function attach(EventManagerInterface $events, $priority = 1)
     {
