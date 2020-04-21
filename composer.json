@@ -24,7 +24,6 @@
     "ext-openssl": "*",
     "ext-json": "*",
     "ext-pdo_mysql": "*",
-    "laminas/laminas-file": "^2.8.*",
     "justinrainbow/json-schema": "5.2.1",
     "melisplatform/melis-core": "*",
     "melisplatform/melis-engine": "*",

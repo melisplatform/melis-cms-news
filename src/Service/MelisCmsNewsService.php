@@ -13,7 +13,7 @@ use MelisCore\Service\MelisGeneralService;
 
 /**
  *
- * This service handles the slider system of Melis.
+ * This service handles the news system of Melis.
  *
  */
 class MelisCmsNewsService extends MelisGeneralService
