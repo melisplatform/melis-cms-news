@@ -11,9 +11,9 @@ namespace MelisCmsNews\Controller\Plugin;
 
 
 use MelisEngine\Controller\Plugin\MelisTemplatingPlugin;
-use Zend\Form\Factory;
-use Zend\Session\Container;
-use Zend\View\Model\ViewModel;
+use Laminas\Form\Factory;
+use Laminas\Session\Container;
+use Laminas\View\Model\ViewModel;
 
 /**
  * This plugin implements the business logic of the
