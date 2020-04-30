@@ -114,7 +114,7 @@ class MelisCmsNewsLatestNewsPlugin extends MelisTemplatingPlugin
         /** @var \MelisCmsNews\Service\MelisCmsNewsService $newsSrv */
         $newsSrv = $this->getServiceManager()->get('MelisCmsNewsService');
         $newsList = $newsSrv->getNewsList($status, $langId, null, null, $dateMin, $dateMax, $unpublishFilter, null, $limit, $orderColumn, $order, $siteId, $search);
-        print_r($newsList);exit;
+
         $latestNews = [];
         foreach ($newsList as $key => $val) {
             // Getting the News Data from CmsNews entity
