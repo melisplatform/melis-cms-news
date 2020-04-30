@@ -78,7 +78,7 @@ class MelisCmsNewsLatestNewsPlugin extends MelisTemplatingPlugin
         $status = true;
         $unpublishFilter = true;
         $orderColumn = !empty($data['column']) ? $data['column'] : 'cnews_publish_date';
-        $order = !empty($data['order']) ? $data['order'] : null;
+        $order = !empty($data['order']) ? $data['order'] : 'desc';
         $dateMin = !empty($data['date_min']) ? $data['date_min'] : null;
         $dateMax = !empty($data['date_max']) ? $data['date_max'] : null;
         $limit = !empty($data['limit']) ? $data['limit'] : null;
@@ -114,7 +114,7 @@ class MelisCmsNewsLatestNewsPlugin extends MelisTemplatingPlugin
         /** @var \MelisCmsNews\Service\MelisCmsNewsService $newsSrv */
         $newsSrv = $this->getServiceManager()->get('MelisCmsNewsService');
         $newsList = $newsSrv->getNewsList($status, $langId, null, null, $dateMin, $dateMax, $unpublishFilter, null, $limit, $orderColumn, $order, $siteId, $search);
-
+        print_r($newsList);exit;
         $latestNews = [];
         foreach ($newsList as $key => $val) {
             // Getting the News Data from CmsNews entity
