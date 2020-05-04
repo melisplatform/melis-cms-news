@@ -10,9 +10,9 @@
 namespace MelisCmsNews\View\Helper;
 
 use Laminas\ServiceManager\ServiceManager;
-use Zend\View\Helper\AbstractHelper;
-use Zend\Session\Container;
-use Zend\View\Model\ViewModel;
+use Laminas\View\Helper\AbstractHelper;
+use Laminas\Session\Container;
+use Laminas\View\Model\ViewModel;
 
 /** Creates News Details */
 class MelisCmsNewsShowNewsHelper extends AbstractHelper
