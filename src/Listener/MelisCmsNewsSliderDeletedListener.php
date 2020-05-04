@@ -25,7 +25,7 @@ class MelisCmsNewsSliderDeletedListener extends MelisGeneralListener implements 
             'meliscmsslider_delete_slider_end',
         	function($e){
         	    
-        		$sm = $e->getTarget()->getServiceLocator();   	
+        		$sm = $e->getTarget()->getServiceManager();
         		$params = $e->getParams();
         		$paramData = array();
         		if(isset($params['data'])) {
