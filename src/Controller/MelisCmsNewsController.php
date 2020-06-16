@@ -18,9 +18,9 @@ use Laminas\Validator\File\IsImage;
 use Laminas\Validator\File\Size;
 use Laminas\View\Model\JsonModel;
 use Laminas\View\Model\ViewModel;
-use MelisCore\Controller\AbstractActionController;
+use MelisCore\Controller\MelisAbstractActionController;
 
-class MelisCmsNewsController extends AbstractActionController
+class MelisCmsNewsController extends MelisAbstractActionController
 {
     /**
      * renders the page container
