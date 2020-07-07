@@ -10,17 +10,15 @@
 namespace MelisCmsNews\Listener;
 
 use Laminas\EventManager\EventManagerInterface;
-use Laminas\EventManager\ListenerAggregateInterface;
 use MelisCore\Listener\MelisGeneralListener;
 use Laminas\Session\Container;
 
-class MelisCmsNewsTableColumnDisplayListener extends MelisGeneralListener implements ListenerAggregateInterface
+class MelisCmsNewsTableColumnDisplayListener extends MelisGeneralListener
 {
     public function attach(EventManagerInterface $events, $priority = 1)
     {
-        $sharedEvents      = $events->getSharedManager();
-
-        $this->listeners[] = $sharedEvents->attach(
+        $this->attachEventListener(
+            $events,
             '*',
             'melis_toolcreator_col_display_options',
             function ($e) {
@@ -31,7 +29,8 @@ class MelisCmsNewsTableColumnDisplayListener extends MelisGeneralListener implem
             }
         );
 
-        $this->listeners[] = $sharedEvents->attach(
+        $this->attachEventListener(
+            $events,
             '*',
             'melis_tool_column_display_news_title',
             function($e){

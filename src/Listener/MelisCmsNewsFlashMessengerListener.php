@@ -11,10 +11,9 @@ namespace MelisCmsNews\Listener;
 
 use Laminas\EventManager\EventInterface;
 use Laminas\EventManager\EventManagerInterface;
-use Laminas\EventManager\ListenerAggregateInterface;
 use MelisCore\Listener\MelisGeneralListener;
 
-class MelisCmsNewsFlashMessengerListener extends MelisGeneralListener implements ListenerAggregateInterface
+class MelisCmsNewsFlashMessengerListener extends MelisGeneralListener
 {
     /**
      * @param EventManagerInterface $events
@@ -25,9 +24,9 @@ class MelisCmsNewsFlashMessengerListener extends MelisGeneralListener implements
         $identifier = 'MelisCmsNews';
         $eventsName = [
             'meliscmsnews_delete_news_end',
-        	'meliscmsnews_save_news_letter_end',
-        	'meliscmsnews_save_news_file_end',
-        	'meliscmsnews_delete_news_file_end',
+            'meliscmsnews_save_news_letter_end',
+            'meliscmsnews_save_news_file_end',
+            'meliscmsnews_delete_news_file_end',
         ];
 
         $priority = -1000;

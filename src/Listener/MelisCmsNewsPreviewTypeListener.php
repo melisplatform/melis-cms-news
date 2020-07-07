@@ -18,9 +18,8 @@ use MelisCore\Listener\MelisGeneralListener;
  * This listener listens to MelisCmsNews events in order to add entries in the
  * flash messenger
  */
-class MelisCmsNewsPreviewTypeListener extends MelisGeneralListener implements ListenerAggregateInterface
+class MelisCmsNewsPreviewTypeListener extends MelisGeneralListener
 {
-
     /**
      * Customizes the Page properties form config
      * - Adding a NEWS_DETAIL option under the page type select element
@@ -28,9 +27,8 @@ class MelisCmsNewsPreviewTypeListener extends MelisGeneralListener implements Li
      */
     public function attach(EventManagerInterface $events, $priority = 1)
     {
-        $sharedEvents = $events->getSharedManager();
-
-        $callBackHandler = $sharedEvents->attach(
+        $this->attachEventListener(
+            $events,
             '*',
             'modify_page_properties_form_config',
             function ($e) {
@@ -62,7 +60,5 @@ class MelisCmsNewsPreviewTypeListener extends MelisGeneralListener implements Li
             },
             200
         );
-
-        $this->listeners[] = $callBackHandler;
     }
 }

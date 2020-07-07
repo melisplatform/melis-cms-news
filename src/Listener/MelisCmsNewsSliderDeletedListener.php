@@ -14,38 +14,34 @@ use Laminas\EventManager\ListenerAggregateInterface;
 
 use MelisCore\Listener\MelisGeneralListener;
 
-class MelisCmsNewsSliderDeletedListener extends MelisGeneralListener implements ListenerAggregateInterface
+class MelisCmsNewsSliderDeletedListener extends MelisGeneralListener
 {
-    public function attach(EventManagerInterface $events, $priority = 1)
+	public function attach(EventManagerInterface $events, $priority = 1)
     {
-        $sharedEvents      = $events->getSharedManager();
-        
-        $callBackHandler = $sharedEvents->attach(
-            'MelisCmsSlider',
-            'meliscmsslider_delete_slider_end',
-        	function($e){
-        	    
-        		$sm = $e->getTarget()->getServiceManager();
-        		$params = $e->getParams();
-        		$paramData = array();
-        		if(isset($params['data'])) {
-        		    $paramData = $params['data'];
-        		}
+        $this->attachEventListener(
+            $events,
+			'MelisCmsSlider',
+			'meliscmsslider_delete_slider_end',
+			function($e){
+				
+				$sm = $e->getTarget()->getServiceManager();
+				$params = $e->getParams();
+				$paramData = array();
+				if(isset($params['data'])) {
+					$paramData = $params['data'];
+				}
 
-        		$melisCoreDispatchService = $sm->get('MelisCoreDispatch');
-        		
-        		list($success, $errors, $datas) = $melisCoreDispatchService->dispatchPluginAction(
-        		    $e,
-        		    'meliscmsnews',
-        		    'slider-deleted-data',
-        		    'MelisCmsNews\Controller\MelisCmsNews',
-        		    array('action' => 'newsSliderDeleted')
-        		    );
-        		       		
-        		    
-        	},
-        100);
-        
-        $this->listeners[] = $callBackHandler;
-    }
+				$melisCoreDispatchService = $sm->get('MelisCoreDispatch');
+				
+				list($success, $errors, $datas) = $melisCoreDispatchService->dispatchPluginAction(
+					$e,
+					'meliscmsnews',
+					'slider-deleted-data',
+					'MelisCmsNews\Controller\MelisCmsNews',
+					array('action' => 'newsSliderDeleted')
+					);
+			},
+			100
+		);
+	}
 }

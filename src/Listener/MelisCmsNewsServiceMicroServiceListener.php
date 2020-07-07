@@ -13,14 +13,12 @@ use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
 use MelisCore\Listener\MelisGeneralListener;
 
-class MelisCmsNewsServiceMicroServiceListener extends MelisGeneralListener implements ListenerAggregateInterface
+class MelisCmsNewsServiceMicroServiceListener extends MelisGeneralListener
 {
-
     public function attach(EventManagerInterface $events, $priority = 1)
     {
-        $sharedEvents      = $events->getSharedManager();
-
-        $callBackHandler = $sharedEvents->attach(
+        $this->attachEventListener(
+            $events,
             '*',
             'melis_core_microservice_amend_data',
             function($e){
@@ -86,8 +84,7 @@ class MelisCmsNewsServiceMicroServiceListener extends MelisGeneralListener imple
                     'results' => $results
                 );
             },
-            -1000);
-
-        $this->listeners[] = $callBackHandler;
+            -1000
+        );
     }
 }

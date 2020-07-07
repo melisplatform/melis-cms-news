@@ -10,16 +10,14 @@
 namespace MelisCmsNews\Listener;
 
 use Laminas\EventManager\EventManagerInterface;
-use Laminas\EventManager\ListenerAggregateInterface;
 use MelisCore\Listener\MelisGeneralListener;
 
-class MelisCmsNewsToolCreatorEditionTypeListener extends MelisGeneralListener implements ListenerAggregateInterface
+class MelisCmsNewsToolCreatorEditionTypeListener extends MelisGeneralListener
 {
     public function attach(EventManagerInterface $events, $priority = 1)
     {
-        $sharedEvents      = $events->getSharedManager();
-
-        $this->listeners[] = $sharedEvents->attach(
+        $this->attachEventListener(
+            $events,
             '*',
             'melis_toolcreator_input_edition_type_options',
             function ($e) {

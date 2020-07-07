@@ -18,7 +18,7 @@ class MelisCmsNewsListController extends MelisAbstractActionController
 {
     /**
      * renders the page container
-     * @return \Zend\View\Model\ViewModel
+     * @return \Laminas\View\Model\ViewModel
      */
     public function renderNewsListPageAction()
     {
@@ -31,7 +31,7 @@ class MelisCmsNewsListController extends MelisAbstractActionController
 
     /**
      * renders the header container
-     * @return \Zend\View\Model\ViewModel
+     * @return \Laminas\View\Model\ViewModel
      */
     public function renderNewsListHeaderAction()
     {
@@ -43,7 +43,7 @@ class MelisCmsNewsListController extends MelisAbstractActionController
 
     /**
      * renders the news list page left header container
-     * @return \Zend\View\Model\ViewModel
+     * @return \Laminas\View\Model\ViewModel
      */
     public function renderNewsListHeaderLeftAction()
     {
@@ -55,7 +55,7 @@ class MelisCmsNewsListController extends MelisAbstractActionController
 
     /**
      * renders the news list page right header container
-     * @return \Zend\View\Model\ViewModel
+     * @return \Laminas\View\Model\ViewModel
      */
     public function renderNewsListHeaderRightAction()
     {
@@ -67,7 +67,7 @@ class MelisCmsNewsListController extends MelisAbstractActionController
 
     /**
      * renders the news list page right header container
-     * @return \Zend\View\Model\ViewModel
+     * @return \Laminas\View\Model\ViewModel
      */
     public function renderNewsListHeaderRightAddAction()
     {
@@ -79,7 +79,7 @@ class MelisCmsNewsListController extends MelisAbstractActionController
 
     /**
      * renders the news list page title
-     * @return \Zend\View\Model\ViewModel
+     * @return \Laminas\View\Model\ViewModel
      */
     public function renderNewsListHeaderTitleAction()
     {
@@ -91,7 +91,7 @@ class MelisCmsNewsListController extends MelisAbstractActionController
 
     /**
      * renders the news list page content container
-     * @return \Zend\View\Model\ViewModel
+     * @return \Laminas\View\Model\ViewModel
      */
     public function renderNewsListContentAction()
     {
@@ -103,7 +103,7 @@ class MelisCmsNewsListController extends MelisAbstractActionController
 
     /**
      * renders the coupon list content news filter limit
-     * @return \Zend\View\Model\ViewModel
+     * @return \Laminas\View\Model\ViewModel
      */
     public function renderNewsListContentFilterLimitAction()
     {
@@ -112,7 +112,7 @@ class MelisCmsNewsListController extends MelisAbstractActionController
 
     /**
      * renders the coupon list content news filter site
-     * @return \Zend\View\Model\ViewModel
+     * @return \Laminas\View\Model\ViewModel
      */
     public function renderNewsListContentFilterSiteAction()
     {
@@ -134,7 +134,7 @@ class MelisCmsNewsListController extends MelisAbstractActionController
 
     /**
      * renders the coupon list content news filter search
-     * @return \Zend\View\Model\ViewModel
+     * @return \Laminas\View\Model\ViewModel
      */
     public function renderNewsListContentFilterSearchAction()
     {
@@ -143,7 +143,7 @@ class MelisCmsNewsListController extends MelisAbstractActionController
 
     /**
      * renders the coupon list content news filter refresh
-     * @return \Zend\View\Model\ViewModel
+     * @return \Laminas\View\Model\ViewModel
      */
     public function renderNewsListContentFilterRefreshAction()
     {
@@ -152,7 +152,7 @@ class MelisCmsNewsListController extends MelisAbstractActionController
 
     /**
      * renders the coupon list content news action info
-     * @return \Zend\View\Model\ViewModel
+     * @return \Laminas\View\Model\ViewModel
      */
     public function renderNewsListContentActionInfoAction()
     {
@@ -164,7 +164,7 @@ class MelisCmsNewsListController extends MelisAbstractActionController
 
     /**
      * renders the coupon list content news action edit
-     * @return \Zend\View\Model\ViewModel
+     * @return \Laminas\View\Model\ViewModel
      */
     public function renderNewsListContentActionEditAction()
     {
@@ -173,7 +173,7 @@ class MelisCmsNewsListController extends MelisAbstractActionController
 
     /**
      * renders the coupon list content news action edit
-     * @return \Zend\View\Model\ViewModel
+     * @return \Laminas\View\Model\ViewModel
      */
     public function renderNewsListContentActionDeleteAction()
     {
@@ -185,7 +185,7 @@ class MelisCmsNewsListController extends MelisAbstractActionController
 
     /**
      * renders the coupon list page news
-     * @return \Zend\View\Model\ViewModel
+     * @return \Laminas\View\Model\ViewModel
      */
     public function renderNewsListContentTableAction()
     {
@@ -201,7 +201,7 @@ class MelisCmsNewsListController extends MelisAbstractActionController
 
     /**
      * Retrieves the news data list
-     * @return \Zend\View\Model\JsonModel
+     * @return \Laminas\View\Model\JsonModel
      */
     public function renderNewsListDataAction()
     {
@@ -318,7 +318,7 @@ class MelisCmsNewsListController extends MelisAbstractActionController
 
     /**
      * Deletes the news letter
-     * @return \Zend\View\Model\JsonModel
+     * @return \Laminas\View\Model\JsonModel
      */
     public function deleteNewsAction()
     {

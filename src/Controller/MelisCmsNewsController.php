@@ -598,7 +598,6 @@ class MelisCmsNewsController extends MelisAbstractActionController
 
             if (empty($errors) && $titleExist && $form->isValid()) {
                 $newsTbl = $form->getData();
-
                 $cnews_id = $newsTbl['cnews_id'];
                 $newsTbl['cnews_status'] = $postValues['cnews_status'];
                 $newsTbl['cnews_slider_id'] = empty($postValues['cnews_slider_id']) ? NULL : $postValues['cnews_slider_id'];
@@ -606,6 +605,10 @@ class MelisCmsNewsController extends MelisAbstractActionController
                 unset($newsTbl['cnews_id']);
                 $newsTbl['cnews_publish_date'] = $tool->localeDateToSql($newsTbl['cnews_publish_date']);
                 $newsTbl['cnews_unpublish_date'] = $tool->localeDateToSql($newsTbl['cnews_unpublish_date']);
+                // user account
+                if (isset($postValues['cnews_author_account']) && !empty($postValues['cnews_author_account'])) {
+                    $newsTbl['cnews_author_account'] = $postValues['cnews_author_account'];
+                }
 
                 $data['cnews_id'] = $newsSvc->saveNews($newsTbl, $cnews_id);
 

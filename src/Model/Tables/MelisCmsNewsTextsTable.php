@@ -9,8 +9,8 @@
 
 namespace MelisCmsNews\Model\Tables;
 
-use Zend\Db\TableGateway\TableGateway;
-use Zend\Db\Sql\Expression;
+use Laminas\Db\TableGateway\TableGateway;
+use Laminas\Db\Sql\Expression;
 use MelisEngine\Model\Tables\MelisGenericTable;
 
 class MelisCmsNewsTextsTable extends MelisGenericTable 

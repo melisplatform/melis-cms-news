@@ -10,6 +10,7 @@
 namespace MelisCmsNews;
 
 use MelisCmsNews\Form\Factory\MelisCmsNewsBOSelectFactory;
+use MelisCmsNews\Listener\MelisCmsNewsGdprAutoDeleteActionDeleteListener;
 use MelisCmsNews\Listener\MelisCmsNewsTableColumnDisplayListener;
 use MelisCmsNews\Listener\MelisCmsNewsToolCreatorEditionTypeListener;
 use Laminas\Mvc\ModuleRouteListener;
@@ -39,7 +40,7 @@ class Module
             $routeName = $routeMatch->getMatchedRouteName();
             
             $module = explode('/', $routeName);
-             
+            
             if (!empty($module[0]))
             {
                 if ($module[0] == 'melis-backoffice')
@@ -55,54 +56,51 @@ class Module
             (new MelisCmsNewsPreviewTypeListener())->attach($eventManager);
             (new MelisCmsNewsTableColumnDisplayListener())->attach($eventManager);
             (new MelisCmsNewsToolCreatorEditionTypeListener())->attach($eventManager);
+            (new MelisCmsNewsGdprAutoDeleteActionDeleteListener())->attach($eventManager);
         }
     }
     
-    public function init(ModuleManager $manager)
-    {
-    }
-
     public function getConfig()
     {
-    	$config = array();
-    	$configFiles = array(
-    		include __DIR__ . '/../config/module.config.php',
+        $config = [];
+        $configFiles = [
+            include __DIR__ . '/../config/module.config.php',
 
-    	    // interface design Melis
-    		include __DIR__ . '/../config/app.interface.php',
-    	    include __DIR__ . '/../config/app.tools.php',
-    	    include __DIR__ . '/../config/app.forms.php',
-    	    include __DIR__ . '/../config/app.microservice.php',
-    	    
-    	    // Tests
-    	    include __DIR__ . '/../config/diagnostic.config.php',
+            // interface design Melis
+            include __DIR__ . '/../config/app.interface.php',
+            include __DIR__ . '/../config/app.tools.php',
+            include __DIR__ . '/../config/app.forms.php',
+            include __DIR__ . '/../config/app.microservice.php',
+            
+            // Tests
+            include __DIR__ . '/../config/diagnostic.config.php',
 
-    	    // Templating plugins
-    	    include __DIR__ . '/../config/plugins/MelisCmsNewsLatestNewsPlugin.config.php',
-    	    include __DIR__ . '/../config/plugins/MelisCmsNewsListNewsPlugin.config.php',
-    	    include __DIR__ . '/../config/plugins/MelisCmsNewsShowNewsPlugin.config.php',
+            // Templating plugins
+            include __DIR__ . '/../config/plugins/MelisCmsNewsLatestNewsPlugin.config.php',
+            include __DIR__ . '/../config/plugins/MelisCmsNewsListNewsPlugin.config.php',
+            include __DIR__ . '/../config/plugins/MelisCmsNewsShowNewsPlugin.config.php',
 
             // Extending with MelisCmsComments module
             include __DIR__ . '/../config/comments.config.php',
             include __DIR__ . '/../config/plugins/dashboard/dashboard.latest.comments.php',
-    	);
-    	
-    	foreach ($configFiles as $file) {
-    		$config = ArrayUtils::merge($config, $file);
-    	} 
-    	
-    	return $config;
+        ];
+        
+        foreach ($configFiles as $file) {
+            $config = ArrayUtils::merge($config, $file);
+        } 
+        
+        return $config;
     }
 
     public function getAutoloaderConfig()
     {
-        return array(
-            'Zend\Loader\StandardAutoloader' => array(
-                'namespaces' => array(
+        return [
+            'Laminas\Loader\StandardAutoloader' => [
+                'namespaces' => [
                     __NAMESPACE__ => __DIR__ . '/src/' . __NAMESPACE__,
-                ),
-            ),
-        );
+                ],
+            ],
+        ];
     }
     
     public function createTranslations($e)
@@ -115,11 +113,11 @@ class Module
 
         if (!empty($locale)){
             
-            $translationType = array(
+            $translationType = [
                 'interface',
-            );
+            ];
             
-            $translationList = array();
+            $translationList = [];
             if(file_exists($_SERVER['DOCUMENT_ROOT'].'/../module/MelisModuleConfig/config/translation.list.php')){
                 $translationList = include 'module/MelisModuleConfig/config/translation.list.php';
             }
@@ -144,5 +142,4 @@ class Module
             }
         }
     }
- 
 }
