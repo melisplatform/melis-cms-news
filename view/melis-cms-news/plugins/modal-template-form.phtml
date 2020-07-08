@@ -5,3 +5,17 @@
     echo $this->melisFieldCollection($form);
     echo $this->form()->closeTag();
 ?>
+<script type="text/javascript">
+    $(function() {
+        var $body       = $("body"),
+            $inputGrp   = $body.find(".page-evolution-content .input-group"),
+            $label      = $inputGrp.closest(".form-group").find("label");
+
+            if ( $label.length > 0 && 
+            ! $label.hasClass("d-flex") && 
+            ! $label.hasClass("flex-row") && 
+            ! $label.hasClass("justify-content-between") ) {
+                $label.addClass("d-flex flex-row justify-content-between");
+            }
+    });
+</script>

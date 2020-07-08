@@ -459,21 +459,37 @@ return [
 						'hydrator' => '\Zend\Stdlib\Hydrator\ArraySerializable',
 						'elements' => [
 							[
-								'spec' => [
-									'name' => 'newsId',
-									'type' => 'Text',
-									'options' => [
-										'label' => 'newsId',
-									],
-									'attributes' => [
-										'id' => 'newsId',
-										'value' => '',
-										'class' => '',
-										'placeholder' => '1',
-										'data-type' => 'int'
-									],
-								],
-							],
+                                'spec' => [
+                                    'name' => 'newsId',
+                                    'type' => 'Text',
+                                    'options' => [
+                                        'label' => 'newsId',
+                                    ],
+                                    'attributes' => [
+                                        'id' => 'newsId',
+                                        'value' => '',
+                                        'class' => '',
+                                        'placeholder' => '1',
+                                        'data-type' => 'int'
+                                    ],
+                                ],
+                            ],
+                            [
+                                'spec' => [
+                                    'name' => 'langId',
+                                    'type' => 'Text',
+                                    'options' => [
+                                        'label' => 'langId',
+                                    ],
+                                    'attributes' => [
+                                        'id' => 'langId',
+                                        'value' => '',
+                                        'class' => '',
+                                        'placeholder' => '1',
+                                        'data-type' => 'int'
+                                    ],
+                                ],
+                            ],
 						],
 						'input_filter' => [
 							'newsId' => [
@@ -494,6 +510,24 @@ return [
 									['name' => 'StringTrim']
 								],
 							],
+                            'langId' => [
+                                'name' => 'langId',
+                                'required' => false,
+                                'validators' => [
+                                    [
+                                        'name' => 'IsInt',
+                                        'options' => [
+                                            'message' => [
+                                                \Zend\I18n\Validator\IsInt::INVALID => 'langId must be an integer'
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                                'filters' => [
+                                    ['name' => 'StripTags'],
+                                    ['name' => 'StringTrim']
+                                ],
+                            ],
 						],
 					],
 				],

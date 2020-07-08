@@ -9,6 +9,10 @@
 
 namespace MelisCmsNews;
 
+use MelisCmsNews\Form\Factory\MelisCmsNewsBOSelectFactory;
+use MelisCmsNews\Listener\MelisCmsNewsGdprAutoDeleteActionDeleteListener;
+use MelisCmsNews\Listener\MelisCmsNewsTableColumnDisplayListener;
+use MelisCmsNews\Listener\MelisCmsNewsToolCreatorEditionTypeListener;
 use Zend\Mvc\ModuleRouteListener;
 use Zend\Mvc\MvcEvent;
 use Zend\ModuleManager\ModuleManager;
@@ -50,6 +54,9 @@ class Module
             $eventManager->attach(new MelisCmsNewsSliderDeletedListener());
             $eventManager->attach(new MelisCmsNewsFlashMessengerListener());
             $eventManager->attach(new MelisCmsNewsPreviewTypeListener());
+            $eventManager->attach(new MelisCmsNewsTableColumnDisplayListener());
+            $eventManager->attach(new MelisCmsNewsToolCreatorEditionTypeListener());
+            $eventManager->attach(new MelisCmsNewsGdprAutoDeleteActionDeleteListener());
         }
     }
     

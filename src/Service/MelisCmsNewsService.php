@@ -91,7 +91,12 @@ class MelisCmsNewsService extends MelisCoreGeneralService
     {
         // Event parameters prepare
         $arrayParameters = $this->makeArrayFromParameters(__METHOD__, func_get_args());
-        $results = array();
+
+        if (empty($langId)) {
+            $results = array();
+        } else {
+            $results = null;
+        }
 
         // Sending service start event
         $arrayParameters = $this->sendEvent('melis_cms_news_get_news_by_id_start', $arrayParameters);
@@ -101,7 +106,11 @@ class MelisCmsNewsService extends MelisCoreGeneralService
         $newsTable = $this->getServiceLocator()->get('MelisCmsNewsTable');
 
         foreach ($newsTable->getNews($arrayParameters['newsId'], $arrayParameters['langId']) as $news) {
-            $results = $news;
+            if (empty($langId)) {
+                $results[] = $news;
+            } else {
+                $results = $news;
+            }
         }
 
         // Service implementation end

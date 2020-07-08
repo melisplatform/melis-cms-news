@@ -179,4 +179,7 @@ return [
     'tr_meliscmsnews_preview_page_type' => 'Page – News details',
     'tr_meliscmsnews_preview_title_prefix' => 'Preview for',
     'tr_meliscmsnews_preview_no_pages_found' => 'No page with the type "Page - News details" found for this website. To have a preview, the news\' site must have a news detail page.',
+
+    // Table column text
+    'tr_meliscmsnews_news_title' => 'News',
 ];
