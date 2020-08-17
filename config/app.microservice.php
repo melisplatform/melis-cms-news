@@ -19,7 +19,7 @@ return [
 							'method' => 'POST',
 							'action' => $_SERVER['REQUEST_URI']
 						],
-						'hydrator' => '\Zend\Stdlib\Hydrator\ArraySerializable',
+						'hydrator' => '\Laminas\Hydrator\ArraySerializable',
 						'elements' => [
 							[
 								'spec' => [
@@ -239,7 +239,7 @@ return [
 										'name' => 'NotEmpty',
 										'options' => [
 											'message' => [
-												\Zend\Validator\NotEmpty::IS_EMPTY => 'Please enter status'
+												\Laminas\Validator\NotEmpty::IS_EMPTY => 'Please enter status'
 											],
 										],
 									],
@@ -257,7 +257,7 @@ return [
 										'name' => 'NotEmpty',
 										'options' => [
 											'message' => [
-												\Zend\Validator\NotEmpty::IS_EMPTY => 'Please enter minimum date'
+												\Laminas\Validator\NotEmpty::IS_EMPTY => 'Please enter minimum date'
 											],
 										],
 									],
@@ -275,7 +275,7 @@ return [
 										'name' => 'NotEmpty',
 										'options' => [
 											'message' => [
-												\Zend\Validator\NotEmpty::IS_EMPTY => 'Please enter maximum date'
+												\Laminas\Validator\NotEmpty::IS_EMPTY => 'Please enter maximum date'
 											],
 										],
 									],
@@ -293,7 +293,7 @@ return [
 										'name' => 'NotEmpty',
 										'options' => [
 											'message' => [
-												\Zend\Validator\NotEmpty::IS_EMPTY => 'Please enter minimum publish date'
+												\Laminas\Validator\NotEmpty::IS_EMPTY => 'Please enter minimum publish date'
 											],
 										],
 									],
@@ -311,7 +311,7 @@ return [
 										'name' => 'NotEmpty',
 										'options' => [
 											'message' => [
-												\Zend\Validator\NotEmpty::IS_EMPTY => 'Please enter maximum publish date'
+												\Laminas\Validator\NotEmpty::IS_EMPTY => 'Please enter maximum publish date'
 											],
 										],
 									],
@@ -329,7 +329,7 @@ return [
 										'name' => 'NotEmpty',
 										'options' => [
 											'message' => [
-												\Zend\Validator\NotEmpty::IS_EMPTY => 'Please enter unpublish Filter'
+												\Laminas\Validator\NotEmpty::IS_EMPTY => 'Please enter unpublish Filter'
 											],
 										],
 									],
@@ -347,7 +347,7 @@ return [
 										'name' => 'NotEmpty',
 										'options' => [
 											'message' => [
-												\Zend\Validator\NotEmpty::IS_EMPTY => 'Please enter start'
+												\Laminas\Validator\NotEmpty::IS_EMPTY => 'Please enter start'
 											],
 										],
 									],
@@ -365,7 +365,7 @@ return [
 										'name' => 'NotEmpty',
 										'options' => [
 											'message' => [
-												\Zend\Validator\NotEmpty::IS_EMPTY => 'Please enter limit'
+												\Laminas\Validator\NotEmpty::IS_EMPTY => 'Please enter limit'
 											],
 										],
 									],
@@ -383,7 +383,7 @@ return [
 										'name' => 'NotEmpty',
 										'options' => [
 											'message' => [
-												\Zend\Validator\NotEmpty::IS_EMPTY => 'Please enter column to order'
+												\Laminas\Validator\NotEmpty::IS_EMPTY => 'Please enter column to order'
 											],
 										],
 									],
@@ -401,7 +401,7 @@ return [
 										'name' => 'NotEmpty',
 										'options' => [
 											'message' => [
-												\Zend\Validator\NotEmpty::IS_EMPTY => 'Please enter order direction'
+												\Laminas\Validator\NotEmpty::IS_EMPTY => 'Please enter order direction'
 											],
 										],
 									],
@@ -419,7 +419,7 @@ return [
 										'name' => 'IsInt',
 										'options' => [
 											'message' => [
-												\Zend\I18n\Validator\IsInt::INVALID => 'siteId must be an integer'
+												\Laminas\I18n\Validator\IsInt::INVALID => 'siteId must be an integer'
 											],
 										],
 									],
@@ -437,7 +437,7 @@ return [
 										'name' => 'NotEmpty',
 										'options' => [
 											'message' => [
-												\Zend\Validator\NotEmpty::IS_EMPTY => 'Search'
+												\Laminas\Validator\NotEmpty::IS_EMPTY => 'Search'
 											],
 										],
 									],
@@ -456,7 +456,7 @@ return [
 							'method' => 'POST',
 							'action' => $_SERVER['REQUEST_URI']
 						],
-						'hydrator' => '\Zend\Stdlib\Hydrator\ArraySerializable',
+						'hydrator' => 'Laminas\Hydrator\ArraySerializable',
 						'elements' => [
 							[
                                 'spec' => [
@@ -500,7 +500,7 @@ return [
 										'name' => 'IsInt',
 										'options' => [
 											'message' => [
-												\Zend\I18n\Validator\IsInt::INVALID => 'newsId must be an integer'
+												\Laminas\I18n\Validator\IsInt::INVALID => 'newsId must be an integer'
 											],
 										],
 									],
@@ -518,7 +518,7 @@ return [
                                         'name' => 'IsInt',
                                         'options' => [
                                             'message' => [
-                                                \Zend\I18n\Validator\IsInt::INVALID => 'langId must be an integer'
+                                                \Laminas\I18n\Validator\IsInt::INVALID => 'langId must be an integer'
                                             ],
                                         ],
                                     ],

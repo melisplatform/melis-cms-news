@@ -9,25 +9,28 @@
 
 namespace MelisCmsNews\View\Helper;
 
-use Zend\View\Helper\AbstractHelper;
-use Zend\Session\Container;
-use Zend\View\Model\ViewModel;
+use Laminas\ServiceManager\ServiceManager;
+use Laminas\View\Helper\AbstractHelper;
+use Laminas\Session\Container;
+use Laminas\View\Model\ViewModel;
 
 /** Creates News Details */
 class MelisCmsNewsShowNewsHelper extends AbstractHelper
 {
     public $serviceManager;
-    public $renderMode;
-    public $preview;
 
-    public function __construct($sm, $renderMode, $preview)
+    /**
+     * @param ServiceManager $serviceManager
+     */
+    public function setServiceManager(ServiceManager $serviceManager)
     {
-        $this->serviceManager = $sm;
-        $this->renderMode = $renderMode;
-        $this->preview = $preview;
+        $this->serviceManager = $serviceManager;
     }
 
-
+    /**
+     * @param $newsParameters
+     * @return mixed
+     */
     public function __invoke($newsParameters)
     {
         $newsPlugin = $this->serviceManager->get('ControllerPluginManager')->get('MelisCmsNewsShowNewsPlugin');

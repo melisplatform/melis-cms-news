@@ -9,14 +9,22 @@
 
 namespace MelisCmsNews\Model\Tables;
 
-use Zend\Db\TableGateway\TableGateway;
-use Zend\Db\Sql\Expression;
+use Laminas\Db\TableGateway\TableGateway;
+use Laminas\Db\Sql\Expression;
 use MelisEngine\Model\Tables\MelisGenericTable;
 
 class MelisCmsNewsTable extends MelisGenericTable 
 {
-    protected $tableGateway;
-    protected $idField;
+
+    /**
+     * Table name
+     */
+    const TABLE = 'melis_cms_news';
+    /**
+     * Primary key
+     */
+    const PRIMARY_KEY = 'cnews_id';
+
     protected $cnews_text_cols = [
         'cnews_text_id',
         'cnews_title',
@@ -28,11 +36,13 @@ class MelisCmsNewsTable extends MelisGenericTable
         'cnews_id',
         'cnews_lang_id',
     ];
-    
-    public function __construct(TableGateway $tableGateway)
+
+    /**
+     * MelisCmsNewsTable constructor.
+     */
+    public function __construct()
     {
-        parent::__construct($tableGateway);
-        $this->idField = 'cnews_id';
+        $this->idField = self::PRIMARY_KEY;
     }
 
     /**

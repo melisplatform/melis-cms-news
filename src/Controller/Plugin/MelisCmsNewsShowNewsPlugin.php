@@ -11,9 +11,9 @@ namespace MelisCmsNews\Controller\Plugin;
 
 
 use MelisEngine\Controller\Plugin\MelisTemplatingPlugin;
-use Zend\Form\Factory;
-use Zend\Session\Container;
-use Zend\View\Model\ViewModel;
+use Laminas\Form\Factory;
+use Laminas\Session\Container;
+use Laminas\View\Model\ViewModel;
 
 /**
  * This plugin implements the business logic of the
@@ -72,7 +72,7 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
 
         $newsData = [];
         /** @var \MelisCmsNews\Service\MelisCmsNewsService $newsSrv */
-        $newsSrv = $this->getServiceLocator()->get('MelisCmsNewsService');
+        $newsSrv = $this->getServiceManager()->get('MelisCmsNewsService');
 
         $container = new Container('melisplugins');
         $langId = $container['melis-plugins-lang-id'];
@@ -87,7 +87,7 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
              * Retrieving the page Site id to get the
              * list of the current site news
              */
-            $pageTreeService = $this->getServiceLocator()->get('MelisEngineTree');
+            $pageTreeService = $this->getServiceManager()->get('MelisEngineTree');
             $site = $pageTreeService->getSiteByPageId($pageId);
 
             if (!empty($site)) {
@@ -119,12 +119,12 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
             }
         }
         # add user account
-        $activeModules = $this->getServiceLocator()->get('MelisAssetManagerModulesService')->getActiveModules();
+        $activeModules = $this->getServiceManager()->get('MelisAssetManagerModulesService')->getActiveModules();
         $userAccountModuleIsLoaded = in_array('MelisCmsUserAccount', $activeModules);
         if ($userAccountModuleIsLoaded) {
             //get Author data
             $authorId = $newsData->cnews_author_account ?? null;
-            $userSiteService = $this->getServiceLocator()->get('FrontUserAccountService');
+            $userSiteService = $this->getServiceManager()->get('FrontUserAccountService');
             $authorInfo = $userSiteService->getUserById($authorId);
             if (!empty($authorInfo)) {
                 # remove password
@@ -162,7 +162,7 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
     {
         // construct form
         $factory = new Factory();
-        $formElements = $this->getServiceLocator()->get('FormElementManager');
+        $formElements = $this->getServiceManager()->get('FormElementManager');
         $factory->setFormElementManager($formElements);
         $formConfig = $this->pluginBackConfig['modal_form'];
 
@@ -181,7 +181,7 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
                     $siteId = $this->getSiteIdByPageId($pluginData['pageId']);
 
                     /** @var \MelisCmsNews\Service\MelisCmsNewsService $newsSvc */
-                    $newsSvc = $this->getServiceLocator()->get('MelisCmsNewsService');
+                    $newsSvc = $this->getServiceManager()->get('MelisCmsNewsService');
                     $posts = $newsSvc->getNewsList(
                         1,
                         null,
@@ -207,7 +207,7 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
                     $form->get('newsId')->setValueOptions($valueOptions);
                 }
 
-                $request = $this->getServiceLocator()->get('request');
+                $request = $this->getServiceManager()->get('request');
                 $parameters = $request->getQuery()->toArray();
 
                 if (!isset($parameters['validate'])) {
@@ -216,7 +216,7 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
                     $viewModelTab->setTemplate($config['tab_form_layout']);
                     $viewModelTab->modalForm = $form;
                     $viewModelTab->formData = $this->getFormData();
-                    $viewRender = $this->getServiceLocator()->get('ViewRenderer');
+                    $viewRender = $this->getServiceManager()->get('ViewRenderer');
                     $html = $viewRender->render($viewModelTab);
                     array_push($render, [
                             'name' => $config['tab_title'],
@@ -366,9 +366,9 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
     {
         $siteId = 0;
 
-        $pageSaved = $this->getServiceLocator()->get('MelisEngineTablePageSaved');
-        $pagePublished = $this->getServiceLocator()->get('MelisEngineTablePagePublished');
-        $template = $this->getServiceLocator()->get('MelisEngineTableTemplate');
+        $pageSaved = $this->getServiceManager()->get('MelisEngineTablePageSaved');
+        $pagePublished = $this->getServiceManager()->get('MelisEngineTablePagePublished');
+        $template = $this->getServiceManager()->get('MelisEngineTableTemplate');
 
         if(!empty($pageId)){
             /**

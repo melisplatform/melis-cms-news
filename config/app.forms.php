@@ -14,7 +14,7 @@ return [
                         'method' => 'POST',
                         'action' => '',
                     ],
-                    'hydrator' => 'Zend\Stdlib\Hydrator\ArraySerializable',
+                    'hydrator' => 'Laminas\Hydrator\ArraySerializable',
                     'elements' => [
                         [
                             'spec' => [
@@ -68,7 +68,7 @@ return [
                         'method' => 'POST',
                         'action' => '',
                     ],
-                    'hydrator' => 'Zend\Stdlib\Hydrator\ArraySerializable',
+                    'hydrator' => 'Laminas\Hydrator\ArraySerializable',
                     'elements' => [
                         [
                             'spec' => [
@@ -117,7 +117,7 @@ return [
                         'method' => 'POST',
                         'action' => '',
                     ],
-                    'hydrator' => 'Zend\Stdlib\Hydrator\ArraySerializable',
+                    'hydrator' => 'Laminas\Hydrator\ArraySerializable',
                     'elements' => [
                         [
                             'spec' => [
@@ -145,7 +145,7 @@ return [
                                     'name' => 'NotEmpty',
                                     'options' => [
                                         'messages' => [
-                                            \Zend\Validator\NotEmpty::IS_EMPTY => 'tr_meliscmsnews_empty_site',
+                                            \Laminas\Validator\NotEmpty::IS_EMPTY => 'tr_meliscmsnews_empty_site',
                                         ],
                                     ],
                                 ],
@@ -161,7 +161,7 @@ return [
                         'method' => 'POST',
                         'action' => '',
                     ],
-                    'hydrator' => 'Zend\Stdlib\Hydrator\ArraySerializable',
+                    'hydrator' => 'Laminas\Hydrator\ArraySerializable',
                     'elements' => [
                         [
                             'spec' => [
@@ -193,7 +193,7 @@ return [
                         [
                             'spec' => [
                                 'name' => 'cnews_paragraph1',
-                                'type' => 'TextArea',
+                                'type' => 'Textarea',
                                 'options' => [
                                     'label' => 'tr_meliscmsnews_paragraph1',
                                     'tooltip' => 'tr_meliscmsnews_paragraph1 tooltip',
@@ -211,7 +211,7 @@ return [
                         [
                             'spec' => [
                                 'name' => 'cnews_paragraph2',
-                                'type' => 'TextArea',
+                                'type' => 'Textarea',
                                 'options' => [
                                     'label' => 'tr_meliscmsnews_paragraph2',
                                     'tooltip' => 'tr_meliscmsnews_paragraph2 tooltip',
@@ -229,7 +229,7 @@ return [
                         [
                             'spec' => [
                                 'name' => 'cnews_paragraph3',
-                                'type' => 'TextArea',
+                                'type' => 'Textarea',
                                 'options' => [
                                     'label' => 'tr_meliscmsnews_paragraph3',
                                     'tooltip' => 'tr_meliscmsnews_paragraph3 tooltip',
@@ -247,7 +247,7 @@ return [
                         [
                             'spec' => [
                                 'name' => 'cnews_paragraph4',
-                                'type' => 'TextArea',
+                                'type' => 'Textarea',
                                 'options' => [
                                     'label' => 'tr_meliscmsnews_paragraph4',
                                     'tooltip' => 'tr_meliscmsnews_paragraph4 tooltip',
@@ -274,7 +274,7 @@ return [
                                         'encoding' => 'UTF-8',
                                         'max' => 255,
                                         'messages' => [
-                                            \Zend\Validator\StringLength::TOO_LONG => 'tr_meliscmsnews_form_error_long_255',
+                                            \Laminas\Validator\StringLength::TOO_LONG => 'tr_meliscmsnews_form_error_long_255',
                                         ],
                                     ],
                                 ],
@@ -282,7 +282,7 @@ return [
                                     'name' => 'NotEmpty',
                                     'options' => [
                                         'messages' => [
-                                            \Zend\Validator\NotEmpty::IS_EMPTY => 'tr_meliscmsnews_form_error_empty',
+                                            \Laminas\Validator\NotEmpty::IS_EMPTY => 'tr_meliscmsnews_form_error_empty',
                                         ],
                                     ],
                                 ],
@@ -302,7 +302,7 @@ return [
                                         'encoding' => 'UTF-8',
                                         'max' => 255,
                                         'messages' => [
-                                            \Zend\Validator\StringLength::TOO_LONG => 'tr_meliscmsnews_form_error_long_255',
+                                            \Laminas\Validator\StringLength::TOO_LONG => 'tr_meliscmsnews_form_error_long_255',
                                         ],
                                     ],
                                 ],
@@ -321,7 +321,7 @@ return [
                         'method' => 'POST',
                         'action' => '',
                     ],
-                    'hydrator' => 'Zend\Stdlib\Hydrator\ArraySerializable',
+                    'hydrator' => 'Laminas\Hydrator\ArraySerializable',
                     'elements' => [
                         [
                             'spec' => [

@@ -7,20 +7,15 @@
  */
 namespace MelisCmsNews\Listener;
 
-use MelisCore\Listener\MelisCoreGeneralListener;
-use Zend\EventManager\EventManagerInterface;
-use Zend\EventManager\ListenerAggregateInterface;
+use MelisCore\Listener\MelisGeneralListener;
+use Laminas\EventManager\EventManagerInterface;
 
-class MelisCmsNewsGdprAutoDeleteActionDeleteListener extends MelisCoreGeneralListener implements ListenerAggregateInterface
+class MelisCmsNewsGdprAutoDeleteActionDeleteListener extends MelisGeneralListener
 {
-    /**
-     * @param EventManagerInterface $events
-     */
-    public function attach(EventManagerInterface $events)
+    public function attach(EventManagerInterface $events, $priority = 1)
     {
-        $sharedEvents = $events->getSharedManager();
-
-        $callBackHandler = $sharedEvents->attach(
+        $this->attachEventListener(
+            $events,
             '*',
             'melis_cms_user_account_gdpr_auto_delete_action_delete',
             function ($e) {
@@ -29,12 +24,11 @@ class MelisCmsNewsGdprAutoDeleteActionDeleteListener extends MelisCoreGeneralLis
                     'cnews_author_account' => null
                 ];
                 // update the table info
-                $e->getTarget()->getServiceLocator()->get('MelisCmsNewsTable')->update($data, 'cnews_author_account', $userData->uac_id);
+                $e->getTarget()->getServiceManager()->get('MelisCmsNewsTable')->update($data, 'cnews_author_account', $userData->uac_id);
                 // trigger event for other modules
                 $e->getTarget()->getEventManager()->trigger('melis_cms_news_gdpr_auto_delete_action_delete', $e->getTarget(), ['user_data', $userData]);
             },
-            -1000);
-
-        $this->listeners[] = $callBackHandler;
+            -1000
+        );
     }
 }

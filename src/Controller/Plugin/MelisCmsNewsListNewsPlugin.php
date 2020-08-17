@@ -11,12 +11,12 @@ namespace MelisCmsNews\Controller\Plugin;
 
 
 use MelisEngine\Controller\Plugin\MelisTemplatingPlugin;
-use Zend\Form\Factory;
-use Zend\Paginator\Adapter\ArrayAdapter;
-use Zend\Paginator\Paginator;
-use Zend\Session\Container;
-use Zend\Stdlib\ArrayUtils;
-use Zend\View\Model\ViewModel;
+use Laminas\Form\Factory;
+use Laminas\Paginator\Adapter\ArrayAdapter;
+use Laminas\Paginator\Paginator;
+use Laminas\Session\Container;
+use Laminas\Stdlib\ArrayUtils;
+use Laminas\View\Model\ViewModel;
 
 /**
  * This plugin implements the business logic of the
@@ -97,7 +97,7 @@ class MelisCmsNewsListNewsPlugin extends MelisTemplatingPlugin
         $dateMin = is_null($dateMin) ? null : date('Y-m-d H:i:s', strtotime($dateMin));
         $dateMax = is_null($dateMax) ? null : date('Y-m-d H:i:s', strtotime($dateMax . ' 23:59:59'));
 
-        $pageTreeService = $this->getServiceLocator()->get('MelisEngineTree');
+        $pageTreeService = $this->getServiceManager()->get('MelisEngineTree');
 
         /**
          * Getting the current page id
@@ -120,7 +120,7 @@ class MelisCmsNewsListNewsPlugin extends MelisTemplatingPlugin
 
         // Retrieving News list using MelisCmsNewsService
         /** @var \MelisCmsNews\Model\Tables\MelisCmsNewsTable $newsSrv */
-        $newsSrv = $this->getServiceLocator()->get('MelisCmsNewsService');
+        $newsSrv = $this->getServiceManager()->get('MelisCmsNewsService');
         $newsList = $newsSrv->getNewsList($status, $langId, null, null, $dateMin, $dateMax, $unpublishFilter, null, null, $orderColumn, $order, $siteId, $search);
 
         $listNews = [];
@@ -149,7 +149,7 @@ class MelisCmsNewsListNewsPlugin extends MelisTemplatingPlugin
         $langLocale = $defLangLocale;  // english by default
         $pageId = (int)$this->pluginFrontConfig['pageId'];
         if ($pageId) {
-            $pageService = $this->getServiceLocator()->get('MelisEnginePage');
+            $pageService = $this->getServiceManager()->get('MelisEnginePage');
             $pageData = $pageService->getDatasPage($pageId)->getMelisPageTree();
             if (!empty($pageData)) {
                 $langLocale = empty($pageData->lang_cms_locale) ? $langLocale : $pageData->lang_cms_locale;
@@ -189,10 +189,10 @@ class MelisCmsNewsListNewsPlugin extends MelisTemplatingPlugin
     {
         // construct form
         $factory = new Factory();
-        $formElements = $this->getServiceLocator()->get('FormElementManager');
+        $formElements = $this->getServiceManager()->get('FormElementManager');
         $factory->setFormElementManager($formElements);
         $formConfig = $this->pluginBackConfig['modal_form'];
-        $translator = $this->getServiceLocator()->get('translator');
+        $translator = $this->getServiceManager()->get('translator');
 
         $response = [];
         $render = [];
@@ -200,7 +200,7 @@ class MelisCmsNewsListNewsPlugin extends MelisTemplatingPlugin
         if (!empty($formConfig)) {
             foreach ($formConfig as $formKey => $config) {
                 $form = $factory->createForm($config);
-                $request = $this->getServiceLocator()->get('request');
+                $request = $this->getServiceManager()->get('request');
                 $parameters = $request->getQuery()->toArray();
 
                 if (!isset($parameters['validate'])) {
@@ -210,7 +210,7 @@ class MelisCmsNewsListNewsPlugin extends MelisTemplatingPlugin
                     $viewModelTab->setTemplate($config['tab_form_layout']);
                     $viewModelTab->modalForm = $form;
                     $viewModelTab->formData = $this->getFormData();
-                    $viewRender = $this->getServiceLocator()->get('ViewRenderer');
+                    $viewRender = $this->getServiceManager()->get('ViewRenderer');
                     $html = $viewRender->render($viewModelTab);
                     array_push($render, [
                             'name' => $config['tab_title'],

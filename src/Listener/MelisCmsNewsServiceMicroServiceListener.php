@@ -9,25 +9,21 @@
 
 namespace MelisCmsNews\Listener;
 
-use Zend\EventManager\EventManagerInterface;
-use Zend\EventManager\ListenerAggregateInterface;
-use MelisCore\Listener\MelisCoreGeneralListener;
+use Laminas\EventManager\EventManagerInterface;
+use Laminas\EventManager\ListenerAggregateInterface;
+use MelisCore\Listener\MelisGeneralListener;
 
-class MelisCmsNewsServiceMicroServiceListener extends MelisCoreGeneralListener implements ListenerAggregateInterface
+class MelisCmsNewsServiceMicroServiceListener extends MelisGeneralListener
 {
-
-    public function attach(EventManagerInterface $events)
+    public function attach(EventManagerInterface $events, $priority = 1)
     {
-        $sharedEvents      = $events->getSharedManager();
-
-        $callBackHandler = $sharedEvents->attach(
+        $this->attachEventListener(
+            $events,
             '*',
-            array(
-                'melis_core_microservice_amend_data',
-            ),
+            'melis_core_microservice_amend_data',
             function($e){
 
-                $sm = $e->getTarget()->getServiceLocator();
+                $sm = $e->getTarget()->getServiceManager();
                 $params = $e->getParams();
                 $tool = $sm->get('MelisCoreTool');
 
@@ -88,8 +84,7 @@ class MelisCmsNewsServiceMicroServiceListener extends MelisCoreGeneralListener i
                     'results' => $results
                 );
             },
-            -1000);
-
-        $this->listeners[] = $callBackHandler;
+            -1000
+        );
     }
 }

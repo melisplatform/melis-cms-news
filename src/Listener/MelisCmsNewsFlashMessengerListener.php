@@ -9,39 +9,28 @@
 
 namespace MelisCmsNews\Listener;
 
-use Zend\EventManager\EventManagerInterface;
-use Zend\EventManager\ListenerAggregateInterface;
-use MelisCore\Listener\MelisCoreGeneralListener;
+use Laminas\EventManager\EventInterface;
+use Laminas\EventManager\EventManagerInterface;
+use MelisCore\Listener\MelisGeneralListener;
 
-class MelisCmsNewsFlashMessengerListener extends MelisCoreGeneralListener implements ListenerAggregateInterface
+class MelisCmsNewsFlashMessengerListener extends MelisGeneralListener
 {
-	
-    public function attach(EventManagerInterface $events)
+    /**
+     * @param EventManagerInterface $events
+     */
+    public function attach(EventManagerInterface $events, $priority = 1)
     {
         $sharedEvents      = $events->getSharedManager();
-        
-        $callBackHandler = $sharedEvents->attach(
-        	'MelisCmsNews',
-        	array(
-        	    'meliscmsnews_delete_news_end',
-        	    'meliscmsnews_save_news_letter_end',
-        	    'meliscmsnews_save_news_file_end',
-        	    'meliscmsnews_delete_news_file_end',
-        	    
-        	),
-        	function($e){
+        $identifier = 'MelisCmsNews';
+        $eventsName = [
+            'meliscmsnews_delete_news_end',
+            'meliscmsnews_save_news_letter_end',
+            'meliscmsnews_save_news_file_end',
+            'meliscmsnews_delete_news_file_end',
+        ];
 
-        		$sm = $e->getTarget()->getServiceLocator();
-        		
-        		$flashMessenger = $sm->get('MelisCoreFlashMessenger');
-        		$params = $e->getParams();
-        		$results = $e->getTarget()->forward()->dispatch(
-        		    'MelisCore\Controller\MelisFlashMessenger',
-        		    array_merge(array('action' => 'log'), $params))->getVariables();
+        $priority = -1000;
 
-        	},
-        -1000);
-        
-        $this->listeners[] = $callBackHandler;
+        $this->attachEventListener($events, $identifier, $eventsName, [$this, 'logMessages'], $priority);
     }
 }

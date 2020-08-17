@@ -9,16 +9,16 @@
 
 namespace MelisCmsNews\Controller;
 
-use Zend\Mvc\Controller\AbstractActionController;
-use Zend\View\Model\ViewModel;
-use Zend\View\Model\JsonModel;
-use Zend\Session\Container;
+use Laminas\View\Model\ViewModel;
+use Laminas\View\Model\JsonModel;
+use Laminas\Session\Container;
+use MelisCore\Controller\MelisAbstractActionController;
 
-class MelisCmsNewsListController extends AbstractActionController
+class MelisCmsNewsListController extends MelisAbstractActionController
 {
     /**
      * renders the page container
-     * @return \Zend\View\Model\ViewModel
+     * @return \Laminas\View\Model\ViewModel
      */
     public function renderNewsListPageAction()
     {
@@ -31,7 +31,7 @@ class MelisCmsNewsListController extends AbstractActionController
 
     /**
      * renders the header container
-     * @return \Zend\View\Model\ViewModel
+     * @return \Laminas\View\Model\ViewModel
      */
     public function renderNewsListHeaderAction()
     {
@@ -43,7 +43,7 @@ class MelisCmsNewsListController extends AbstractActionController
 
     /**
      * renders the news list page left header container
-     * @return \Zend\View\Model\ViewModel
+     * @return \Laminas\View\Model\ViewModel
      */
     public function renderNewsListHeaderLeftAction()
     {
@@ -55,7 +55,7 @@ class MelisCmsNewsListController extends AbstractActionController
 
     /**
      * renders the news list page right header container
-     * @return \Zend\View\Model\ViewModel
+     * @return \Laminas\View\Model\ViewModel
      */
     public function renderNewsListHeaderRightAction()
     {
@@ -67,7 +67,7 @@ class MelisCmsNewsListController extends AbstractActionController
 
     /**
      * renders the news list page right header container
-     * @return \Zend\View\Model\ViewModel
+     * @return \Laminas\View\Model\ViewModel
      */
     public function renderNewsListHeaderRightAddAction()
     {
@@ -79,7 +79,7 @@ class MelisCmsNewsListController extends AbstractActionController
 
     /**
      * renders the news list page title
-     * @return \Zend\View\Model\ViewModel
+     * @return \Laminas\View\Model\ViewModel
      */
     public function renderNewsListHeaderTitleAction()
     {
@@ -91,7 +91,7 @@ class MelisCmsNewsListController extends AbstractActionController
 
     /**
      * renders the news list page content container
-     * @return \Zend\View\Model\ViewModel
+     * @return \Laminas\View\Model\ViewModel
      */
     public function renderNewsListContentAction()
     {
@@ -103,7 +103,7 @@ class MelisCmsNewsListController extends AbstractActionController
 
     /**
      * renders the coupon list content news filter limit
-     * @return \Zend\View\Model\ViewModel
+     * @return \Laminas\View\Model\ViewModel
      */
     public function renderNewsListContentFilterLimitAction()
     {
@@ -112,11 +112,11 @@ class MelisCmsNewsListController extends AbstractActionController
 
     /**
      * renders the coupon list content news filter site
-     * @return \Zend\View\Model\ViewModel
+     * @return \Laminas\View\Model\ViewModel
      */
     public function renderNewsListContentFilterSiteAction()
     {
-        $tableSite = $this->getServiceLocator()->get('MelisEngineTableSite');
+        $tableSite = $this->getServiceManager()->get('MelisEngineTableSite');
         $sites = $tableSite->fetchAll();
         $siteId = $this->getRequest()->getPost('cnews_site_id');
 
@@ -134,7 +134,7 @@ class MelisCmsNewsListController extends AbstractActionController
 
     /**
      * renders the coupon list content news filter search
-     * @return \Zend\View\Model\ViewModel
+     * @return \Laminas\View\Model\ViewModel
      */
     public function renderNewsListContentFilterSearchAction()
     {
@@ -143,7 +143,7 @@ class MelisCmsNewsListController extends AbstractActionController
 
     /**
      * renders the coupon list content news filter refresh
-     * @return \Zend\View\Model\ViewModel
+     * @return \Laminas\View\Model\ViewModel
      */
     public function renderNewsListContentFilterRefreshAction()
     {
@@ -152,7 +152,7 @@ class MelisCmsNewsListController extends AbstractActionController
 
     /**
      * renders the coupon list content news action info
-     * @return \Zend\View\Model\ViewModel
+     * @return \Laminas\View\Model\ViewModel
      */
     public function renderNewsListContentActionInfoAction()
     {
@@ -164,7 +164,7 @@ class MelisCmsNewsListController extends AbstractActionController
 
     /**
      * renders the coupon list content news action edit
-     * @return \Zend\View\Model\ViewModel
+     * @return \Laminas\View\Model\ViewModel
      */
     public function renderNewsListContentActionEditAction()
     {
@@ -173,7 +173,7 @@ class MelisCmsNewsListController extends AbstractActionController
 
     /**
      * renders the coupon list content news action edit
-     * @return \Zend\View\Model\ViewModel
+     * @return \Laminas\View\Model\ViewModel
      */
     public function renderNewsListContentActionDeleteAction()
     {
@@ -185,7 +185,7 @@ class MelisCmsNewsListController extends AbstractActionController
 
     /**
      * renders the coupon list page news
-     * @return \Zend\View\Model\ViewModel
+     * @return \Laminas\View\Model\ViewModel
      */
     public function renderNewsListContentTableAction()
     {
@@ -201,7 +201,7 @@ class MelisCmsNewsListController extends AbstractActionController
 
     /**
      * Retrieves the news data list
-     * @return \Zend\View\Model\JsonModel
+     * @return \Laminas\View\Model\JsonModel
      */
     public function renderNewsListDataAction()
     {
@@ -212,7 +212,7 @@ class MelisCmsNewsListController extends AbstractActionController
         $dataFiltered = 0;
         $tableData = array();
 
-        $newsSvc = $this->getServiceLocator()->get('MelisCmsNewsService');
+        $newsSvc = $this->getServiceManager()->get('MelisCmsNewsService');
 
         if($this->getRequest()->isPost()) {
 
@@ -242,7 +242,7 @@ class MelisCmsNewsListController extends AbstractActionController
             $container = new Container('meliscore');
             $lang_id = null;
             if ($container) {
-                $melisEngineLangTable = $this->getServiceLocator()->get('MelisEngineTableCmsLang');
+                $melisEngineLangTable = $this->getServiceManager()->get('MelisEngineTableCmsLang');
                 $locale = $container['melis-lang-locale'];
                 $currentLangData = $melisEngineLangTable->getEntryByField('lang_cms_locale', $locale);
 
@@ -318,7 +318,7 @@ class MelisCmsNewsListController extends AbstractActionController
 
     /**
      * Deletes the news letter
-     * @return \Zend\View\Model\JsonModel
+     * @return \Laminas\View\Model\JsonModel
      */
     public function deleteNewsAction()
     {
@@ -331,8 +331,8 @@ class MelisCmsNewsListController extends AbstractActionController
         $textMessage = 'tr_meliscmsnews_news_delete_fail';
         $textTitle = 'tr_meliscmsnews_list_header_title';
 
-        $newsSvc = $this->getServiceLocator()->get('MelisCmsNewsService');
-        $melisCoreConfig = $this->serviceLocator->get('MelisCoreConfig');
+        $newsSvc = $this->getServiceManager()->get('MelisCmsNewsService');
+        $melisCoreConfig = $this->getServiceManager()->get('MelisCoreConfig');
 
         if($this->getRequest()->isPost()){
             $postValues = get_object_vars($this->getRequest()->getPost());
@@ -408,7 +408,7 @@ class MelisCmsNewsListController extends AbstractActionController
      */
     private function getTool()
     {
-        $melisTool = $this->getServiceLocator()->get('MelisCoreTool');
+        $melisTool = $this->getServiceManager()->get('MelisCoreTool');
         $melisTool->setMelisToolKey('meliscmsnews', 'meliscmsnews_list_table');
         return $melisTool;
 
