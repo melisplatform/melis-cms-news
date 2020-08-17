@@ -1,38 +1,35 @@
 {
-  "name": "melisplatform/melis-cms-news",
-  "description": "Melis Platform news module",
-  "type": "melisplatform-module",
-  "license": "OSL-3.0",
-  "homepage": "https://github.com/melisplatform/melis-cms-news",
-  "support": {
-    "source": "https://github.com/melisplatform/melis-cms-news",
-    "issues": "https://github.com/melisplatform/melis-cms-news/issues"
-  },
-  "keywords": [
-    "cms",
-    "melis",
-    "zf2",
-    "module"
-  ],
-  "extra": {
-    "module-name": "MelisCmsNews",
-    "melis-site": false,
-    "melis-module-category": "cms"
-  },
-  "require": {
-    "php": "^7.1.3|^7.2|^7.3",
-    "laminas/laminas-paginator": "^2.8",
-    "melisplatform/melis-core": "*",
-    "melisplatform/melis-engine": "*",
-    "melisplatform/melis-front": "*",
-    "melisplatform/melis-cms": "*"
-  },
-  "require-dev": {
-    "phpunit/phpunit": "~4.8"
-  },
-  "autoload": {
-    "psr-4": {
-      "MelisCmsNews\\": "src/"
-    }
-  }
+	"name": "melisplatform/melis-cms-news",
+	"description": "Melis Platform news module",
+	"type": "melisplatform-module",
+	"license": "OSL-3.0",
+	"homepage": "https://github.com/melisplatform/melis-cms-news",
+	"support": {
+		"source": "https://github.com/melisplatform/melis-cms-news",
+		"issues": "https://github.com/melisplatform/melis-cms-news/issues"
+	},
+	"keywords": [
+		"cms",
+		"melis",
+		"zf2",
+		"module"
+	],
+	"extra": {
+		"module-name": "MelisCmsNews",
+		"melis-site": false,
+		"melis-module-category": "cms"
+	},
+	"require": {
+		"php": "^7.1.3|^7.2|^7.3",
+		"laminas/laminas-paginator": "^2.8",
+		"melisplatform/melis-core": "*",
+		"melisplatform/melis-engine": "*",
+		"melisplatform/melis-front": "*",
+		"melisplatform/melis-cms": "*"
+	},
+	"autoload": {
+		"psr-4": {
+			"MelisCmsNews\\": "src/"
+		}
+	}
 }
