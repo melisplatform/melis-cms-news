@@ -228,7 +228,3 @@ img.imgDocThumbnail {
 .mcn-width-100 {
     width: 100%;
 }
-
-.select2-container.select2-container--default.select2-container--open {
-    z-index: 1040;
-}
