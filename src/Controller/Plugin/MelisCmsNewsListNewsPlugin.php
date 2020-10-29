@@ -226,7 +226,7 @@ class MelisCmsNewsListNewsPlugin extends MelisTemplatingPlugin
                     $success = false;
                     $errors = [];
 
-                    $post = get_object_vars($request->getPost());
+                    $post = $request->getPost()->toArray();
                     $form->setData($post);
 
                     if ($formKey == 'melis_cms_news_list_plugin_filter_form') {

@@ -196,7 +196,7 @@ class MelisCmsNewsLatestNewsPlugin extends MelisTemplatingPlugin
                     $success = false;
                     $errors = [];
 
-                    $post = get_object_vars($request->getPost());
+                    $post = $request->getPost()->toArray();
                     $form->setData($post);
 
 

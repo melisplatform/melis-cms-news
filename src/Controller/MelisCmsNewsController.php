@@ -1055,7 +1055,7 @@ class MelisCmsNewsController extends MelisAbstractActionController
         $newsSvc = $this->getServiceManager()->get('MelisCmsNewsService');
 
         if ($this->getRequest()->isPost()) {
-            $postValues = get_object_vars($this->getRequest()->getPost());
+            $postValues = $this->getRequest()->getPost()->toArray();
             $id = $postValues['newsId'];
             $type = $postValues['type'];
 
@@ -1128,7 +1128,7 @@ class MelisCmsNewsController extends MelisAbstractActionController
         $newsSvc = $this->getServiceManager()->get('MelisCmsNewsService');
 
         if ($this->getRequest()->isPost()) {
-            $postValues = get_object_vars($this->getRequest()->getPost());
+            $postValues = $this->getRequest()->getPost()->toArray();
             foreach ($newsTable->getEntryByField('cnews_slider_id', $postValues['sliderId']) as $news) {
                 $tmp = [
                     'cnews_slider_id' => NULL
