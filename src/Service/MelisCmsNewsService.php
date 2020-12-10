@@ -51,8 +51,9 @@ class MelisCmsNewsService extends MelisGeneralService
         $orderColumn = null,
         $order = null,
         $siteId = null,
-        $search = null)
-    {
+        $search = null,
+        $publishedOnly = null 
+    ){
         // Event parameters prepare
         $arrayParameters = $this->makeArrayFromParameters(__METHOD__, func_get_args());
         $results = array();
@@ -66,7 +67,8 @@ class MelisCmsNewsService extends MelisGeneralService
         $news = $newsTable->getNewsList(
             $arrayParameters['status'], $arrayParameters['langId'], $arrayParameters['dateMin'], $arrayParameters['dateMax'], $arrayParameters['publishDateMin'],
             $arrayParameters['publishDateMax'], $arrayParameters['unpublishFilter'], $arrayParameters['start'], $arrayParameters['limit'],
-            $arrayParameters['orderColumn'], $arrayParameters['order'], $arrayParameters['siteId'], $arrayParameters['search']
+            $arrayParameters['orderColumn'], $arrayParameters['order'], $arrayParameters['siteId'], $arrayParameters['search'], $arrayParameters['publishedOnly']
+
         )->toArray();
 
         $results = $news;

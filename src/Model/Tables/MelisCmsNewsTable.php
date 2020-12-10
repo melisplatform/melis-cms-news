@@ -69,19 +69,20 @@ class MelisCmsNewsTable extends MelisGenericTable
     }
 
     public function getNewsList(
-        $status             = null,
-        $langId             = null,
-        $dateMin            = null,
-        $dateMax            = null,
-        $publishDateMin     = null,
-        $publishDateMax     = null,
-        $unpublishFilter    = false,
-        $start              = null,
-        $limit              = null,
-        $orderColumn        = null,
-        $order              = null,
-        $siteId             = null,
-        $search             = null
+        $status          = null,
+        $langId          = null,
+        $dateMin         = null,
+        $dateMax         = null,
+        $publishDateMin  = null,
+        $publishDateMax  = null,
+        $unpublishFilter = false,
+        $start           = null,
+        $limit           = null,
+        $orderColumn     = null,
+        $order           = null,
+        $siteId          = null,
+        $search          = null,
+        $publishedOnly   = null 
     ) {
         $select = $this->tableGateway->getSql()->select();
 
@@ -142,6 +143,13 @@ class MelisCmsNewsTable extends MelisGenericTable
             } else {
                 $select->order('melis_cms_news.' . $orderColumn . ' ' . $order);
             }
+        }
+
+        /**
+         * include news if date today is equal or greather than published date
+         */
+        if ($publishedOnly) {
+            $select->where('NOW() >= cnews_publish_date');
         }
 
         $select->where('melis_cms_news_texts.cnews_title !=""');

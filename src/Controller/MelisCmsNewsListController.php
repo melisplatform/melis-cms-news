@@ -253,10 +253,10 @@ class MelisCmsNewsListController extends MelisAbstractActionController
                 }
             }
 
-            $tmp = $newsSvc->getNewsList(null, null, null, null, null, null, null, null, null, null,  null, $cnews_site_id, $search);
+            $tmp = $newsSvc->getNewsList(null, null, null, null, null, null, null, null, null, null,  null, $cnews_site_id, $search, false);
             $dataFiltered = count($tmp);
 
-            $news = $newsSvc->getNewsList(null, null, null, null, null, null, null, $start, $length, $selCol, $sortOrder, $cnews_site_id, $search);
+            $news = $newsSvc->getNewsList(null, null, null, null, null, null, null, $start, $length, $selCol, $sortOrder, $cnews_site_id, $search, false);
 
             $dataArray = [];
             $idArray = [];
