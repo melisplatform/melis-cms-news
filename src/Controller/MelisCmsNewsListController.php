@@ -335,7 +335,7 @@ class MelisCmsNewsListController extends MelisAbstractActionController
         $melisCoreConfig = $this->getServiceManager()->get('MelisCoreConfig');
 
         if($this->getRequest()->isPost()){
-            $postValues = get_object_vars($this->getRequest()->getPost());
+            $postValues = $this->getRequest()->getPost()->toArray();
             $id = $postValues['newsId'];
             $tmp = $newsSvc->getNewsById($postValues['newsId']);
 
