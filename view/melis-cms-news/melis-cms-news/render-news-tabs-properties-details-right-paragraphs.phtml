@@ -64,7 +64,7 @@
     $(function() {
         let tinyMceOption = {
             height: 300,
-            templates: '/melis/MelisCore/MelisTinyMce/getTinyTemplates?siteId=<?= $this->siteId; ?>&prefix=2-cols'
+            templates: '/melis/MelisCore/MelisTinyMce/getTinyTemplates?siteId=<?= $this->siteId; ?>'            
         };
         melisTinyMCE.createTinyMCE("tool", ".editme", tinyMceOption);
     });
