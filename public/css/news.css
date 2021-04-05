@@ -221,6 +221,10 @@ img.imgDocThumbnail {
     margin: 0 0 5px 0;
 }
 
+.news-preview-btns a:focus {
+    text-decoration: none;
+}
+
 .news-preview-tab .col-md-12 {
     padding: 0;
 }
