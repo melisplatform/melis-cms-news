@@ -128,6 +128,7 @@ class MelisCmsNewsTable extends MelisGenericTable
 
         if ($unpublishFilter) {
             $select->where->nest->greaterThan('cnews_unpublish_date', date("Y-m-d H:i:s"))->or->isNull('cnews_unpublish_date')->unnest;
+            $select->where('DATE(cnews_publish_date) <= "'.date("Y-m-d").'"'); 
         }
         
         if (!is_null($start)) {
