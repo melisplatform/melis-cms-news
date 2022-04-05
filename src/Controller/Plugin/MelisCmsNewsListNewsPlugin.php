@@ -229,9 +229,10 @@ class MelisCmsNewsListNewsPlugin extends MelisTemplatingPlugin
                     $post = $request->getPost()->toArray();
                     $form->setData($post);
 
+
                     if ($formKey == 'melis_cms_news_list_plugin_filter_form') {
                         if (!empty($post['date_min']) && !empty($post['date_max'])) {
-                            if ($post['date_min'] > $post['date_max']) {
+                            if (strtotime($post['date_min']) > strtotime($post['date_max'])) {
                                 $errors['date_max'] = [
                                     'label' => $translator->translate('tr_meliscmsnews_plugin_filter_date_range_to'),
                                     'inValidDates' => $translator->translate('tr_meliscmsnews_plugin_invalid_dates'),

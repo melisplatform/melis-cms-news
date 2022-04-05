@@ -1026,8 +1026,8 @@ class MelisCmsNewsController extends MelisAbstractActionController
 
     public function renameIfDuplicateFile($filePath)
     {
-        $newsTable = $this->getServiceManager()->get('MelisCmsNewsTable');
-        $docData = $newsTable->checkForDuplicates(pathinfo($filePath, PATHINFO_DIRNAME) . '/' . pathinfo($filePath, PATHINFO_FILENAME));
+        $newsTable = $this->getServiceManager()->get('MelisCmsNewsTable');       
+        $docData = $newsTable->checkForDuplicates(pathinfo($filePath, PATHINFO_DIRNAME) . '/' . str_replace("'","''", pathinfo($filePath, PATHINFO_FILENAME)));
         $totalFile = count($docData) ? '_' . count($docData) : null;
         $fileDir = pathinfo($filePath, PATHINFO_DIRNAME);
         $fileName = pathinfo($filePath, PATHINFO_FILENAME) . $totalFile;
