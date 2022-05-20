@@ -182,4 +182,24 @@ return [
 
     // Table column text
     'tr_meliscmsnews_news_title' => 'News',
+    //SEO
+    'tr_meliscmsnews_content_tabs_seo' => 'SEO',
+    'tr_meliscmsnews_page_tab_seo_form_Meta Title' => 'Meta title',
+    'tr_meliscmsnews_page_tab_seo_form_Meta Title tooltip' => 'Meta title of the news',
+    'tr_meliscmsnews_page_tab_seo_form_Meta Description' => 'Meta description',
+    'tr_meliscmsnews_page_tab_seo_form_Meta Description tooltip' => 'Meta description of the news',
+    'tr_meliscmsnews_page_tab_seo_form_Url' => 'URL',
+    'tr_meliscmsnews_page_tab_seo_form_Url tooltip' => 'URL of the news',
+    'tr_meliscmsnews_page_tab_seo_form_Url Redirect' => 'URL redirection',
+    'tr_meliscmsnews_page_tab_seo_form_Url Redirect tooltip' => 'URL redirection of the news.',
+    'tr_meliscmsnews_page_tab_seo_form_Url 301' => 'URL 301',
+    'tr_meliscmsnews_page_tab_seo_form_Url 301 tooltip' => 'URL 301 redirection of the news.',
+    'tr_meliscmsnews_pageseo_form_page_title_long'  => 'Meta Title is too long, it should be less than 65 characters',
+    'tr_meliscmsnews_pageseo_form_page_desc_long'  => 'Meta Description is too long, it should be less than 255 characters',
+    'tr_meliscmsnews_pageseo_form_page_url_too_long'  => 'URL is too long, it should be less than 255 characters',
+    'tr_meliscmsnews_page_tab_seo_form_canonical'  => 'Canonical URL',
+    'tr_meliscmsnews_page_tab_seo_form_canonical tooltip'  => 'Canonical URL of the news',
+    'tr_meliscmsnews_page_tab_seo_error_duplicate_url' => 'SEO url already used on',
+    'tr_meliscmsnews_page_tab_seo_error_label_seo_url' => 'SEO url',
+    'tr_meliscmsnews_save_seo_fail' => 'Failed to save SEO',
 ];

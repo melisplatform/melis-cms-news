@@ -53,9 +53,11 @@ return array(
         'aliases' => array(
             //services
             'MelisCmsNewsService'       => \MelisCmsNews\Service\MelisCmsNewsService::class,
+            'MelisCmsNewsSeoService'    => \MelisCmsNews\Service\MelisCmsNewsSeoService::class,
             //tables
             'MelisCmsNewsTable'         => \MelisCmsNews\Model\Tables\MelisCmsNewsTable::class,
             'MelisCmsNewsTextsTable'    => \MelisCmsNews\Model\Tables\MelisCmsNewsTextsTable::class,
+            'MelisCmsNewsSeoTable'      => \MelisCmsNews\Model\Tables\MelisCmsNewsSeoTable::class,
         ),
     ),
     'controllers' => array(

@@ -182,4 +182,24 @@ return [
 
     // Table column text
     'tr_meliscmsnews_news_title' => 'Actualités',
+    //SEO
+    'tr_meliscmsnews_content_tabs_seo' => 'SEO',
+    'tr_meliscmsnews_page_tab_seo_form_Meta Title' => 'Méta titre',
+    'tr_meliscmsnews_page_tab_seo_form_Meta Title tooltip' => 'Méta titre l\'actualité',
+    'tr_meliscmsnews_page_tab_seo_form_Meta Description' => 'Méta description',
+    'tr_meliscmsnews_page_tab_seo_form_Meta Description tooltip' => 'Méta description l\'actualité',
+    'tr_meliscmsnews_page_tab_seo_form_Url' => 'URL',
+    'tr_meliscmsnews_page_tab_seo_form_Url tooltip' => 'URL l\'actualité',
+    'tr_meliscmsnews_page_tab_seo_form_Url Redirect' => 'URL redirection',
+    'tr_meliscmsnews_page_tab_seo_form_Url Redirect tooltip' => 'URL redirection l\'actualité.',
+    'tr_meliscmsnews_page_tab_seo_form_Url 301' => 'URL 301',
+    'tr_meliscmsnews_page_tab_seo_form_Url 301 tooltip' => 'URL 301 redirection l\'actualité.',
+    'tr_meliscmsnews_pageseo_form_page_title_long'  => 'Méta Titre de page trop long, il doit être de moins de 65 caractères',
+    'tr_meliscmsnews_pageseo_form_page_desc_long'  => 'Méta Description trop longue, elle doit être de moins de 255 caractères',
+    'tr_meliscmsnews_pageseo_form_page_url_too_long'  => 'URL trop longue, elle doit être de moins de 255 caractères',
+    'tr_meliscmsnews_page_tab_seo_form_canonical'  => 'Canonical URL',
+    'tr_meliscmsnews_page_tab_seo_form_canonical tooltip'  => 'Canonical URL l\'actualité.',
+    'tr_meliscmsnews_page_tab_seo_error_duplicate_url' => 'Url SEO déjà utilisée sur',
+    'tr_meliscmsnews_page_tab_seo_error_label_seo_url' => 'SEO url',
+    'tr_meliscmsnews_save_seo_fail' => 'Echec de la sauvegarde des SEO'
 ];

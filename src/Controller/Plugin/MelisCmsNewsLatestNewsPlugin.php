@@ -121,8 +121,9 @@ class MelisCmsNewsLatestNewsPlugin extends MelisTemplatingPlugin
             $news = $val;
             if (!empty($news)) {
                 // Generate link to news
-                $link = $pageTreeService->getPageLink($pageIdDetailNews, false);
-                $news['newsLink'] = $link . '?newsId=' . $news['cnews_id'];
+                $newsSeoService = $this->getServiceManager()->get('MelisCmsNewsSeoService');
+                $link = $newsSeoService->getPageLink($pageIdDetailNews, $news['cnews_id'], false);    
+                $news['newsLink'] = $link;                
 
                 // date formated of news
                 $news['newsDateFormated'] = date('d M Y', strtotime(($news['cnews_publish_date']) ? $news['cnews_publish_date'] : $news['cnews_creation_date']));

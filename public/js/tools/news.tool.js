@@ -116,6 +116,20 @@ $(function() {
                 melisCoreTool.done(".removeAttachFile");
         });
 
+        //automatically set the seo url in Seo tab when entering a new title 
+        $body.on("keyup", "#cnews_title", function(){
+            var newsPage        = $(this).closest('.container-level-a'),
+                newsId          = newsPage.data('newsid'),
+                newsTitle       = $(this).val();
+            //get first the active language in the Text Form
+            var textForms   = $('#' + newsId + '_id_meliscmsnews_content_tabs_properties_details_right_paragraphs .news-post-text-form');
+            var activeDataLangId = $('#' + newsId + '_id_meliscmsnews_content_tabs_properties_details_right_paragraphs').find('li.active a').attr('data-lang-id');
+            var origval   = $('#' + newsId + '_id_meliscmsnews_content_tabs_seo_details #cnews_'+activeDataLangId).find('#cnews_seo_url').val(); 
+            var cnews_seo_id = $('#' + newsId + '_id_meliscmsnews_content_tabs_seo_details #cnews_'+activeDataLangId).find('input[name="cnews_seo_id"]').val();
+            if (cnews_seo_id == '') {
+                $('#' + newsId + '_id_meliscmsnews_content_tabs_seo_details #cnews_'+activeDataLangId).find('#cnews_seo_url').val(newsTitle.replace(/\s+/g, '-').replace(/[^a-z0-9]+/gi, '-').replace(/^-+/, '').replace(/-+$/, '').toLowerCase());
+            }                        
+        });
         $body.on("click", ".saveNewsLetter", function() {
             var $this = $(this);
 
@@ -160,6 +174,19 @@ $(function() {
                             ctr++;
                         });
 
+                    var seoForms   = $('#' + newsId + '_id_meliscmsnews_content_tabs_seo_details .news-seo-form');
+                        seoForms.each(function(index, val) {                         
+                            var form_name = $(this).find('form').attr('name');    
+                            var countForm = $('form[name='+form_name+']').length;
+                            var formData = new FormData($(this).find('form')[0]);
+                            var formValues = formData.entries();
+                            for(var pair of formValues){      
+                                dataString.push({
+                                    name: 'cnews_seo['+index+']['+pair[0]+']',
+                                    value: pair[1]
+                                });                             
+                            }                                  
+                        });
                         dataString.push({name: 'formCount', value: forms.length});
                         //end
 
@@ -203,6 +230,20 @@ $(function() {
                                         allTitleLabels.css("color", "red");
                                     }
                                 }
+                                var seo_fields = ["cnews_seo_meta_title","cnews_seo_meta_description","cnews_seo_canonical","cnews_seo_url","cnews_seo_url_redirect","cnews_seo_url_301"];
+                                var arrayLength = seo_fields.length;
+                                for (var i = 0; i < arrayLength; i++) {                                  
+                                    if (data['errors'][seo_fields[i]]) {
+                                        var label = data['errors'][seo_fields[i]]['label'];    
+                                        var lang = label.substring(
+                                            label.indexOf("(") + 1, 
+                                            label.lastIndexOf(")")
+                                        );
+                                        var langTabIDWithError = $('#' + data.chunk.cnews_id + '_id_meliscmsnews_content_tabs_seo_details').find('span:contains('+lang+')').parent('a').attr('href');
+                                        $('#' + data.chunk.cnews_id + '_id_meliscmsnews_content_tabs_seo_details .form-control[name='+seo_fields[i]+']').parents(".form-group").children(":first").css("color", "#686868");
+                                        $(langTabIDWithError + " .form-control[name='"+seo_fields[i]+"']").parents(".form-group").children(":first").css("color", "red");  
+                                    }                                   
+                                }                             
                             }
                             melisCore.flashMessenger();
                             melisCoreTool.done(".saveNewsLetter");
@@ -404,7 +445,55 @@ $(function() {
                }
             }
         });
+        $body.on(
+            "keyup keydown change",
+            "form[name='newsSeoForm'] input[name='cnews_seo_meta_title']",
+            { limit: 65 },
+            charCounter
+        );
+        $body.on(
+            "keyup keydown change",
+            "form[name='newsSeoForm'] textarea[name='cnews_seo_meta_description']",
+            { limit: 255 },
+            charCounter
+        );
 });
+function charCounter(event) {
+    var charLength = $(this).val().length;
+    var prevLabel = $(this).prev("label");
+    var limit = event.data.limit;
+    if (prevLabel.find("span").length) {
+        if (charLength === 0) {
+            prevLabel.removeClass("limit");
+            prevLabel.find("span").remove();
+        } else {
+            prevLabel
+                .find("span")
+                .html('<i class="fa fa-text-width"></i>(' + charLength + ")");
+            if (charLength > limit) {
+                prevLabel.addClass("limit");
+                prevLabel.find("span").addClass("limit");
+            } else {
+                prevLabel.removeClass("limit");
+                prevLabel.find("span").removeClass("limit");
+            }
+        }
+    } else {
+        if (charLength !== 0) {
+            prevLabel
+                .find(".label-text")
+                .append(
+                    "<span class='text-counter-indicator'><i class='fa fa-text-width'></i>(" +
+                        charLength +
+                        ")</span>"
+                );
+            if (charLength > limit) {
+                prevLabel.addClass("limit");
+                prevLabel.find("span").addClass("limit");
+            }
+        }
+    }
+}
 
 var toolNews = {
     refreshTable: function () {
