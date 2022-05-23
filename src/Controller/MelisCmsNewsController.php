@@ -1509,10 +1509,10 @@ class MelisCmsNewsController extends MelisAbstractActionController
                                         // This URL is already used somewhere else
                                         return array(
                                                 'success' => 0,                                               
-                                                'errors' => array(
+                                                'errors' => array( 'cnews_seo_url' => 
                                                                 array(
                                                                         'cnews_seo_url' => $translator->translate('tr_meliscmsnews_page_tab_seo_error_duplicate_url') . ' '. $newsTitleDuplicate. '('.$languages->lang_cms_name.')',
-                                                                        'label' => $translator->translate('tr_meliscmsnews_page_tab_seo_error_label_seo_url')
+                                                                        'label' => $translator->translate('tr_meliscmsnews_page_tab_seo_error_label_seo_url'). '('.$lang["lang_cms_name"].')'
                                                                     )
                                                                 )
                                         );
@@ -1535,10 +1535,10 @@ class MelisCmsNewsController extends MelisAbstractActionController
                                         // This URL is already used somewhere else
                                         return array(
                                                 'success' => 0,                                              
-                                                'errors' => array(
+                                                'errors' => array( 'cnews_seo_url' =>
                                                                 array(
                                                                         'cnews_seo_url' => $translator->translate('tr_meliscmsnews_page_tab_seo_error_duplicate_url') . $pageNameDuplicate,
-                                                                        'label' => $translator->translate('tr_meliscmsnews_page_tab_seo_error_label_seo_url')
+                                                                        'label' => $translator->translate('tr_meliscmsnews_page_tab_seo_error_label_seo_url'). '('.$lang["lang_cms_name"].')'
                                                                     )
                                                                 )
                                         );
