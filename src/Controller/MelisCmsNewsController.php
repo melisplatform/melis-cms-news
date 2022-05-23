@@ -1511,7 +1511,7 @@ class MelisCmsNewsController extends MelisAbstractActionController
                                                 'success' => 0,                                               
                                                 'errors' => array(
                                                                 array(
-                                                                        'cnews_seo_url' => $translator->translate('tr_meliscmsnews_page_tab_seo_error_duplicate_url') . $newsTitleDuplicate. '('.$languages->lang_cms_name.')',
+                                                                        'cnews_seo_url' => $translator->translate('tr_meliscmsnews_page_tab_seo_error_duplicate_url') . ' '. $newsTitleDuplicate. '('.$languages->lang_cms_name.')',
                                                                         'label' => $translator->translate('tr_meliscmsnews_page_tab_seo_error_label_seo_url')
                                                                     )
                                                                 )
