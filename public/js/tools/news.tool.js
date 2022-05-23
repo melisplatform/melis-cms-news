@@ -116,7 +116,7 @@ $(function() {
                 melisCoreTool.done(".removeAttachFile");
         });
 
-        //automatically set the seo url in Seo tab when entering a new title 
+        //automatically set the seo url in Seo tab when entering a new title, applies to adding a news only, not applicable to editing 
         $body.on("keyup", "#cnews_title", function(){
             var newsPage        = $(this).closest('.container-level-a'),
                 newsId          = newsPage.data('newsid'),
