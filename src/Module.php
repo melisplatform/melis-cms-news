@@ -25,7 +25,7 @@ use MelisCmsNews\Listener\MelisCmsNewsPreviewTypeListener;
 
 /*news seo*/
 use Laminas\ModuleManager\ModuleEvent;
-use MelisCmsNews\Listener\MelisCmsNewsSeoRouteListener;
+use MelisCmsNews\Listener\MelisCmsNewsSEORouteListener;
 use MelisCmsNews\Listener\MelisCmsNewsRenderPageListener;
 use MelisCmsNews\Listener\MelisCmsNewsMetaPageListener;
 use MelisCmsNews\Listener\MelisCmsNewsSeoRedirectUrlListener;
@@ -38,7 +38,7 @@ class Module
          *  - Catching PAGE SEO URLs to update Router
          *    > create SEO route first so the modules can have a route match in creating translations
          */
-        $events->attach(ModuleEvent::EVENT_LOAD_MODULES_POST, [new MelisCmsNewsSeoRouteListener(), 'onLoadModulesPost']);
+        $events->attach(ModuleEvent::EVENT_LOAD_MODULES_POST, [new MelisCmsNewsSEORouteListener(), 'onLoadModulesPost']);
     }
     public function onBootstrap(MvcEvent $e)
     {
