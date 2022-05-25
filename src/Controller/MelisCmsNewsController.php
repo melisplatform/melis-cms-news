@@ -625,9 +625,10 @@ class MelisCmsNewsController extends MelisAbstractActionController
                         $newsTxt['cnews_title'] = $postValues['cnews_title'][$i];
                         $newsTxt['cnews_subtitle'] = $postValues['cnews_subtitle'][$i];
                         $newsTxt['cnews_lang_id'] = $postValues['cnews_lang_id'][$i];
+                        $newsTxt['cnews_paragraph_order'] = $postValues['cnews_paragraph_order'][$i];
 
                         // get all paragraph values
-                        for ($c = 1; $c <= 4; $c++) {
+                        for ($c = 1; $c <= 10; $c++) {
                             $newsTxt['cnews_paragraph' . $c] = $postValues['cnews_paragraph' . $c][$i];
                         }
 

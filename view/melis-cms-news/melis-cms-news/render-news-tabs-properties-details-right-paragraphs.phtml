@@ -47,7 +47,44 @@
                                                 } 
                                             }
                                             echo $this->form()->openTag($form);
-                                            echo $this->melisFieldCollection($form);
+                                            $paragraphFields = array('cnews_paragraph1', 'cnews_paragraph2', 'cnews_paragraph3', 'cnews_paragraph4','cnews_paragraph5','cnews_paragraph6','cnews_paragraph7','cnews_paragraph8','cnews_paragraph9','cnews_paragraph10');
+                                            foreach ($form as $element => $options) {                                             
+                                                if (!in_array($element, $paragraphFields)) {
+                                                    echo $this->MelisFieldRow($form->get($element));
+                                                }       
+                                            } 
+                                            $paragraphOrder = $form->get('cnews_paragraph_order')->getValue();
+                                            $paragraphOrder = !empty($paragraphOrder) ? explode("-", $paragraphOrder) : $paragraphFields;
+                                            //sort here the form elements based on the ordering of the paragraphs
+                                            $orderedParagraphFields = array();
+                                            $formElements = $form->getElements();
+                                            foreach ($paragraphOrder as $key) {
+                                                if (array_key_exists($key, $formElements)) {
+                                                    $orderedParagraphFields[$key] = $formElements[$key];
+                                                    unset($formElements[$key]);
+                                                }
+                                            }                                            
+                                            ?>
+                                            <div class="news_paragraphs">
+                                                <div class="text_paragraph_sortable clearfix">
+                                                    <?php foreach ($orderedParagraphFields as $element => $value) {  
+                                                        $value->setAttribute('id', $value->getAttribute('id').'_lang_'.$lang['lang_cms_id'].'_news_'.$this->newsId);
+                                                        ?>
+                                                            <div class="form-group">      
+                                                                <label class="d-flex flex-row justify-content-between" for="<?=$value->getAttribute('id')?>">
+                                                                    <div class="label-text">
+                                                                        <i class="fa fa-arrows arrow-news" aria-hidden="true"></i><?=$value->getLabel()?>
+                                                                    </div>
+                                                                    <div class="slider-open-tooltip">
+                                                                          <i class="fa fa-info-circle fa-lg float-right tip-info" data-toggle="tooltip" data-placement="left" title="" data-original-title="<?= $this->translate($value->getOptions()['tooltip'])?>" data-html="true"></i>
+                                                                    </div>
+                                                                </label> 
+                                                                <?=$this->formElement($value)?> 
+                                                             </div>                                                    
+                                                <?php    } ?>                                                   
+                                                </div>
+                                            </div>                
+                                        <?php
                                             echo $this->form()->closeTag();
                                         ?>
                                     </div>
@@ -63,7 +100,7 @@
 <script type="text/javascript">
     $(function() {
         let tinyMceOption = {
-            height: 300,
+            height: 400,
             /**
              * Prefix value refers to the mini template filenames which include dashes
              * Example: 2-cols-left-text-right-image, prefix of 2 or 2-cols
@@ -71,5 +108,40 @@
             templates: '/melis/MelisCore/MelisTinyMce/getTinyTemplates?siteId=<?= $this->siteId; ?>'
         };
         melisTinyMCE.createTinyMCE("tool", ".editme", tinyMceOption);
+        $(".text_paragraph_sortable").sortable({
+            placeholder: 'slide-placeholder',
+            axis: "y",
+            revert: 150,      
+            start: function(e, ui){                      
+                placeholderHeight = ui.item.outerHeight();              
+                ui.placeholder.height(placeholderHeight + 15);               
+                $('<div class="slide-placeholder-animator" data-height="' + placeholderHeight + '"></div>').insertAfter(ui.placeholder);
+            },
+            change: function(event, ui) {                
+                ui.placeholder.stop().height(0).animate({
+                    height: ui.item.outerHeight() + 15                   
+                }, 300);
+                placeholderAnimatorHeight = parseInt($(".slide-placeholder-animator").attr("data-height"));
+                $(".slide-placeholder-animator").stop().height(placeholderAnimatorHeight + 15).animate({
+                    height: 0
+                }, 300, function() {
+                    $(this).remove();
+                    placeholderHeight = ui.item.outerHeight();
+                    $('<div class="slide-placeholder-animator" data-height="' + placeholderHeight + '"></div>').insertAfter(ui.placeholder);
+                });                
+            },
+            sort: function(e, ui) {               
+                ui.item.css('margin-top', '315px');       
+            },
+            stop: function(e, ui) {                
+                $(".slide-placeholder-animator").remove();
+                //reinitialize tiny mce of the dragged section 
+                var textareaID = $(ui.item).find('textarea').attr('id');      
+                melisTinyMCE.createTinyMCE("tool", "#"+textareaID, tinyMceOption);
+                ui.item.css('margin-top', '0px');
+            },
+        });
+        $(".text_paragraph_sortable").find('div.form-group').removeClass('ui-sortable-handle');
+        $(".text_paragraph_sortable").find('.label-text').addClass('ui-sortable-handle');
     });
 </script>

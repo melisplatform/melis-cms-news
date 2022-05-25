@@ -47,6 +47,13 @@ CREATE TABLE IF NOT EXISTS `melis_cms_news_texts` (
   `cnews_paragraph2` LONGTEXT NULL,
   `cnews_paragraph3` LONGTEXT NULL,
   `cnews_paragraph4` LONGTEXT NULL,
+  `cnews_paragraph5` LONGTEXT NULL,
+  `cnews_paragraph6` LONGTEXT NULL,
+  `cnews_paragraph7` LONGTEXT NULL,
+  `cnews_paragraph8` LONGTEXT NULL,
+  `cnews_paragraph9` LONGTEXT NULL,
+  `cnews_paragraph10` LONGTEXT NULL,
+  `cnews_paragraph_order` VARCHAR(255) NULL,
   `cnews_id` INT(11) NULL,
   `cnews_lang_id` INT(11) NULL,
   PRIMARY KEY (`cnews_text_id`))

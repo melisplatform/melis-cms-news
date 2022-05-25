@@ -132,11 +132,23 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
                 $newsData->cnews_author_account = $authorInfo;
             }
         }
+        //sort paragraphs based on the defined order
+        $newsData = (array) $newsData;
+        $paragraphOrder = $newsData['cnews_paragraph_order'] ?? null; //the paragraph order defined in db
+        $paragraphFields = array('cnews_paragraph1', 'cnews_paragraph2', 'cnews_paragraph3', 'cnews_paragraph4','cnews_paragraph5','cnews_paragraph6','cnews_paragraph7','cnews_paragraph8','cnews_paragraph9','cnews_paragraph10');
+        $paragraphOrder = !empty($paragraphOrder) ? explode('-', $paragraphOrder) : $paragraphFields;
 
+        $ctr = 0;
+        $sortedNewsData = array();
+        foreach ($paragraphOrder as $field) {
+            $sortedNewsData[$paragraphFields[$ctr]] = $newsData[$field] ?? null;
+            $ctr++;
+        }        
+        $finalData = array_merge($newsData, $sortedNewsData);
         // Create an array with the variables that will be available in the view
         $viewVariables = [
             'pluginId' => $data['id'],
-            'news' => (array) $newsData
+            'news' => $finalData
         ];
 
         // return the variable array and let the view be created

@@ -165,12 +165,24 @@ $(function() {
                                 value: formContainer.data("langId")
                             });
 
-                            for (var i = 1; i <= 4; i++) {
+                            for (var i = 1; i <= 10; i++) {
                                 dataString.push({
                                     name: 'cnews_paragraph' + i + "[" + ctr + "]",
-                                    value: formContainer.find("#cnews_paragraph" + i).val()
+                                    value: formContainer.find("textarea[name='cnews_paragraph"+ i+"'"+"]" ).val()
                                 });
                             }
+                            var order = "";
+                            formContainer.find("textarea.editme").each(function(){   
+                                if (order != '') {
+                                    order = order + "-" + $(this).attr('name');    
+                                } else{
+                                    order = $(this).attr('name')
+                                }                           
+                            });                
+                            dataString.push({
+                                name: 'cnews_paragraph_order[' + ctr + ']',
+                                value: order
+                            });
                             ctr++;
                         });
 

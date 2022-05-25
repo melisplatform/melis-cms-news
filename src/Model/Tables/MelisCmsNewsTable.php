@@ -33,6 +33,12 @@ class MelisCmsNewsTable extends MelisGenericTable
         'cnews_paragraph2',
         'cnews_paragraph3',
         'cnews_paragraph4',
+        'cnews_paragraph5',
+        'cnews_paragraph6',
+        'cnews_paragraph7',
+        'cnews_paragraph8',
+        'cnews_paragraph9',
+        'cnews_paragraph10',
         'cnews_id',
         'cnews_lang_id',
     ];

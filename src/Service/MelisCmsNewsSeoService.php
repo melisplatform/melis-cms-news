@@ -36,18 +36,27 @@ class MelisCmsNewsSeoService extends MelisGeneralService
 
 		// Get the already generated link from the DB if possible    
 		$link = '';		
+		$pageDefaultUrlsSrv = $this->getServiceManager()->get('MelisEnginePageDefaultUrlsService');
+		if ($this->getRenderMode() == 'front') {
+			$defaultUrls = $pageDefaultUrlsSrv->getPageDefaultUrl($idPage);
+			if (!empty($defaultUrls)) {
+				if (count($defaultUrls) > 0) {
+					$link = $defaultUrls[0]['purl_page_url'];
+				}
+			}
+		}
 
 		// if nothing found in DB, then let's generate
 		if ($link == '') {
 			// Generate real one
 			$seoUrl = '';
 	            
+	        //Check for Seo URL first of the idpage   
         	$melisPage = $this->getServiceManager()->get('MelisEnginePage');
 			$datasPageRes = $melisPage->getDatasPage($idPage);
 			$datasPageTreeRes = $datasPageRes->getMelisPageTree();
 			
-			if ($datasPageTreeRes && !empty($datasPageTreeRes->pseo_url))
-			{
+			if ($datasPageTreeRes && !empty($datasPageTreeRes->pseo_url)) {
 				$seoUrl = $datasPageTreeRes->pseo_url;
 				if (substr($seoUrl, 0, 1) != '/')
 					$seoUrl = '/' . $seoUrl;
@@ -91,6 +100,17 @@ class MelisCmsNewsSeoService extends MelisGeneralService
 
 			$link = $melisEngineTreeService->cleanLink($seoUrl);	
 				   
+			//add to DB
+			$tablePageDefaultUrls = $this->getServiceManager()->get('MelisEngineTablePageDefaultUrls');
+			$tablePageDefaultUrls->save(
+				array(
+					'purl_page_id' => $idPage,
+					'purl_page_url' => $link
+				),
+				$idPage
+			);	
+		}
+		//Check for the News SEO URL
             $newsDetailSeoLink = $this->getSeoData($newsId, $idPage)->current();
             //add the newsId param if no news seo url is given		
 			if (empty($newsDetailSeoLink->cnews_seo_url)) {			
@@ -101,7 +121,6 @@ class MelisCmsNewsSeoService extends MelisGeneralService
 					$link = $link . '/' . $newsDetailSeoLink->cnews_seo_url;           
             	} else {
             		$link = $link .  $newsDetailSeoLink->cnews_seo_url; 
-            	}	            		            
 			}
 		}
 			
@@ -114,8 +133,7 @@ class MelisCmsNewsSeoService extends MelisGeneralService
 			$idversion = $routeMatch->getParam('idversion');
 		}
 
-		if ($absolute || !empty($idversion))
-		{
+		if ($absolute || !empty($idversion)) {
 			$host = $melisEngineTreeService->getDomainByPageId($idPage);
 			$link = $host . $link;
 		}
