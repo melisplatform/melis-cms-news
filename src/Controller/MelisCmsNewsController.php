@@ -669,14 +669,28 @@ class MelisCmsNewsController extends MelisAbstractActionController
                     }
                     //save seo tab
                     list('success' => $isSeoSuccess, 'errors' => $errors) = $this->saveNewsSeo($data['cnews_id']);
+                    //rollback here when seo saving is not successful
+                    if ($isSeoSuccess != 1) {
+                        //delete news and news texts
+                        $deleteNews = $this->forward()->dispatch(
+                            'MelisCmsNews\Controller\MelisCmsNewsList',
+                            [
+                                'action' => 'deleteNews',
+                                'newsId' => $data['cnews_id']                                
+                            ]
+                        )->getVariables();
+                        $postValues['cnews_id'] = null;
+                        $data['cnews_id'] = 0;
+                    } else {
                     /** Updating post values for the listener: "meliscmsnews_get_postvalues" */
                     if (!empty($postValues['cnews_id'])) {
                         $postValues['cnews_id'] = $data['cnews_id'];
                     }
 
+                        $textMessage = 'tr_meliscmsnews_save_success';
+                        $success = 1;
+                    }
                     $id = $data['cnews_id'];
-                    $textMessage = ($isSeoSuccess == 1) ? 'tr_meliscmsnews_save_success' : 'tr_meliscmsnews_save_seo_fail';
-                    $success = ($isSeoSuccess == 1) ? 1 : 0;
                 }
             } else {
                 $formErrors = $form->getMessages();
@@ -1496,7 +1510,7 @@ class MelisCmsNewsController extends MelisAbstractActionController
                         if (!$allEmpty)  {
                             // Check for unicity of the URL declared
                             if (!empty($seoData['cnews_seo_url'])) {
-                                $newsSeo = $melisNewsSeoTable->getEntryByField('cnews_seo_url', $seoData['cnews_seo_url'])->current();
+                                $newsSeo = $melisNewsSeoTable->checkSeoUrlDuplicates($seoData['cnews_seo_url'], $postValues['cnews_site_id'])->current();
                                 if (!empty($newsSeo)) {
                                     // Not this page of course
                                     if (empty($seoData['cnews_seo_id']) || (!empty($seoData['cnews_seo_id']) && $seoData['cnews_seo_id'] != $newsSeo->cnews_seo_id)) {
@@ -1512,7 +1526,7 @@ class MelisCmsNewsController extends MelisAbstractActionController
                                                 'success' => 0,                                               
                                                 'errors' => array( 'cnews_seo_url' => 
                                                                 array(
-                                                                        'cnews_seo_url' => $translator->translate('tr_meliscmsnews_page_tab_seo_error_duplicate_url') . ' '. $newsTitleDuplicate. '('.$languages->lang_cms_name.')',
+                                                                        'cnews_seo_url' => $translator->translate('tr_meliscmsnews_page_tab_seo_error_duplicate_url') . ' '. $newsTitleDuplicate,
                                                                         'label' => $translator->translate('tr_meliscmsnews_page_tab_seo_error_label_seo_url'). '('.$lang["lang_cms_name"].')'
                                                                     )
                                                                 )

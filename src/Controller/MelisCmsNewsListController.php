@@ -336,15 +336,20 @@ class MelisCmsNewsListController extends MelisAbstractActionController
 
         if($this->getRequest()->isPost()){
             $postValues = $this->getRequest()->getPost()->toArray();
-            $id = $postValues['newsId'];
-            $tmp = $newsSvc->getNewsById($postValues['newsId']);
+            $newsId = $postValues['newsId'] ?? null;
+            //if news id is not given from the post values, try to get from the route param from the forward dispatch event during rollback when seo saving is not successful
+            if (empty($newsId)) {
+                $newsId = $this->params()->fromRoute('newsId');
+            }
 
+            $id = $newsId ;
+            $tmp = $newsSvc->getNewsById($newsId);
             if (!empty($tmp) && is_array($tmp)) {
                 $tmp = $tmp[0];
             }
 
             //delete db data
-            if($newsSvc->deleteNewsById($postValues['newsId'])){
+            if ($newsSvc->deleteNewsById($newsId)) {
                 //delete directory files
                 $iConf = $melisCoreConfig->getItem('meliscmsnews/conf/images_conf/');
                 $iLimit = $iConf['max'];

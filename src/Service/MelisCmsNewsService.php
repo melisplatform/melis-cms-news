@@ -175,10 +175,21 @@ class MelisCmsNewsService extends MelisGeneralService
         // Service implementation start
         $newsTable = $this->getServiceManager()->get('MelisCmsNewsTable');
         $newsTextTable = $this->getServiceManager()->get('MelisCmsNewsTextsTable');
+        $newsSeoTable = $this->getServiceManager()->get('MelisCmsNewsSeoTable');
         try {
             if ($newsTable->deleteById($arrayParameters['newsId'])) {
                 // Remove news text
-                $results = empty($newsTextTable->deleteByField('cnews_id', $arrayParameters['newsId'])) ? false : true;
+                $newsTextDeleteResults = empty($newsTextTable->deleteByField('cnews_id', $arrayParameters['newsId'])) ? false : true;
+                //Remove seo data
+                $seoData = $newsSeoTable->getEntryByField('cnews_id', $arrayParameters['newsId'])->toArray();
+                $seoDeleteResults = true;
+                //delete seo data if there are any
+                if ($seoData) {
+                    $seoDeleteResults = empty($newsSeoTable->deleteByField('cnews_id', $arrayParameters['newsId'])) ? false : true;
+                }
+                if ($newsTextDeleteResults && $seoDeleteResults) {
+                    $results = true;
+                }
             }
         } catch (\Exception $e) {
             echo $e->getMessage();

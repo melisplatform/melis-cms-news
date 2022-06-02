@@ -50,4 +50,23 @@ class MelisCmsNewsSeoTable extends MelisGenericTable
         $resultData = $this->tableGateway->selectWith($select);
         return $resultData;
     }
+    /**
+     * @param $seoUrl
+     * @param null $siteId
+     * @return mixed
+     */
+    public function checkSeoUrlDuplicates($seoUrl, $siteId)
+    {
+        $select = $this->tableGateway->getSql()->select();  
+        if ($seoUrl) {
+            $select->where->like('melis_cms_news_seo.cnews_seo_url', $seoUrl);     
+        }
+        if (!is_null($siteId)) {
+            $select->join(array('news' => 'melis_cms_news'), 'news.cnews_id = melis_cms_news_seo.cnews_id', array(), $select::JOIN_LEFT);
+            $select->join(array('site' => 'melis_cms_site'), 'site.site_id = news.cnews_site_id', array('site_name'), $select::JOIN_LEFT);
+            $select->where('news.cnews_site_id ='.$siteId);
+        }
+        $resultData = $this->tableGateway->selectWith($select);
+        return $resultData;
+    }
 }

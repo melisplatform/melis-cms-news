@@ -251,7 +251,7 @@ $(function() {
                                             label.indexOf("(") + 1, 
                                             label.lastIndexOf(")")
                                         );
-                                        var langTabIDWithError = $('#' + data.chunk.cnews_id + '_id_meliscmsnews_content_tabs_seo_details').find('span:contains('+lang+')').parent('a').attr('href');
+                                        var langTabIDWithError = $('#' + newsId + '_id_meliscmsnews_content_tabs_seo_details').find('span:contains('+lang+')').parent('a').attr('href');
                                         $('#' + data.chunk.cnews_id + '_id_meliscmsnews_content_tabs_seo_details .form-control[name='+seo_fields[i]+']').parents(".form-group").children(":first").css("color", "#686868");
                                         $(langTabIDWithError + " .form-control[name='"+seo_fields[i]+"']").parents(".form-group").children(":first").css("color", "red");  
                                     }                                   
