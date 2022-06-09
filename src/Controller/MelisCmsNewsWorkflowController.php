@@ -460,18 +460,16 @@ class MelisCmsNewsWorkflowController extends MelisAbstractActionController
        
         $wfMainId = 0;
         $datasWF = $melisCmsNewsWorkflowTable->getUnvalidatedWorkflowByTypeAndId($type, $idItem, 1);
-        if (!empty($datasWF))
-        {
+        if (!empty($datasWF)) {
             $datasWF = $datasWF->toArray();
             print_r($datasWF);
-            if (!empty($datasWF))
-            {
+            if (!empty($datasWF)) {
                 if ($datasWF[0]['cnews_wfe_action'] == 'VALIDATION')
                     $wfMainId = $datasWF[0]['cnews_wf_id'];
             }
-        }
-        else
+        } else {
             $datasWF = array();
+        }
 
         if (!empty($wfMainId))
             return true;
@@ -489,8 +487,7 @@ class MelisCmsNewsWorkflowController extends MelisAbstractActionController
             $wfeDataCount = count($wfeData);
             if ($wfeDataCount === 2) {
                 return true;
-            }
-            else {
+            } else {
                 return false;
             }
         }
@@ -524,8 +521,7 @@ class MelisCmsNewsWorkflowController extends MelisAbstractActionController
         $datas = array();
 
         // Update from the different save actions done
-        if (!empty($container['action-workflow']))
-        {
+        if (!empty($container['action-workflow'])) {
             if (!empty($container['action-workflow']['success']))
                 $success = $container['action-workflow']['success'];
             if (!empty($container['action-workflow']['errors']))

@@ -86,16 +86,13 @@ class MelisCmsNewsWorkflowPlugin extends MelisCoreDashboardTemplatingPlugin
         // get demands asked to me
         $demands = array();
         $nbItems = 0;
-        if (!empty($workflowItems))
-        {
+        if (!empty($workflowItems)) {
             $workflowItems = $workflowItems->toArray();
-            foreach ($workflowItems as $wf)
-            {
+            foreach ($workflowItems as $wf) {
                 $wfEvents = $melisCmsNewsWorkflowEventsTable->getWorkflowEventsById($wf['cnews_wf_id']);
                 
                 // Limit to 8 in the dashboard (or more only if not validated)
-                if ($nbItems >= $this->pluginConfig['datas']['limit'])
-                {
+                if ($nbItems >= $this->pluginConfig['datas']['limit']) {
                     /**
                      * if there's already more items than MELIS_WF_DASHBOARD_LIMIT
                      * then we'll add them only if there're not validated yet so that they don't disappear
@@ -115,8 +112,7 @@ class MelisCmsNewsWorkflowPlugin extends MelisCoreDashboardTemplatingPlugin
                         
                 $results = $wfEvents->toArray();
                 $finalResult = array();
-                foreach ($results as $wfItem)
-                {
+                foreach ($results as $wfItem) {                    
                     
                     $wfItem['cnews_wf_id'] = $wf['cnews_wf_id'];
                     $wfItem['cnews_wf_process_finished'] = $wf['cnews_wf_process_finished'];
@@ -128,8 +124,7 @@ class MelisCmsNewsWorkflowPlugin extends MelisCoreDashboardTemplatingPlugin
                     // Deleted user as Default value
                     $userTo = $translator->translate('tr_meliscore_user_deleted').' ('.$wfItem['cnews_wfe_to_user_id'].')';
                     $userDatas = $melisUserTable->getEntryById($wfItem['cnews_wfe_to_user_id']);
-                    if (!empty($userDatas))
-                    {
+                    if (!empty($userDatas)) {
                         $userDatas = $userDatas->toArray();
                         if (!empty($userDatas))
                             $userTo = $userDatas[0]['usr_firstname'] . ' ' . $userDatas[0]['usr_lastname'];
@@ -138,8 +133,7 @@ class MelisCmsNewsWorkflowPlugin extends MelisCoreDashboardTemplatingPlugin
                     // Deleted user as Default value
                     $userFrom = $translator->translate('tr_meliscore_user_deleted').' ('.$wfItem['cnews_wfe_from_user_id'].')';
                     $userDatas = $melisUserTable->getEntryById($wfItem['cnews_wfe_from_user_id']);
-                    if (!empty($userDatas))
-                    {
+                    if (!empty($userDatas)) {
                         $userDatas = $userDatas->toArray();
                         if (!empty($userDatas))
                             $userFrom = $userDatas[0]['usr_firstname'] . ' ' . $userDatas[0]['usr_lastname'];
@@ -147,8 +141,7 @@ class MelisCmsNewsWorkflowPlugin extends MelisCoreDashboardTemplatingPlugin
                     
                     $roleName = '';
                     $roleDatas = $melisUserRole->getEntryById($wfItem['cnews_wfe_to_role_id']);
-                    if (!empty($roleDatas))
-                    {
+                    if (!empty($roleDatas)) {
                         $roleDatas = $roleDatas->toArray();
                         if (!empty($roleDatas))
                             $roleName = $roleDatas[0]['urole_name'];
@@ -239,41 +232,11 @@ class MelisCmsNewsWorkflowPlugin extends MelisCoreDashboardTemplatingPlugin
         return $tabItems;
     }
     
-    // public function workflowCommentModal()
-    // {
-    //     dump('inside workflowCommentModal in plugin controller');
         
-    //     // Get the form properly loaded               
-    //     $factory = new \Laminas\Form\Factory();
-    //     $formElements = $this->getServiceManager()->get('FormElementManager');
-    //     $factory->setFormElementManager($formElements);
-    //     $melisCoreConfig = $this->getServiceManager()->get('MelisCoreConfig');  
-    //     $commentFormConfig = $melisCoreConfig->getFormMergedAndOrdered('MelisCmsNews/forms/meliscmsnews_comment_form', 'meliscmsnews_comment_form');
-    //     $commentNewsForm = $factory->createForm($commentFormConfig);
         
-    //     $request = $this->getController()->getRequest();        
-    //     $data = $request->getQuery()->toArray();
 
-    //     $pluginId = $data['pluginId'];
-    //     // Changing the form Attribute id
-    //     $commentNewsForm->setAttribute('id', 'news-wf-comment-modal-'.$pluginId);
         
-    //     $commentNewsForm->add(array(
-    //         'type' => 'hidden',
-    //         'name' => 'cnews_com_page_id',
-    //     ));
         
-    //     $commentNewsForm->add(array(
-    //         'type' => 'hidden',
-    //         'name' => 'action',
-    //     ));
         
-    //     $commentNewsForm->setData($data);
         
-    //     $view = new ViewModel();
-    //     $view->setTemplate('MelisCmsNews/dashboard-plugin/workflow-comment-modal');
-    //     $view->setVariable('pluginId', $pluginId);
-    //     $view->setVariable('commentForm', $commentNewsForm);
-    //     return $view;
-    // }
 }

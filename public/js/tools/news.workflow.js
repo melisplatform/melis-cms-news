@@ -1,6 +1,7 @@
 /*reference: Melis Small Business/js/workflow.js*/
 $(function() {
-    var $body = $("body");
+    var $body = $("body"),
+        globalAction = '';//either ask, validated or refused
 
          /*Start News Workflow Dashboard*/
 
@@ -17,20 +18,13 @@ $(function() {
                 datastring['wfe-id'] = $this.data("wfe-id");
                 datastring['wfe_wf_id'] = $this.data("wfe-wf-id");
 
-                console.log('wfe-id: ' + $this.data("wfe-id"));
-                console.log('wfe_wf_id: ' + $this.data("wfe-wf-id"));
             
             // get reloadable parent
-            var zoneId      = $this.parents("div[data-meliskey]").attr('id'),
-                meliskey    = $this.parents("div[data-meliskey]").attr('data-meliskey');
             
                 // set global values
-                gZoneId                 = zoneId;
-                gMelisKey               = meliskey;
-                gDataString             = datastring;
-                gAction                 = action;
-                pluginId                = $this.parents(".grid-stack-item").data("gsId");
+            var pluginId = $this.parents(".grid-stack-item").data("gsId"),
                 currentWorkflowNewsId   = datastring.wfId;
+            globalAction = action;               
 
                 melisCoreTool.confirm(
                         translations.tr_meliscore_common_yes, 
@@ -53,11 +47,11 @@ $(function() {
                                     melisHelper.melisOkNotification( data.textTitle, data.textMessage );
                                 
                                     // show comment modal
-                                    wfCommentZoneId = 'id_meliscmsnews_dashboard_workflow_comment_modal_content';
-                                    wfCommentMelisKey = 'meliscmsnews_dashboard_workflow_comment_modal_content';
-                                    modalUrl = '/melis/MelisCmsNews/MelisCmsNewsWorkflow/workflowCommentModal';
+                                var wfCommentZoneId = 'id_meliscmsnews_dashboard_workflow_comment_modal_content';
+                                var wfCommentMelisKey = 'meliscmsnews_dashboard_workflow_comment_modal_content';
+                                var modalUrl = '/melis/MelisCmsNews/MelisCmsNewsWorkflow/workflowCommentModal';
                                     // requesting to create modal and display after
-                                    melisHelper.createModal(wfCommentZoneId, wfCommentMelisKey, false, {cnews_com_news_id: currentWorkflowNewsId, action : gAction, pluginId : pluginId}, modalUrl);
+                                melisHelper.createModal(wfCommentZoneId, wfCommentMelisKey, false, {cnews_com_news_id: currentWorkflowNewsId, action : globalAction, pluginId : pluginId}, modalUrl);
                                 } else {
                                     // error modal
                                     melisHelper.melisKoNotification( data.textTitle, data.textMessage, data.errors );
@@ -240,12 +234,8 @@ $(function() {
                 datastring.roles = roles;
                 datastring.ask = "ask";
 
-                // /MelisCmsNews/MelisCmsNewsWorkflow/saveActions
                 // parameter: wfaction=ask roleId=1 userId=1
-                gAction     = datastring.ask;
-                gZoneId     = zoneId;
-                gMelisKey   = meliskey;
-                gDataString = datastring;
+                globalAction = datastring.ask;              
                 
                 if ( !$this.attr("disabled") ) {
                     $(".workflow-modal-cont-news .w-asktovalidate-cont-news .send-workflow-request").attr("disabled", true);
@@ -267,7 +257,6 @@ $(function() {
                             melisHelper.melisOkNotification( data.textTitle, data.textMessage );
 
                             // zoneReload the modal content to update
-                            //melisHelper.zoneReload(zoneId, meliskey, modalDatas);
 
                             $("#workflow-comments-modal form#idmeliscmsnewscomments #id_cnews_com_title").attr("disabled", "disabled");
                             $("#workflow-comments-modal form#idmeliscmsnewscomments #id_cnews_com_title").parent().hide();
@@ -302,10 +291,7 @@ $(function() {
                 action      = ( $this.hasClass('pw-validate') ? "validate" : "refuse" );
 
                 // set global values
-                gZoneId     = zoneId;
-                gMelisKey   = meliskey;
-                gDataString = datastring;
-                gAction     = action;
+                globalAction = action;
 
                 melisCoreTool.confirm(
                     translations.tr_meliscore_common_yes,
@@ -340,13 +326,20 @@ $(function() {
                     });
         });
 
+        $body.on('keyup blur', '#idmeliscmsnewscomments #id_cnews_com_text', function(e) {
+            if ($(this).val() != '') {
+                $(".btnAddWorkflowCommentNews").removeAttr('disabled');
+            } else {
+                $(".btnAddWorkflowCommentNews").attr('disabled','disabled');
+            }
+        });
          /**
          * Handles the request when user adds a comment to the workflow request
          */
         $body.on('click', '.btnAddWorkflowCommentNews, .btnCommentModalCloseNews', function (e) {           
             var newsId      = $("#melis-modals-container").find(".modal-content").data('wf-id'),
                 form        = "workflow-comments-modal form#idmeliscmsnewscomments",
-                action      = "ask",
+                action = globalAction,//gets the global value of the action selected
                 btn = "";
                               
                 if ($(this).hasClass('btnAddWorkflowCommentNews')) {                   
