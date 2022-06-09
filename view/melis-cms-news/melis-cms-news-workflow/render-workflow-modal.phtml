@@ -1,0 +1,45 @@
+<!-- PAGE WORKFLOW MODAL -->
+<div class="workflow-modal-cont-news">
+    <div class="modal fade" id="newsWorkflowModal">
+        <div class="modal-dialog" role="document">
+
+            <div class="modal-content">
+
+                <!-- Modal content -->
+                <div id="id_meliscmsnews_workflow_modal_content" class="workflow-modal-cont-news">
+
+                </div>
+
+                <!-- Modal footer-->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-dismiss="modal"> <?= $this->translate('tr_meliscmsnews_common_close'); ?> </button>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade bootstrap-dialog type-danger fade size-normal in" id="workflowCommentModalNews" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bootstrap-dialog-header">
+                <h4 class="modal-title bootstrap-dialog-title"><?= $this->translate('tr_meliscmsnews_page_tab_comments_Add comment')?></h4>
+            </div>
+            <div class="modal-body">
+                <div id="workflow-comments-modal">
+                    <?= $this->form()->openTag($this->commentNewsForm); ?>
+                    <?= $this->melisFieldCollection($this->commentNewsForm); ?>
+                    <?= $this->form()->closeTag(); ?>
+                </div>
+            </div>
+            <div class="modal-footer footer-modal d-flex flex-row justify-content-between">
+                <button type="button" class="btn btn-danger float-left btnCommentModalCloseNews"><?= $this->translate('tr_meliscmsnews_page_tab_comments_no comment'); ?></button>
+                <a class="btn btn-success float-right btnAddWorkflowCommentNews"><i class="fa fa-comment"></i> <?= $this->translate('tr_meliscmsnews_page_tab_comments_add_comment_btn'); ?></a>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>

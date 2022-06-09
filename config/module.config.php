@@ -54,16 +54,24 @@ return array(
             //services
             'MelisCmsNewsService'       => \MelisCmsNews\Service\MelisCmsNewsService::class,
             'MelisCmsNewsSeoService'    => \MelisCmsNews\Service\MelisCmsNewsSeoService::class,
+            'MelisCmsNewsCommentService'    => \MelisCmsNews\Service\MelisCmsNewsCommentService::class,
             //tables
             'MelisCmsNewsTable'         => \MelisCmsNews\Model\Tables\MelisCmsNewsTable::class,
             'MelisCmsNewsTextsTable'    => \MelisCmsNews\Model\Tables\MelisCmsNewsTextsTable::class,
             'MelisCmsNewsSeoTable'      => \MelisCmsNews\Model\Tables\MelisCmsNewsSeoTable::class,
+            'MelisCmsNewsWorkflowTable' => \MelisCmsNews\Model\Tables\MelisCmsNewsWorkflowTable::class,
+            'MelisCmsNewsWorkflowEventsTable' => \MelisCmsNews\Model\Tables\MelisCmsNewsWorkflowEventsTable::class,
+            'MelisCmsNewsWorkflowComment' => \MelisCmsNews\Model\Tables\MelisCmsNewsWorkflowCommentTable::class,
+            'MelisCmsNewsWorkflowCommentType' => \MelisCmsNews\Model\Tables\MelisCmsNewsWorkflowCommentTypeTable::class,
+            'MelisCmsNewsUserRole' => \MelisCmsNews\Model\Tables\MelisCmsNewsUserRoleTable::class,
         ),
     ),
     'controllers' => array(
         'invokables' => array(
             'MelisCmsNews\Controller\MelisCmsNewsList' => \MelisCmsNews\Controller\MelisCmsNewsListController::class,
             'MelisCmsNews\Controller\MelisCmsNews' => \MelisCmsNews\Controller\MelisCmsNewsController::class,
+            'MelisCmsNews\Controller\MelisCmsNewsWorkflow' => \MelisCmsNews\Controller\MelisCmsNewsWorkflowController::class,
+            'MelisCmsNews\Controller\MelisCmsNewsWorkflowComments' => \MelisCmsNews\Controller\MelisCmsNewsWorkflowCommentsController::class,
         ),
     ),
     'controller_plugins' => array(
@@ -73,7 +81,9 @@ return array(
             'MelisCmsNewsShowNewsPlugin' => 'MelisCmsNews\Controller\Plugin\MelisCmsNewsShowNewsPlugin',
 
             /** Extending MelisCmsComments module */
-            'DashboardLatestComments' => 'MelisCmsNews\Controller\Plugin\Dashboard\DashboardLatestComments'
+            'DashboardLatestComments' => 'MelisCmsNews\Controller\Plugin\Dashboard\DashboardLatestComments',
+            /*News Workflow*/
+            'MelisCmsNewsWorkflowPlugin' => 'MelisCmsNews\Controller\Plugin\Dashboard\MelisCmsNewsWorkflowPlugin'
         )
     ),
 
@@ -104,6 +114,9 @@ return array(
             /** Extending MelisCmsComments module */
             'MelisCmsNews/plugins/dashboard/latest-comments/tab-content' => __DIR__ . '/../view/melis-cms-news/plugins/dashboard/latest-comments/tab-content.phtml',
             'MelisCmsNews/plugins/dashboard/latest-comments/filters' => __DIR__ . '/../view/melis-cms-news/plugins/dashboard/latest-comments/filters.phtml',
+            /*Workflow Dashboard*/            
+            'MelisCmsNews/dashboard-plugin/workflow'  => __DIR__ . '/../view/melis-cms-news/plugins/dashboard/workflow/workflow.phtml',
+            'MelisCmsNews/dashboard-plugin/workflow-comment-modal'  => __DIR__ . '/../view/melis-cms-news/plugins/dashboard/workflow/workflow-comment-modal.phtml',
         ),
         'template_path_stack' => array(
             __DIR__ . '/../view',

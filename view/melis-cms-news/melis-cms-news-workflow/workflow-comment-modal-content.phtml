@@ -1,0 +1,40 @@
+<?php
+	$id = '';
+	if (!empty($this->zoneconfig['conf']['id']))
+		$id = ' id="' . $this->zoneconfig['conf']['id'] . '"';
+?>
+<div class="modal-content">
+	<div class="modal-body padding-none">
+		<div class="wizard">
+			<div class="widget widget-tabs widget-tabs-double widget-tabs-responsive margin-none border-none">
+                <div class="widget-head">
+                	<ul class="nav nav-tabs">
+                		<li class="active"><a href="#<?php echo $this->zoneconfig['conf']['id'] ?>" class="glyphicons plus" data-toggle="tab" aria-expanded="true"><i></i> <?php echo $this->translate('tr_meliscmsnews_page_tab_comments_Add comment') ?></a></li>
+            		</ul>
+        		</div>
+        		<div class="widget-body innerAll inner-2x">
+        			<div class="tab-content">
+        				<div class="tab-pane active" <?php echo $id ?>>
+                            <div class="row">
+                            	<div class="col-md-12">
+                                    <?php
+                                    $this->commentForm->get("cnews_com_news_id")->setValue($this->newsId);
+                                    $this->commentForm->get("action")->setValue($this->action);
+
+                                    echo $this->form()->openTag($this->commentForm);
+                                        echo $this->melisFieldCollection($this->commentForm);
+                                        echo $this->form()->closeTag();
+                                    ?>
+                                 	<div class="modal-footer footer-modal d-flex flex-row justify-content-between custom-workflow-modal-footer">
+                                 		<a class="btn btn-danger float-left btnNoWorkflowCommentFromDashboardNews" data-plugin-id="<?php echo $this->pluginId?>"><i class="fa fa-times"></i> <?php echo $this->translate('tr_meliscmsnews_page_tab_comments_no comment')?></a>
+                                 		<a class="btn btn-success btnAddWorkflowCommentFromDashboardNews" data-plugin-id="<?php echo $this->pluginId?>"><i class="fa fa-comment"></i>  <?php echo $this->translate('tr_meliscmsnews_comments_add'); ?></a>
+                                 	</div>
+                            	</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

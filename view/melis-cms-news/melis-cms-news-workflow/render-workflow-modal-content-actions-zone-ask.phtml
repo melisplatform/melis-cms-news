@@ -1,0 +1,38 @@
+<!-- Ask to validate section -->
+<div class="w-asktovalidate-cont-news">
+    <!-- ROLES -->
+    <div class="filter-cont pw-roles">
+        <a href="#" class="dropdown-toggle clearfix" data-toggle="dropdown">
+            <i class="fa fa-unlock-alt"></i>
+            <span class="filter-key"> <?= $this->translate('tr_meliscmsnews_tool_userrole_Roles'); ?> </span>
+            <span class="caret"></span>
+        </a>
+        <ul class="dropdown-menu">
+            <?php
+                foreach ($this->roles as $role) {
+            ?>
+            <li>
+                <a data-id="<?= $role['urole_id']; ?>" data-text="<?= $role['urole_name']; ?>"><?= $role['urole_name']; ?></a>
+            </li>
+            <?php
+                }
+            ?>
+        </ul>
+    </div>
+     <!-- USERS -->
+    <div class="filter-cont pw-users">    	
+        <a href="#" class="dropdown-toggle clearfix" data-toggle="dropdown">
+            <i class="fa fa-users"></i>
+            <span class="filter-key"> <?= $this->translate('tr_meliscmsnews_workflow_users'); ?> </span>
+            <span class="caret"></span>
+        </a>
+        
+        <span class="button-mask-overlay"></span>        
+        <ul class="dropdown-menu"></ul>
+    </div>
+
+    <a class="btn btn-success send-workflow-request" id="#sendWorkFlowRequest">  <?= $this->translate('tr_meliscmsnews_workflow_send_request'); ?> </a>
+    <div class="wrequest-notif">
+        <span> <?= $this->translate('tr_meliscmsnews_workflow_send_request_notification'); ?> </span>
+    </div>
+</div>

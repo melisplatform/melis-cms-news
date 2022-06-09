@@ -209,6 +209,29 @@ class MelisCmsNewsController extends MelisAbstractActionController
     }
 
     /**
+     * renders the tabs content header workflow
+     * @return \Laminas\View\Model\ViewModel
+     */
+    public function renderNewsTabsContentHeaderWorkflowAction()
+    {
+        $melisKey = $this->params()->fromRoute('melisKey', '');
+        $newsId = (int)$this->params()->fromQuery('newsId', '');
+        $postTitle = '';
+        if (!empty($newsId)) {
+            $newsService = $this->getServiceManager()->get('MelisCmsNewsService');
+            $newsTextData = $newsService->getPostText($newsId)->current();
+            if (!empty($newsTextData)) {
+                $postTitle = $newsTextData->cnews_title;
+            }
+        }
+        $view = new ViewModel();
+        $view->melisKey = $melisKey;
+        $view->newsId = $newsId;
+        $view->label = $this->getTool()->getTranslation('tr_meliscmsnews_action_workflow');
+        $view->postTitle = $postTitle;
+        return $view;
+    }
+    /**
      * renders the tabs content header title
      * @return \Laminas\View\Model\ViewModel
      */

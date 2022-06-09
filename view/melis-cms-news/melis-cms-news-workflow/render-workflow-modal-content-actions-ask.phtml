@@ -1,0 +1,6 @@
+<?php
+    $classDisable = "pw-show-ask";
+    if ($this->isDemandExisting)
+        $classDisable = "pw-disabled-btn";
+?>
+<a class="btn btn-default <?= $classDisable; ?>"> <?= $this->translate('tr_meliscmsnews_workflow_ask'); ?> </a>
