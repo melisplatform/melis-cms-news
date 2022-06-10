@@ -287,4 +287,11 @@ return [
     'tr_meliscmsnews_workflow_comments_close' => 'Close',
     'tr_meliscmsnews_pagecomment_today' => 'Today',
     'tr_meliscmsnews_pagecomment_add_comments' => 'Add comments',
+    //For Workflow Emails
+    'tr_meliscmsnews_workflow_email_demand_Subject' => 'Workflow demand',
+    'tr_meliscmsnews_workflow_email_demand_html_Content' => '<p>Good day [USER_TO],</p><p>User&nbsp;[USER_FROM] has asked for a validation of his content.</p><p>You will find his demand in the list of your news workflows on the dashboard.</p><p>Type : [TYPE]</p><p>Details : [DETAILS]</p>',
+    'tr_meliscmsnews_workflow_email_validated_Subject' => 'Workflow validation',
+    'tr_meliscmsnews_workflow_email_validated_Content' => '<p>Good day [USER_TO],</p><p>User&nbsp;[USER_FROM] has validated your validation demand of content.</p><p>Type : [TYPE]</p><p>Details : [DETAILS]</p>',
+    'tr_meliscmsnews_workflow_email_refused_Subject' => 'Workflow refused',
+    'tr_meliscmsnews_workflow_email_refused_Content' => '<p>Good day [USER_TO],</p><p>User&nbsp;[USER_FROM] has refused your validation demand of content.</p><p>Type : [TYPE]</p><p>Details : [DETAILS]</p>',
 ];

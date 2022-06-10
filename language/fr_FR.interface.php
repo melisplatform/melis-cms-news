@@ -287,4 +287,11 @@ return [
     'tr_meliscmsnews_workflow_comments_close' => 'Fermer',
     'tr_meliscmsnews_pagecomment_today' => 'AJD',
     'tr_meliscmsnews_pagecomment_add_comments' => 'Ajouter un commentaire',
+     // For Workflow Emails 
+    'tr_meliscmsnews_workflow_email_demand_Subject' => 'Workflow demand',
+    'tr_meliscmsnews_workflow_email_demand_html_Content' => '<p>Bonjour [USER_TO],</p><p>L\'utilisateur&nbsp;[USER_FROM] a demandé une validation de son contenu.</p><p>Vous pourrez trouver sa demande dans la liste de votre workflow l\'actualité sur le dashboard.</p><p>Type : [TYPE]</p><p>Details : [DETAILS]</p>',
+    'tr_meliscmsnews_workflow_email_validated_Subject' => 'Workflow validation',
+    'tr_meliscmsnews_workflow_email_validated_Content' => '<p>Bonjour [USER_TO],</p><p>L\'utilisateur&nbsp;[USER_FROM] a validé votre demande de validation de contenu.</p><p>Type : [TYPE]</p><p>Details : [DETAILS]</p>',
+    'tr_meliscmsnews_workflow_email_refused_Subject' => 'Workflow refused',
+    'tr_meliscmsnews_workflow_email_refused_Content' => '<p>Bonjour [USER_TO],</p><p>L\'utilisateur&nbsp;[USER_FROM] a refusé votre demande de validation de contenu.</p><p>Type : [TYPE]</p><p>Details : [DETAILS]</p>',
 ];

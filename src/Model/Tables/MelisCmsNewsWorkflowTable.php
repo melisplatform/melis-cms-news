@@ -37,8 +37,7 @@ class MelisCmsNewsWorkflowTable extends MelisGenericTable
 		$select->join('melis_cms_news_workflow_events', 'melis_cms_news_workflow_events.cnews_wfe_wf_id = melis_cms_news_workflow.cnews_wf_id',
 				array('*'), $select::JOIN_RIGHT);
 
-		if (!empty($userId) && !empty($roleId))
-		{
+		if (!empty($userId) && !empty($roleId)) {
 			$where = new \Laminas\Db\Sql\Where();
 			$where->nest()
 				->equalTo('cnews_wfe_to_user_id', $userId)
@@ -48,10 +47,8 @@ class MelisCmsNewsWorkflowTable extends MelisGenericTable
 				->and
 				->equalTo('cnews_wfe_action', 'VALIDATION');
 			$select->where($where);
-		}
-		else
-			if (!empty($userId))
-			{
+		} else {
+			if (!empty($userId)) {
 				$where = new \Laminas\Db\Sql\Where();
 				$where->nest()
 					->equalTo('cnews_wfe_to_user_id', $userId)
@@ -60,7 +57,7 @@ class MelisCmsNewsWorkflowTable extends MelisGenericTable
 					->equalTo('cnews_wfe_action', 'VALIDATION');
 				$select->where($where);
 			}
-
+		}
 		$select->order(array('cnews_wf_process_finished', 'cnews_wf_id DESC'));
 
 		$select->limit(50);
@@ -79,8 +76,7 @@ class MelisCmsNewsWorkflowTable extends MelisGenericTable
 		$select->join('melis_cms_news_workflow_events', 'melis_cms_news_workflow_events.cnews_wfe_wf_id = melis_cms_news_workflow.cnews_wf_id',
 			array('*'), $select::JOIN_RIGHT);
 
-		if (!empty($userId))
-		{
+		if (!empty($userId)) {
 			$where = new \Laminas\Db\Sql\Where();
 			$where->nest()
 				->equalTo('cnews_wfe_from_user_id', $userId)

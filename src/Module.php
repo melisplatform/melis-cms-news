@@ -95,6 +95,7 @@ class Module
             include __DIR__ . '/../config/app.tools.php',
             include __DIR__ . '/../config/app.forms.php',
             include __DIR__ . '/../config/app.microservice.php',
+            include __DIR__ . '/../config/app.emails.php',
             
             // Tests
             include __DIR__ . '/../config/diagnostic.config.php',
