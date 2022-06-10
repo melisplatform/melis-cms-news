@@ -19,7 +19,6 @@ use Laminas\Session\Container;
 class MelisCmsNewsWorkflowCommentsController extends MelisAbstractActionController
 {	
 
-	const WF_TYPE = "NEWS";
 
 	/**
 	 * Makes the rendering of the Workflow Comments Tab
@@ -64,7 +63,7 @@ class MelisCmsNewsWorkflowCommentsController extends MelisAbstractActionControll
 	{
 		$newsId = $this->params()->fromRoute('newsId', $this->params()->fromQuery('newsId', ''));
 		$melisKey = $this->params()->fromRoute('melisKey', '');					
-		$newsComments = $this->getServiceManager()->get('MelisCmsNewsCommentService')->getNewsComments((int) $newsId, self::WF_TYPE);
+		$newsComments = $this->getServiceManager()->get('MelisCmsNewsCommentService')->getNewsComments((int) $newsId);
 
 		/**
 		 * Send back the view and add the form config inside
