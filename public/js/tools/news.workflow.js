@@ -103,8 +103,7 @@ $(function() {
                     if ( data.success ) {
                         // Closing Comment modal
                         $("#id_meliscmsnews_dashboard_workflow_comment_modal_content_container").modal("hide");      
-                    }
-                    else {
+                    } else {
                         melisHelper.melisKoNotification(data.textTitle, data.textMessage, data.errors, 0);
                         melisCoreTool.highlightErrors(data.success, data.errors, form);
                     }
@@ -314,8 +313,7 @@ $(function() {
 
                                 // update flash messenger values
                                 melisCore.flashMessenger();
-                            }
-                            else {
+                            } else {
                                 // error modal
                                 melisHelper.melisKoNotification( data.textTitle, data.textMessage, data.errors );
                             }

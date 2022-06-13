@@ -19,8 +19,6 @@ use Laminas\Session\Container;
  */
 class MelisCmsNewsWorkflowController extends MelisAbstractActionController
 {
-    // Limit to 8 in the dashboard (or more only if not validated)
-    const MELIS_WF_DASHBOARD_LIMIT = 8;
 
     /*
     * retrieves the workflow actions for the given news

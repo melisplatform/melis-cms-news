@@ -94,7 +94,7 @@ class MelisCmsNewsWorkflowPlugin extends MelisCoreDashboardTemplatingPlugin
                 // Limit to 8 in the dashboard (or more only if not validated)
                 if ($nbItems >= $this->pluginConfig['datas']['limit']) {
                     /**
-                     * if there's already more items than MELIS_WF_DASHBOARD_LIMIT
+                     * if there's already more items than the limit
                      * then we'll add them only if there're not validated yet so that they don't disappear
                      * Items are ordered by wf_process_finished asc meaning the first to come will be the
                      * not finished, so we just have to check if it's finished and we cn stop because we're
