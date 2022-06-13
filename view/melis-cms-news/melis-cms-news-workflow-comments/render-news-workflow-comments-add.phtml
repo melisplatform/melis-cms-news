@@ -33,9 +33,9 @@
     	  	    setup: function (editor) {
 		            editor.on('keyup blur', function () {		            	
 		            	if (editor.getContent() != '') {
-			                $(selector).parents().find('.btnAddNewsComment').removeAttr('disabled');
+			                $(selector).closest('form').find('.btnAddNewsComment').removeAttr('disabled');
 			            } else {
-			                $(selector).parents().find('.btnAddNewsComment').attr("disabled", "disabled");
+			                $(selector).closest('form').find('.btnAddNewsComment').attr("disabled", "disabled");
 			            }	
 
 			            editor.save();	                	                
