@@ -472,6 +472,7 @@ $(function() {
             charCounter
         );
         $body.on("click", ".news-details-workflow", function() {
+            gActionNews = "ask"; //set back to default action 
             var $this = $(this);
             if ( $this.attr('disabled') == undefined ) {
                 var pageData = $this.data();
@@ -481,6 +482,7 @@ $(function() {
             }
         });
         $body.on("click", ".news-workflow", function() {
+            gActionNews = "ask"; //set back to default action 
             var $this = $(this);
                 if ( $this.attr('disabled') == undefined ) {
                     melisCoreTool.pending('.news-workflow');
