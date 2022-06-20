@@ -189,8 +189,13 @@ class MelisCmsNewsListController extends MelisAbstractActionController
      */
     public function renderNewsListContentActionWorkflowAction()
     {
+        /**
+         * Checks if Melis Small Business module is disabled
+         */
+        $sbIsDisabled = !in_array('MelisSmallBusiness', $this->getServiceManager()->get('MelisAssetManagerModulesService')->getActiveModules());
         $view = new ViewModel();
         $view->title = $this->getTool()->getTranslation('tr_meliscmsnews_action_workflow');
+        $view->sbIsDisabled = $sbIsDisabled;
         return $view;
     }
     /**
