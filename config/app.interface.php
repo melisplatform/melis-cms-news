@@ -59,12 +59,10 @@ return [
                 'js' => [
                     '/MelisCmsNews/js/tools/news.tool.js',
                     '/MelisCmsNews/assets/switch/bootstrap-switch.js',
-                    '/MelisCmsNews/js/tools/news.workflow.js',
                 ],
 
                 'css' => [
                     '/MelisCmsNews/css/news.css',
-                    '/MelisCmsNews/css/news-workflow.css',
                 ],
                 /**
                  * the "build" configuration compiles all assets into one file to make

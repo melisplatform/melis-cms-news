@@ -29,9 +29,8 @@ use MelisCmsNews\Listener\MelisCmsNewsSEORouteListener;
 use MelisCmsNews\Listener\MelisCmsNewsRenderPageListener;
 use MelisCmsNews\Listener\MelisCmsNewsMetaPageListener;
 use MelisCmsNews\Listener\MelisCmsNewsSeoRedirectUrlListener;
-/*news workflow*/
-use MelisCmsNews\Listener\MelisCmsNewsWorkflowSaveDemandListener;
-use MelisCmsNews\Listener\MelisCmsNewsWorkflowSaveAnswerListener;
+
+
 class Module
 {
     public function init(ModuleManager $moduleManager)
@@ -75,8 +74,7 @@ class Module
             (new MelisCmsNewsTableColumnDisplayListener())->attach($eventManager);
             (new MelisCmsNewsToolCreatorEditionTypeListener())->attach($eventManager);
             (new MelisCmsNewsGdprAutoDeleteActionDeleteListener())->attach($eventManager);
-            (new MelisCmsNewsWorkflowSaveDemandListener())->attach($eventManager);
-            (new MelisCmsNewsWorkflowSaveAnswerListener())->attach($eventManager);
+
         } else {
             (new MelisCmsNewsRenderPageListener())->attach($eventManager);
             (new MelisCmsNewsMetaPageListener())->attach($eventManager);
@@ -95,7 +93,6 @@ class Module
             include __DIR__ . '/../config/app.tools.php',
             include __DIR__ . '/../config/app.forms.php',
             include __DIR__ . '/../config/app.microservice.php',
-            include __DIR__ . '/../config/app.emails.php',
             
             // Tests
             include __DIR__ . '/../config/diagnostic.config.php',
@@ -108,8 +105,7 @@ class Module
             // Extending with MelisCmsComments module
             include __DIR__ . '/../config/comments.config.php',
             include __DIR__ . '/../config/plugins/dashboard/dashboard.latest.comments.php',
-            /*News Workflow Dashboard Plugin*/
-            include __DIR__ . '/../config/plugins/dashboard/MelisCmsNewsWorkflowPlugin.config.php',
+           
         ];
         
         foreach ($configFiles as $file) {

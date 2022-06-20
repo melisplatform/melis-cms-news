@@ -27,8 +27,6 @@ class MelisCmsNewsFlashMessengerListener extends MelisGeneralListener
             'meliscmsnews_save_news_letter_end',
             'meliscmsnews_save_news_file_end',
             'meliscmsnews_delete_news_file_end',
-            'meliscmsnews_workflow_ask_end',
-            'meliscmsnews_workflow_actions_end'
         ];
 
         $priority = -1000;

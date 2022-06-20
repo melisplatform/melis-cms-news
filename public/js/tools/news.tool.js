@@ -1,5 +1,7 @@
 $(function() {
     var $body = $("body");
+    var gActionNews = "ask"; //default to ask
+    var MelisCmsNewsId = 0;
 
         $body.on("click", '.addNews', function() {
             var newsId  = 0,
@@ -469,7 +471,144 @@ $(function() {
             { limit: 255 },
             charCounter
         );
+        $body.on("click", ".news-details-workflow", function() {
+            var $this = $(this);
+            if ( $this.attr('disabled') == undefined ) {
+                var pageData = $this.data();
+                    melisCoreTool.pending('.news-details-workflow');
+                    MelisCmsNewsId = pageData.wfId;
+                    renderNewsWorkFlowModal(pageData, ".news-details-workflow");
+            }
+        });
+        $body.on("click", ".news-workflow", function() {
+            var $this = $(this);
+                if ( $this.attr('disabled') == undefined ) {
+                    melisCoreTool.pending('.news-workflow');
+                    var news    = $this.closest('tr'),
+                        newsId  = news.attr('id');
+                        MelisCmsNewsId = newsId;
+                        var newsTitle = news.find("td:eq(2)").text();
+                        var pageData = {
+                            wfDetails: newsTitle + ' (' + newsId + ')',
+                            wfId: newsId,
+                            wfOpeningJs: "melisHelper.tabOpen('" + newsTitle + "', 'fa fa-rss fa-2x', " + newsTitle + "'_id_meliscmsnews_page', 'meliscmsnews_page', { newsId: " + newsId + " });",
+                            wfType: 'NEWS'
+                        };
+                        renderNewsWorkFlowModal(pageData, ".news-workflow");                        
+                }
+        });
+        $body.on("click",".workflow-modal-cont .btn-validate-refuse", function() {    
+            gActionNews = $(this).hasClass('pw-validate') ? "validate" : "refuse" ;
+        });
+        $body.on('click', '.btnAddWorkflowCommentNews, .btnCommentModalCloseNews', function (e) {
+            var newsId = MelisCmsNewsId,
+                form = "workflow-comments-modal form#idmelissbpagecomments",
+                action = gActionNews,
+                btn = "";
+            if ($(this).hasClass('btnAddWorkflowCommentNews')) {                   
+                btn = ".btnAddWorkflowCommentNews";                    
+            } else {                  
+                $('#id_pcom_text').val('');
+                btn = ".btnCommentModalCloseNews";
+            }    
+            var datastring  = $("#" + form).serializeArray();
+            datastring.push({
+                name: "pcom_news_id",
+                value: newsId,
+            });
+            datastring.push({
+                name: "action",
+                value: action,
+            });
+            datastring = $.param(datastring);
+            melisCoreTool.pending(".btnAddWorkflowCommentNews");
+            $.ajax({
+                type    : 'POST',
+                url     : '/melis/MelisSmallBusiness/MelisWorkflow/addWorkflowComments',
+                data    : datastring,
+                dataType: 'json',
+                encode  : true
+            }).done(function (data) {
+                if (data.success) {                        
+                    melisHelper.zoneReload(newsId + '_id_meliscmsnews_center_workflow_tabs_comments_timeline', 'meliscmsnews_workflow_comments_timeline', {newsId: newsId});
+                    melisCoreTool.clearForm(form);
+                    $('#workflowCommentModal').modal('hide');
+                    $("#pageWorkflowModal").modal("hide");
+                } else {
+                    melisHelper.melisKoNotification(data.textTitle, data.textMessage, data.errors, 0);
+                    melisCoreTool.highlightErrors(data.success, data.errors, form);
+                }
+                melisCore.flashMessenger();
+                melisCoreTool.done(".btnAddWorkflowCommentNews");
+            }).fail(function() {
+                alert( translations.tr_meliscore_error_message );
+            });
+        });
+        $body.on('click', '.btnAddNewsComment', function(e) {          
+            var btn         = $(this),
+                newsId      = btn.data("newsid"),               
+                form        = newsId + "_id_meliscmsnews_center_page_tabs_comments_add form#idmelissbpagecomments",
+                datastring  = $("#"+form).serializeArray();
+                datastring.push({
+                    name: "pcom_news_id", 
+                    value: newsId,
+                });
+                datastring = $.param(datastring);
+                btn.attr('disabled', true);
+                $.ajax({
+                    type        : 'POST', 
+                    url         : '/melis/MelisSmallBusiness/PageComments/addComment',
+                    data        : datastring,
+                    dataType    : 'json',
+                    encode      : true
+                }).done(function(data){
+                    if (data.success) {
+                        melisHelper.zoneReload(newsId + '_id_meliscmsnews_center_workflow_tabs_comments_timeline', 'meliscmsnews_workflow_comments_timeline', {newsId: newsId});
+                        melisCoreTool.clearForm(form);
+                    } else {
+                        melisHelper.melisKoNotification(data.textTitle, data.textMessage, data.errors);
+                        melisCoreTool.highlightErrors(data.success, data.errors, form);
+                    }
+                    melisCore.flashMessenger();
+                }).fail(function() {
+                    alert( translations.tr_meliscore_error_message );
+                }); 
+        });
 });
+function renderNewsWorkFlowModal(pageData, button) {
+    $.ajax({
+        url: '/melis/MelisSmallBusiness/MelisWorkflow/render-workflow-modal',
+        encode: true
+    }).done(function (data) {
+        $("#melis-modals-container").append(data);
+        $("#melis-modals-container").find(".modal-content").data(pageData);
+        var modalID = $(data).find(".modal").attr("id");
+        melisHelper.zoneReload('id_melissb_workflow_modal_content', 'melissb_workflow_modal_content', pageData);
+        $("#" + modalID).modal({show: true});
+        melisCoreTool.done(button);
+    }).fail(function (xhr, textStatus, errorThrown) {
+        melisCoreTool.done(button);
+        alert( translations.tr_meliscore_error_message );
+    });
+    var commentBtnSearch = setInterval(function () {
+        $commentBtn = $("#melis-modals-container").find(".btnAddWorkflowComment");
+        if ($commentBtn.length) {
+            $commentBtn.removeClass();
+            $commentBtn.addClass("btn btn-success pull-right btnAddWorkflowCommentNews");
+            if ($("#melis-modals-container").find(".btnAddWorkflowCommentNews").length) {
+                clearInterval(commentBtnSearch);
+            }
+        }
+        $noCommentBtn = $("#melis-modals-container").find(".btnCommentModalClose");
+        if ($noCommentBtn.length) {
+            $noCommentBtn.removeClass();
+            $noCommentBtn.addClass("btn btn-success pull-right btnCommentModalCloseNews");
+            if ($("#melis-modals-container").find(".btnCommentModalCloseNews").length) {
+                clearInterval(commentBtnSearch);
+            }
+        }
+    }, 300);
+}
 function charCounter(event) {
     var charLength = $(this).val().length;
     var prevLabel = $(this).prev("label");

@@ -12,7 +12,7 @@
 	<div class="widget-body">
     	<?php
         	$form = $this->commentForm;
-        	$form->get('cnews_com_text')->setAttribute('id',$this->newsId.'_id_cnews_com_text');
+        	$form->get('pcom_text')->setAttribute('id',$this->newsId.'_id_pcom_text');
         	$form->prepare();
         	echo $this->form()->openTag($form); 
         	echo $this->melisFieldCollection($form);
@@ -25,7 +25,7 @@
 </div>
 <script type="text/javascript">
     $(document).ready(function() {
-    	var selector = "textarea#<?php echo $this->newsId.'_id_cnews_com_text'?>";
+    	var selector = "textarea#<?php echo $this->newsId.'_id_pcom_text'?>";
 
     	melisTinyMCE.createTinyMCE("tool", selector, 
     		{

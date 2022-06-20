@@ -137,10 +137,14 @@ class MelisCmsNewsController extends MelisAbstractActionController
         $view = new ViewModel();
         $melisKey = $this->params()->fromRoute('melisKey', '');
         $newsId = (int)$this->params()->fromQuery('newsId', 0);
+         /**
+         * Checks if Melis Small Business module is disabled
+         */
+        $sbIsDisabled = !in_array('MelisSmallBusiness', $this->getServiceManager()->get('MelisAssetManagerModulesService')->getActiveModules());
         $view->activeModules = $this->getServiceManager()->get('MelisAssetManagerModulesService')->getActiveModules();
         $view->melisKey = $melisKey;
         $view->newsId = $newsId;
-
+        $view->sbIsDisabled = $sbIsDisabled;   
         return $view;
     }
 
@@ -181,8 +185,13 @@ class MelisCmsNewsController extends MelisAbstractActionController
         $view = new ViewModel();
         $melisKey = $this->params()->fromRoute('melisKey', '');
         $newsId = (int)$this->params()->fromQuery('newsId', '');
+        /**
+         * Checks if Melis Small Business module is disabled
+         */
+        $sbIsDisabled = !in_array('MelisSmallBusiness', $this->getServiceManager()->get('MelisAssetManagerModulesService')->getActiveModules());
         $view->melisKey = $melisKey;
         $view->newsId = $newsId;
+        $view->sbIsDisabled = $sbIsDisabled;   
         return $view;
     }
 
@@ -221,14 +230,14 @@ class MelisCmsNewsController extends MelisAbstractActionController
             $newsService = $this->getServiceManager()->get('MelisCmsNewsService');
             $newsTextData = $newsService->getPostText($newsId)->current();
             if (!empty($newsTextData)) {
-                $postTitle = $newsTextData->cnews_title;
+                $newsTitle = $newsTextData->cnews_title;
             }
         }
         $view = new ViewModel();
         $view->melisKey = $melisKey;
         $view->newsId = $newsId;
         $view->label = $this->getTool()->getTranslation('tr_meliscmsnews_action_workflow');
-        $view->postTitle = $postTitle;
+        $view->newsTitle = $newsTitle;
         return $view;
     }
     /**

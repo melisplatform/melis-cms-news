@@ -91,6 +91,11 @@ return array(
                                 'controller' => 'MelisCmsNewsList',
                                 'action' => 'render-news-list-content-action-delete'
                             ),
+                            'workflow' => [
+                                'module' => 'MelisCmsNews',
+                                'controller' => 'MelisCmsNewsList',
+                                'action' => 'render-news-list-content-action-workflow'
+                            ],
                         ),                        
                     ),
                 ),

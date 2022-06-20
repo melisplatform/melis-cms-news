@@ -184,6 +184,16 @@ class MelisCmsNewsListController extends MelisAbstractActionController
     }
 
     /**
+     * Renders the workflow action button
+     * @return ViewModel
+     */
+    public function renderNewsListContentActionWorkflowAction()
+    {
+        $view = new ViewModel();
+        $view->title = $this->getTool()->getTranslation('tr_meliscmsnews_action_workflow');
+        return $view;
+    }
+    /**
      * renders the coupon list page news
      * @return \Laminas\View\Model\ViewModel
      */
