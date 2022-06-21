@@ -493,7 +493,7 @@ $(function() {
                         var pageData = {
                             wfDetails: newsTitle + ' (' + newsId + ')',
                             wfId: newsId,
-                            wfOpeningJs: "melisHelper.tabOpen('" + newsTitle + "', 'fa fa-rss fa-2x', " + newsTitle + "'_id_meliscmsnews_page', 'meliscmsnews_page', { newsId: " + newsId + " });",
+                            wfOpeningJs: "melisHelper.tabOpen('" + newsTitle + "', 'fa fa-rss fa-2x', " + newsId + "'_id_meliscmsnews_page', 'meliscmsnews_page', { newsId: " + newsId + " });",
                             wfType: 'NEWS'
                         };
                         renderNewsWorkFlowModal(pageData, ".news-workflow");                        
