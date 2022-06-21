@@ -14,7 +14,7 @@ return [
                         'method' => 'POST',
                         'action' => '',
                     ],
-                    'hydrator' => 'Laminas\Hydrator\ArraySerializable',
+                    'hydrator' => 'Laminas\Hydrator\ArraySerializableHydrator',
                     'elements' => [
                         [
                             'spec' => [
@@ -68,7 +68,7 @@ return [
                         'method' => 'POST',
                         'action' => '',
                     ],
-                    'hydrator' => 'Laminas\Hydrator\ArraySerializable',
+                    'hydrator' => 'Laminas\Hydrator\ArraySerializableHydrator',
                     'elements' => [
                         [
                             'spec' => [
@@ -117,7 +117,7 @@ return [
                         'method' => 'POST',
                         'action' => '',
                     ],
-                    'hydrator' => 'Laminas\Hydrator\ArraySerializable',
+                    'hydrator' => 'Laminas\Hydrator\ArraySerializableHydrator',
                     'elements' => [
                         [
                             'spec' => [
@@ -161,7 +161,7 @@ return [
                         'method' => 'POST',
                         'action' => '',
                     ],
-                    'hydrator' => 'Laminas\Hydrator\ArraySerializable',
+                    'hydrator' => 'Laminas\Hydrator\ArraySerializableHydrator',
                     'elements' => [
                         [
                             'spec' => [
@@ -262,6 +262,118 @@ return [
                                 ],
                             ],
                         ],
+                        [
+                            'spec' => [
+                                'name' => 'cnews_paragraph5',
+                                'type' => 'Textarea',
+                                'options' => [
+                                    'label' => 'tr_meliscmsnews_paragraph5',
+                                    'tooltip' => 'tr_meliscmsnews_paragraph5 tooltip',
+                                ],
+                                'attributes' => [
+                                    'id' => 'cnews_paragraph5',
+                                    'value' => '',
+                                    'class' => 'form-control editme',
+                                    'style' => 'max-width:100%',
+                                    'rows' => '4',
+                                ],
+                            ],
+                        ],
+                        [
+                            'spec' => [
+                                'name' => 'cnews_paragraph6',
+                                'type' => 'Textarea',
+                                'options' => [
+                                    'label' => 'tr_meliscmsnews_paragraph6',
+                                    'tooltip' => 'tr_meliscmsnews_paragraph6 tooltip',
+                                ],
+                                'attributes' => [
+                                    'id' => 'cnews_paragraph6',
+                                    'value' => '',
+                                    'class' => 'form-control editme',
+                                    'style' => 'max-width:100%',
+                                    'rows' => '4',
+                                ],
+                            ],
+                        ],
+                        [
+                            'spec' => [
+                                'name' => 'cnews_paragraph7',
+                                'type' => 'Textarea',
+                                'options' => [
+                                    'label' => 'tr_meliscmsnews_paragraph7',
+                                    'tooltip' => 'tr_meliscmsnews_paragraph7 tooltip',
+                                ],
+                                'attributes' => [
+                                    'id' => 'cnews_paragraph7',
+                                    'value' => '',
+                                    'class' => 'form-control editme',
+                                    'style' => 'max-width:100%',
+                                    'rows' => '4',
+                                ],
+                            ],
+                        ],
+                        [
+                            'spec' => [
+                                'name' => 'cnews_paragraph8',
+                                'type' => 'Textarea',
+                                'options' => [
+                                    'label' => 'tr_meliscmsnews_paragraph8',
+                                    'tooltip' => 'tr_meliscmsnews_paragraph8 tooltip',
+                                ],
+                                'attributes' => [
+                                    'id' => 'cnews_paragraph8',
+                                    'value' => '',
+                                    'class' => 'form-control editme',
+                                    'style' => 'max-width:100%',
+                                    'rows' => '4',
+                                ],
+                            ],
+                        ],
+                        [
+                            'spec' => [
+                                'name' => 'cnews_paragraph9',
+                                'type' => 'Textarea',
+                                'options' => [
+                                    'label' => 'tr_meliscmsnews_paragraph9',
+                                    'tooltip' => 'tr_meliscmsnews_paragraph9 tooltip',
+                                ],
+                                'attributes' => [
+                                    'id' => 'cnews_paragraph9',
+                                    'value' => '',
+                                    'class' => 'form-control editme',
+                                    'style' => 'max-width:100%',
+                                    'rows' => '4',
+                                ],
+                            ],
+                        ],
+                        [
+                            'spec' => [
+                                'name' => 'cnews_paragraph10',
+                                'type' => 'Textarea',
+                                'options' => [
+                                    'label' => 'tr_meliscmsnews_paragraph10',
+                                    'tooltip' => 'tr_meliscmsnews_paragraph10 tooltip',
+                                ],
+                                'attributes' => [
+                                    'id' => 'cnews_paragraph10',
+                                    'value' => '',
+                                    'class' => 'form-control editme',
+                                    'style' => 'max-width:100%',
+                                    'rows' => '4',
+                                ],
+                            ],
+                        ],
+                        [
+                            'spec' => [
+                                'name' => 'cnews_paragraph_order',
+                                'type' => 'hidden',                             
+                                'attributes' => [
+                                    'id' => 'cnews_paragraph_order',
+                                    'required' => false,
+                                ],
+                            ],
+                        ],
                     ],
                     'input_filter' => [
                         'cnews_title' => [
@@ -321,7 +433,7 @@ return [
                         'method' => 'POST',
                         'action' => '',
                     ],
-                    'hydrator' => 'Laminas\Hydrator\ArraySerializable',
+                    'hydrator' => 'Laminas\Hydrator\ArraySerializableHydrator',
                     'elements' => [
                         [
                             'spec' => [
@@ -341,6 +453,243 @@ return [
                             ],
                         ],
                     ],
+                ],
+               'meliscmsnews_seo_form' => [
+                    'attributes' => [
+                        'name' => 'newsSeoForm',
+                        'id' => 'newsSeoForm',
+                        'method' => 'POST',
+                        'action' => '',
+                    ],
+                    'hydrator' => 'Laminas\Hydrator\ArraySerializableHydrator',
+                    'elements' => array( 
+                        array(
+                            'spec' => array(
+                                'name' => 'cnews_seo_id',
+                                'type' => 'hidden'                                
+                            ),
+                        ),    
+                        array(
+                            'spec' => array(
+                                'name' => 'cnews_id',
+                                'type' => 'hidden'                                
+                            ),
+                        ), 
+                        array(
+                            'spec' => array(
+                                'name' => 'cnews_seo_lang_id',
+                                'type' => 'hidden'                                
+                            ),
+                        ),
+                        array(
+                            'spec' => array(
+                                'name' => 'cnews_seo_meta_title',
+                                'type' => 'MelisText',
+                                'options' => array(
+                                    'label' => 'tr_meliscmsnews_page_tab_seo_form_Meta Title',
+                                    'tooltip' => 'tr_meliscmsnews_page_tab_seo_form_Meta Title tooltip',
+                                ),
+                                'attributes' => array(
+                                    'id' => 'cnews_seo_meta_title',
+                                    'value' => '',
+                                ),
+                            ),
+                        ),
+                        array(
+                            'spec' => array(
+                                'name' => 'cnews_seo_meta_description',
+                                'type' => 'Textarea',
+                                'options' => array(
+                                    'label' => 'tr_meliscmsnews_page_tab_seo_form_Meta Description',
+                                    'tooltip' => 'tr_meliscmsnews_page_tab_seo_form_Meta Description tooltip',
+                                ),
+                                'attributes' => array(
+                                    'id' => 'cnews_seo_meta_description',
+                                    'value' => '',
+                                    'rows' => 5,
+                                    'class' => 'melis-seo-desc form-control'
+                                ),
+                            ),
+                        ),
+                        array(
+                            'spec' => array(
+                                'name' => 'cnews_seo_url',
+                                'type' => 'MelisText',
+                                'options' => array(
+                                    'label' => 'tr_meliscmsnews_page_tab_seo_form_Url',
+                                    'tooltip' => 'tr_meliscmsnews_page_tab_seo_form_Url tooltip',
+                                ),
+                                'attributes' => array(
+                                    'id' => 'cnews_seo_url',
+                                    'value' => '',
+                                ),
+                            ),
+                        ),
+                        array(
+                            'spec' => array(
+                                'name' => 'cnews_seo_url_redirect',
+                                'type' => 'MelisText',
+                                'options' => array(
+                                    'label' => 'tr_meliscmsnews_page_tab_seo_form_Url Redirect',
+                                    'tooltip' => 'tr_meliscmsnews_page_tab_seo_form_Url Redirect tooltip',
+                                ),
+                                'attributes' => array(
+                                    'id' => 'cnews_seo_url_redirect',
+                                    'value' => '',
+                                ),
+                            ),
+                        ),
+                        array(
+                            'spec' => array(
+                                'name' => 'cnews_seo_url_301',
+                                'type' => 'MelisText',
+                                'options' => array(
+                                    'label' => 'tr_meliscmsnews_page_tab_seo_form_Url 301',
+                                    'tooltip' => 'tr_meliscmsnews_page_tab_seo_form_Url 301 tooltip',
+                                ),
+                                'attributes' => array(
+                                    'id' => 'cnews_seo_url_301',
+                                    'value' => '',
+                                ),
+                            ),
+                        ),
+                        array(
+                            'spec' => array(
+                                'name' => 'cnews_seo_canonical',
+                                'type' => 'MelisText',
+                                'options' => array(
+                                    'label' => 'tr_meliscmsnews_page_tab_seo_form_canonical',
+                                    'tooltip' => 'tr_meliscmsnews_page_tab_seo_form_canonical tooltip',
+                                ),
+                                'attributes' => array(
+                                    'id' => 'cnews_seo_canonical',
+                                    'value' => '',
+                                ),
+                            ),
+                        ),                                            
+                    ),
+                    'input_filter' => array( 
+                        'cnews_seo_meta_title' => array(
+                            'name'     => 'cnews_seo_meta_title',
+                            'required' => false,
+                            'validators' => array(
+                                array(
+                                    'name'    => 'StringLength',
+                                    'options' => array(
+                                        'encoding' => 'UTF-8',
+                                        'max'      => 65,
+                                        'messages' => array(
+                                            \Laminas\Validator\StringLength::TOO_LONG => 'tr_meliscmsnews_pageseo_form_page_title_long',
+                                        ),
+                                    ),
+                                ),
+                            ),
+                            'filters'  => array(
+                                array('name' => 'StripTags'),
+                                array('name' => 'StringTrim'),
+                            ),
+                        ),
+                        'cnews_seo_meta_description' => array(
+                            'name'     => 'cnews_seo_meta_description',
+                            'required' => false,
+                            'validators' => array(
+                                array(
+                                    'name'    => 'StringLength',
+                                    'options' => array(
+                                        'encoding' => 'UTF-8',
+                                        'max'      => 255,
+                                        'messages' => array(
+                                            \Laminas\Validator\StringLength::TOO_LONG => 'tr_meliscmsnews_pageseo_form_page_desc_long',
+                                        ),
+                                    ),
+                                ),
+                            ),
+                            'filters'  => array(
+                                array('name' => 'StripTags'),
+                                array('name' => 'StringTrim'),
+                            ),
+                        ),
+                        'cnews_seo_canonical' => array(
+                            'name'     => 'cnews_seo_canonical',
+                            'required' => false,
+                            'validators' => array(
+                                array(
+                                    'name'    => 'StringLength',
+                                    'options' => array(
+                                        'encoding' => 'UTF-8',
+                                        'max'      => 255,
+                                        'messages' => array(
+                                            \Laminas\Validator\StringLength::TOO_LONG => 'tr_meliscmsnews_pageseo_form_page_desc_long',
+                                        ),
+                                    ),
+                                ),
+                            ),
+                            'filters'  => array(
+                                array('name' => 'StripTags'),
+                                array('name' => 'StringTrim'),
+                            ),
+                        ),
+                        'cnews_seo_url' => array(
+                            'name'     => 'cnews_seo_url',
+                            'required' => false,
+                            'validators' => array(
+                                array(
+                                    'name'    => 'StringLength',
+                                    'options' => array(
+                                        'encoding' => 'UTF-8',
+                                        'max'      => 255,
+                                        'messages' => array(
+                                            \Laminas\Validator\StringLength::TOO_LONG => 'tr_meliscmsnews_pageseo_form_page_url_too_long',
+                                        ),
+                                    ),
+                                ),
+                            ),
+                            'filters'  => array(
+                                array('name' => 'StripTags'),
+                                array('name' => 'StringTrim'),
+                            ),
+                        ),
+                        'cnews_seo_url_redirect' => array(
+                            'name'     => 'cnews_seo_url_redirect',
+                            'required' => false,
+                            'validators' => array(
+                                array(
+                                    'name'    => 'StringLength',
+                                    'options' => array(
+                                        'encoding' => 'UTF-8',
+                                        'max'      => 255,
+                                        'messages' => array(
+                                            \Laminas\Validator\StringLength::TOO_LONG => 'tr_meliscmsnews_pageseo_form_page_url_too_long',
+                                        ),
+                                    ),
+                                ),
+                            ),
+                            'filters'  => array(
+                                array('name' => 'StripTags'),
+                                array('name' => 'StringTrim'),
+                            ),
+                        ),
+                        'cnews_seo_url_301' => array(
+                            'name'     => 'cnews_seo_url_301',
+                            'required' => false,
+                            'validators' => array(
+                                array(
+                                    'name'    => 'StringLength',
+                                    'options' => array(
+                                        'encoding' => 'UTF-8',
+                                        'max'      => 255,
+                                        'messages' => array(
+                                            \Laminas\Validator\StringLength::TOO_LONG => 'tr_meliscmsnews_pageseo_form_page_url_too_long',
+                                        ),
+                                    ),
+                                ),
+                            ),
+                            'filters'  => array(
+                                array('name' => 'StripTags'),
+                                array('name' => 'StringTrim'),
+                            ),
+                        ),
+                    ),
                 ],
             ],
         ],

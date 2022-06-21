@@ -372,6 +372,19 @@ return [
                                                                     'interface' => [
                                                                     ],
                                                                 ],
+                                                                'meliscmsnews_content_tabs_properties_header_workflow' => [
+                                                                    'conf' => [
+                                                                        'id' => 'id_meliscmsnews_content_tabs_properties_header_workflow',
+                                                                        'melisKey' => 'meliscmsnews_content_tabs_properties_header_workflow',
+                                                                        'name' => '',
+                                                                    ],
+                                                                    'forward' => [
+                                                                        'module' => 'MelisCmsNews',
+                                                                        'controller' => 'MelisCmsNews',
+                                                                        'action' => 'render-news-tabs-content-header-workflow',
+                                                                    ],
+                                                                    'interface' => [],
+                                                                ],
                                                             ],
                                                         ],
                                                     ],
@@ -697,7 +710,146 @@ return [
                                                 ],
                                             ],
                                         ],
+                                        'meliscmsnews_content_tabs_seo' => [
+                                            'conf' => [
+                                                'id' => 'id_meliscmsnews_content_tabs_seo',
+                                                'name' => 'tr_meliscmsnews_content_tabs_seo',
+                                                'melisKey' => 'meliscmsnews_content_tabs_seo',
+                                                'icon' => 'glyphicons search',
+                                            ],
+                                            'forward' => [
+                                                'module' => 'MelisCmsNews',
+                                                'controller' => 'MelisCmsNews',
+                                                'action' => 'render-news-page-tabs-main',
+                                                'jscallback' => '',
+                                                'jsdatas' => array()
+                                            ],
+                                            'interface' => [
+                                                'meliscmsnews_content_tabs_seo_header' => [
+                                                    'conf' => [
+                                                        'id' => 'id_meliscmsnews_content_tabs_seo_header',
+                                                        'melisKey' => 'meliscmsnews_content_tabs_seo_header',
+                                                    ],
+                                                    'forward' => [
+                                                        'module' => 'MelisCmsNews',
+                                                        'controller' => 'MelisCmsNews',
+                                                        'action' => 'render-news-tabs-content-header',
+                                                    ],
+                                                    'interface' => [
+                                                        'meliscmsnews_content_tabs_seo_header_left' => [
+                                                            'conf' => [
+                                                                'id' => 'id_meliscmsnews_content_tabs_seo_header_left',
+                                                                'melisKey' => 'meliscmsnews_content_tabs_seo_header_left',
+                                                            ],
+                                                            'forward' => [
+                                                                'module' => 'MelisCmsNews',
+                                                                'controller' => 'MelisCmsNews',
+                                                                'action' => 'render-news-tabs-content-header-left',
+                                                            ],
+                                                            'interface' => [
+                                                                'meliscmsnews_content_tabs_seo_header_title' => [
+                                                                    'conf' => [
+                                                                        'id' => 'id_meliscmsnews_content_tabs_seo_header_title',
+                                                                        'melisKey' => 'meliscmsnews_content_tabs_seo_header_title',
+                                                                        'name' => 'tr_meliscmsnews_content_tabs_seo',
+                                                                    ],
+                                                                    'forward' => [
+                                                                        'module' => 'MelisCmsNews',
+                                                                        'controller' => 'MelisCmsNews',
+                                                                        'action' => 'render-news-tabs-content-header-title',
+                                                                    ],
+                                                                ],
+                                                            ],
+                                                        ],
+                                                        'meliscmsnews_content_tabs_seo_header_right' => [
+                                                            'conf' => [
+                                                                'id' => 'id_meliscmsnews_content_tabs_seo_header_right',
+                                                                'melisKey' => 'meliscmsnews_content_tabs_seo_header_right',
+                                                            ],
+                                                            'forward' => [
+                                                                'module' => 'MelisCmsNews',
+                                                                'controller' => 'MelisCmsNews',
+                                                                'action' => 'render-news-tabs-content-header-left',
+                                                            ],
+                                                            'interface' => [
+                                                            ],
+                                                        ],
+                                                    ],
+                                                ],
+                                                'meliscmsnews_content_tabs_seo_details_main' => [
+                                                    'conf' => [
+                                                        'id' => 'id_meliscmsnews_content_tabs_seo_details_main',
+                                                        'melisKey' => 'meliscmsnews_content_tabs_seo_details_main',
+                                                    ],
+                                                    'forward' => [
+                                                        'module' => 'MelisCmsNews',
+                                                        'controller' => 'MelisCmsNews',
+                                                        'action' => 'render-news-tabs-content-seo-details-main',
+                                                    ],
+                                                    'interface' => [
+                                                        'meliscmsnews_content_tabs_seo_details' => [
+                                                            'conf' => [
+                                                                'id' => 'id_meliscmsnews_content_tabs_seo_details',
+                                                                'melisKey' => 'meliscmsnews_content_tabs_seo_details',
+                                                                'name' => 'tr_meliscmsnews_content_tabs_seo_details',
+                                                            ],
+                                                            'forward' => [
+                                                                'module' => 'MelisCmsNews',
+                                                                'controller' => 'MelisCmsNews',
+                                                                'action' => 'render-news-tabs-seo-details',
+                                                            ],
+                                                        ],
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
                                         'meliscmsnews_content_tabs_comments' => [],
+                                        /*for the workflow*/
+                                        'meliscmsnews_workflow_comments' => [
+                                            'conf' => [
+                                                'id' => 'id_meliscmsnews_workflow_tabs_comments',
+                                                'name' => 'tr_meliscmsnews_workflow_tab_comments',
+                                                'melisKey' => 'meliscmsnews_workflow_comments',
+                                                'icon' => 'glyphicons history',
+                                            ],
+                                            'forward' => [
+                                                'module' => 'MelisCmsNews',
+                                                'controller' => 'MelisCmsNewsWorkflowComments',
+                                                'action' => 'render-news-workflow-comments',
+                                                'jscallback' => '',
+                                                'jsdatas' => [],
+                                            ],
+                                            'interface' => [
+                                                'meliscmsnews_news_comments_add' => [
+                                                    'conf' => [
+                                                        'id' => 'id_meliscmsnews_center_page_tabs_comments_add',
+                                                        'name' => 'tr_meliscmsnews_page_tab_comments_Add comment',
+                                                        'melisKey' => 'meliscmsnews_page_comments_add',
+                                                    ],
+                                                    'forward' => [
+                                                        'module' => 'MelisCmsNews',
+                                                        'controller' => 'MelisCmsNewsWorkflowComments',
+                                                        'action' => 'render-news-workflow-comments-add',
+                                                        'jscallback' => '',
+                                                        'jsdatas' => [],
+                                                    ],
+                                                ],
+                                                'meliscmsnews_workflow_comments_timeline' => [
+                                                    'conf' => [
+                                                        'id' => 'id_meliscmsnews_center_workflow_tabs_comments_timeline',
+                                                        'name' => 'tr_meliscmsnews_workflow_tab_comments_Timeline',
+                                                        'melisKey' => 'meliscmsnews_workflow_comments_timeline',
+                                                    ],
+                                                    'forward' => [
+                                                        'module' => 'MelisCmsNews',
+                                                        'controller' => 'MelisCmsNewsWorkflowComments',
+                                                        'action' => 'render-news-workflow-comments-timeline',
+                                                        'jscallback' => '',
+                                                        'jsdatas' => [],
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
 
                                         /** Start of news preview */
                                         'meliscmsnews_tabs_preview' => [
@@ -795,6 +947,143 @@ return [
                                 'action' => 'render-modal-form',
                             ],
                         ],
+                    ],
+                ],
+                'meliscmsnews_workflow_modal_content' => [
+                    'conf' => [
+                        'id' => 'id_meliscmsnews_workflow_modal_content',
+                        'name' => 'tr_meliscmsnews_workflow_modal_content',
+                        'melisKey' => 'meliscmsnews_workflow_modal_content',
+                    ],
+                    'forward' => [
+                        'module' => 'MelisCmsNews',
+                        'controller' => 'MelisCmsNewsWorkflow',
+                        'action' => 'render-workflow-modal-content',
+                        'jscallback' => '',
+                        'jsdatas' => [],
+                    ],
+                    'interface' => [
+                        'meliscmsnews_workflow_modal_content_actions' => [
+                            'conf' => [
+                                'id' => 'id_meliscmsnews_workflow_modal_content_actions',
+                                'name' => 'tr_meliscmsnews_workflow_modal_content_actions',
+                                'melisKey' => 'meliscmsnews_workflow_modal_content_actions',
+                            ],
+                            'forward' => [
+                                'module' => 'MelisCmsNews',
+                                'controller' => 'MelisCmsNewsWorkflow',
+                                'action' => 'render-workflow-modal-content-actions',
+                                'jscallback' => '',
+                                'jsdatas' => [],
+                            ],
+                            'interface' => [
+                                'meliscmsnews_workflow_modal_content_actions_ask' => [
+                                    'conf' => [
+                                        'id' => 'id_meliscmsnews_workflow_modal_content_actions_ask',
+                                        'name' => 'tr_meliscmsnews_workflow_modal_content_actions_ask',
+                                        'melisKey' => 'meliscmsnews_workflow_modal_content_actions_ask',
+                                    ],
+                                    'forward' => [
+                                        'module' => 'MelisCmsNews',
+                                        'controller' => 'MelisCmsNewsWorkflow',
+                                        'action' => 'render-workflow-modal-content-actions-ask',
+                                        'jscallback' => '',
+                                        'jsdatas' => [],
+                                    ],
+                                ],
+                            ],
+                        ],
+                        'meliscmsnews_workflow_modal_content_actions_zones' => [
+                            'interface' => [
+                                'meliscmsnews_workflow_modal_content_actions_zones_ask' => [
+                                    'conf' => [
+                                        'id' => 'id_meliscmsnews_workflow_modal_content_actions_zones_ask',
+                                        'name' => 'tr_meliscmsnews_workflow_modal_content_actions_zones_ask',
+                                        'melisKey' => 'meliscmsnews_workflow_modal_content_actions_zones_ask',
+                                    ],
+                                    'forward' => [
+                                        'module' => 'MelisCmsNews',
+                                        'controller' => 'MelisCmsNewsWorkflow',
+                                        'action' => 'render-workflow-modal-content-actions-zone-ask',
+                                        'jscallback' => '',
+                                        'jsdatas' => [],
+                                    ],
+                                ],
+                            ],
+                        ],
+                        'meliscmsnews_workflow_modal_content_historic' => [
+                            'conf' => [
+                                'id' => 'id_meliscmsnews_workflow_modal_content_historic',
+                                'name' => 'tr_meliscmsnews_workflow_modal_content_historic',
+                                'melisKey' => 'meliscmsnews_workflow_modal_content_historic',
+                            ],
+                            'forward' => [
+                                'module' => 'MelisCmsNews',
+                                'controller' => 'MelisCmsNewsWorkflow',
+                                'action' => 'render-workflow-modal-content-historic',
+                                'jscallback' => '',
+                                'jsdatas' => [],
+                            ],
+                            'interface' => [
+                                'meliscmsnews_workflow_modal_content_actions_validate' => [
+                                    'conf' => [
+                                        'id' => 'id_meliscmsnews_workflow_modal_content_actions_validate',
+                                        'name' => 'tr_meliscmsnews_workflow_modal_content_actions_validate',
+                                        'melisKey' => 'meliscmsnews_workflow_modal_content_actions_validate',
+                                    ],
+                                    'forward' => [
+                                        'module' => 'MelisCmsNews',
+                                        'controller' => 'MelisCmsNewsWorkflow',
+                                        'action' => 'render-workflow-modal-content-actions-validate',
+                                        'jscallback' => '',
+                                        'jsdatas' => [],
+                                    ],
+                                ],
+                                'meliscmsnews_workflow_modal_content_actions_refuse' => [
+                                    'conf' => [
+                                        'id' => 'id_meliscmsnews_workflow_modal_content_actions_refuse',
+                                        'name' => 'tr_meliscmsnews_workflow_modal_content_actions_refuse',
+                                        'melisKey' => 'meliscmsnews_workflow_modal_content_actions_refuse',
+                                    ],
+                                    'forward' => [
+                                        'module' => 'MelisCmsNews',
+                                        'controller' => 'MelisCmsNewsWorkflow',
+                                        'action' => 'render-workflow-modal-content-actions-refuse',
+                                        'jscallback' => '',
+                                        'jsdatas' => [],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+                /*for the news workflow dashboard plugin*/
+                'meliscmsnews_dashboard_workflow_comment_modal' => [
+                    'conf' => [
+                        'id' => 'id_meliscmsnews_dashboard_workflow_comment_modal',
+                        'name' => 'tr_meliscmsnews_dashboard_workflow_comment_modal',
+                        'melisKey' => 'meliscmsnews_dashboard_workflow_comment_modal',
+                    ],
+                    'forward' => [
+                        'module' => 'MelisCmsNews',
+                        'controller' => 'MelisCmsNewsWorkflow',
+                        'action' => 'workflowCommentModal',
+                        'jscallback' => '',
+                        'jsdatas' => [],
+                    ],
+                    'interface' => [
+                        'meliscmsnews_dashboard_workflow_comment_modal_content' => array(
+                            'conf' => array(
+                                'id' => 'id_meliscmsnews_dashboard_workflow_comment_modal_content',
+                                'name' => 'tr_meliscmsnews_dashboard_workflow_comment_modal_content',
+                                'melisKey' => 'meliscmsnews_dashboard_workflow_comment_modal_content',
+                            ),
+                            'forward' => array(
+                                'module' => 'MelisCmsNews',
+                                'controller' => 'MelisCmsNewsWorkflow',
+                                'action' => 'workflowCommentModalContent',
+                            ),
+                        )
                     ],
                 ],
             ],

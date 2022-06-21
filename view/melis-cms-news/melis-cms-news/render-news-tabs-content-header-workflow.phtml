@@ -1,0 +1,11 @@
+<a class="btn btn-info news-details-workflow" title="<?= $this->label; ?>"
+   style="
+        float: right;
+        margin-right: 8px;
+        padding: 3px 12px;"
+
+   data-wf-id="<?= $this->newsId; ?>"
+   data-wf-type="NEWS"
+   data-wf-details="<?= $this->newsTitle; ?> (<?= $this->newsId; ?>)"
+   data-wf-opening-js="melisHelper.tabOpen('<?= $this->newsTitle; ?>', 'fa fa-rss fa-2x', '<?= $this->newsId; ?>_id_meliscmsnews_page', 'meliscmsnews_page', { newsId: <?= $this->newsId; ?> });"
+><i class="fa fa-thumbs-o-up"></i> <?= $this->label; ?></a>

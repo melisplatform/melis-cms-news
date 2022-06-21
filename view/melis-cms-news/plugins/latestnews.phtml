@@ -2,7 +2,10 @@
 	<?php if (! empty($this->latestNews)) : ?>
         <div id="news-latest-plugin">
             <div class="row">
-                <?php foreach ($this->latestNews as $key => $news){?>
+                <?php foreach ($this->latestNews as $key => $news){
+                    $paragraphOrder = !empty($news['cnews_paragraph_order']) ? explode('-', $news['cnews_paragraph_order']) : null;
+                    $firstParagraph = !empty($paragraphOrder) ? $news[$paragraphOrder[0]] : $news['cnews_paragraph1'];
+                    ?>
                     <div class="col-sm-6 col-lg-12">
                         <div class="thumbnail">
                             <?php if(! empty($news['cnews_image1'])){?>
@@ -12,7 +15,7 @@
                                 <a href="<?= $news['newsLink'] ?>">
                                     <h3><?= $news['cnews_title'] ?></h3>
                                 </a>
-                                <p><?= $news['cnews_paragraph1'] ?></p>
+                                <p><?= $firstParagraph ?></p>
                             </div>
                         </div>
                     </div>

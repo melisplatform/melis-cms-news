@@ -27,6 +27,10 @@
         <div class="row news">
         	<?php if (!empty($this->listNews->count())): ?>
             	<?php foreach ($this->listNews as $val): ?>
+                    <?php 
+                        $paragraphOrder = !empty($val['cnews_paragraph_order']) ? explode('-', $val['cnews_paragraph_order']) : null;
+                        $firstParagraph = !empty($paragraphOrder) ? $val[$paragraphOrder[0]] : $val['cnews_paragraph1'];
+                    ?>
                   	<div class="col-sm-6 col-md-4 post">
                         <div class="thumbnail">
                         	<?php if(!empty($val['cnews_image1'])): ?>
@@ -36,7 +40,7 @@
                           		<a href="<?= $val['newsLink']; ?>">
                                 	<h3><?= $val['cnews_title']; ?></h3>
                                 </a>
-                                <p><?= $val['cnews_paragraph1']; ?></p>
+                                <p><?= $firstParagraph; ?></p>
                           	</div>
                         </div>
                   	</div>

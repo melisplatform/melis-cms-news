@@ -137,10 +137,14 @@ class MelisCmsNewsController extends MelisAbstractActionController
         $view = new ViewModel();
         $melisKey = $this->params()->fromRoute('melisKey', '');
         $newsId = (int)$this->params()->fromQuery('newsId', 0);
+         /**
+         * Checks if Melis Small Business module is disabled
+         */
+        $sbIsDisabled = !in_array('MelisSmallBusiness', $this->getServiceManager()->get('MelisAssetManagerModulesService')->getActiveModules());
         $view->activeModules = $this->getServiceManager()->get('MelisAssetManagerModulesService')->getActiveModules();
         $view->melisKey = $melisKey;
         $view->newsId = $newsId;
-
+        $view->sbIsDisabled = $sbIsDisabled;   
         return $view;
     }
 
@@ -181,8 +185,13 @@ class MelisCmsNewsController extends MelisAbstractActionController
         $view = new ViewModel();
         $melisKey = $this->params()->fromRoute('melisKey', '');
         $newsId = (int)$this->params()->fromQuery('newsId', '');
+        /**
+         * Checks if Melis Small Business module is disabled
+         */
+        $sbIsDisabled = !in_array('MelisSmallBusiness', $this->getServiceManager()->get('MelisAssetManagerModulesService')->getActiveModules());
         $view->melisKey = $melisKey;
         $view->newsId = $newsId;
+        $view->sbIsDisabled = $sbIsDisabled;   
         return $view;
     }
 
@@ -208,6 +217,31 @@ class MelisCmsNewsController extends MelisAbstractActionController
         return $view;
     }
 
+    /**
+     * renders the tabs content header workflow
+     * @return \Laminas\View\Model\ViewModel
+     */
+    public function renderNewsTabsContentHeaderWorkflowAction()
+    {
+        $melisKey = $this->params()->fromRoute('melisKey', '');
+        $newsId = (int)$this->params()->fromQuery('newsId', '');
+               
+        $newsTitle = "";
+        if (!empty($newsId)) {
+            $newsService = $this->getServiceManager()->get('MelisCmsNewsService');
+            $newsTextData = $newsService->getPostText($newsId)->current();
+            if (!empty($newsTextData)) {
+                $newsTitle = $newsTextData->cnews_title;
+            }
+        }
+
+        $view = new ViewModel();
+        $view->melisKey = $melisKey;
+        $view->newsId = $newsId;
+        $view->label = $this->getTool()->getTranslation('tr_meliscmsnews_action_workflow');
+        $view->newsTitle = $newsTitle;
+        return $view;
+    }
     /**
      * renders the tabs content header title
      * @return \Laminas\View\Model\ViewModel
@@ -625,9 +659,10 @@ class MelisCmsNewsController extends MelisAbstractActionController
                         $newsTxt['cnews_title'] = $postValues['cnews_title'][$i];
                         $newsTxt['cnews_subtitle'] = $postValues['cnews_subtitle'][$i];
                         $newsTxt['cnews_lang_id'] = $postValues['cnews_lang_id'][$i];
+                        $newsTxt['cnews_paragraph_order'] = $postValues['cnews_paragraph_order'][$i];
 
                         // get all paragraph values
-                        for ($c = 1; $c <= 4; $c++) {
+                        for ($c = 1; $c <= 10; $c++) {
                             $newsTxt['cnews_paragraph' . $c] = $postValues['cnews_paragraph' . $c][$i];
                         }
 
@@ -666,14 +701,30 @@ class MelisCmsNewsController extends MelisAbstractActionController
                             }
                         }
                     }
+                    //save seo tab
+                    list('success' => $isSeoSuccess, 'errors' => $errors) = $this->saveNewsSeo($data['cnews_id']);
+                    //rollback here when seo saving is not successful
+                    if ($isSeoSuccess != 1) {
+                        //delete news and news texts
+                        $deleteNews = $this->forward()->dispatch(
+                            'MelisCmsNews\Controller\MelisCmsNewsList',
+                            [
+                                'action' => 'deleteNews',
+                                'newsId' => $data['cnews_id']                                
+                            ]
+                        )->getVariables();
+                        $postValues['cnews_id'] = null;
+                        $data['cnews_id'] = 0;
+                    } else {
                     /** Updating post values for the listener: "meliscmsnews_get_postvalues" */
                     if (!empty($postValues['cnews_id'])) {
                         $postValues['cnews_id'] = $data['cnews_id'];
                     }
 
+                        $textMessage = 'tr_meliscmsnews_save_success';
+                        $success = 1;
+                    }
                     $id = $data['cnews_id'];
-                    $textMessage = 'tr_meliscmsnews_save_success';
-                    $success = 1;
                 }
             } else {
                 $formErrors = $form->getMessages();
@@ -1026,8 +1077,8 @@ class MelisCmsNewsController extends MelisAbstractActionController
 
     public function renameIfDuplicateFile($filePath)
     {
-        $newsTable = $this->getServiceManager()->get('MelisCmsNewsTable');
-        $docData = $newsTable->checkForDuplicates(pathinfo($filePath, PATHINFO_DIRNAME) . '/' . pathinfo($filePath, PATHINFO_FILENAME));
+        $newsTable = $this->getServiceManager()->get('MelisCmsNewsTable');       
+        $docData = $newsTable->checkForDuplicates(pathinfo($filePath, PATHINFO_DIRNAME) . '/' . str_replace("'","''", pathinfo($filePath, PATHINFO_FILENAME)));
         $totalFile = count($docData) ? '_' . count($docData) : null;
         $fileDir = pathinfo($filePath, PATHINFO_DIRNAME);
         $fileName = pathinfo($filePath, PATHINFO_FILENAME) . $totalFile;
@@ -1371,5 +1422,244 @@ class MelisCmsNewsController extends MelisAbstractActionController
         $view->noPageDetails = $noPageDetails;
 
         return $view;
+    }
+    /**
+     * renders the tab left content container
+     * @return \Laminas\View\Model\ViewModel
+     */
+    public function renderNewsTabsContentSeoDetailsMainAction()
+    {
+        $view = new ViewModel();
+        $melisKey = $this->params()->fromRoute('melisKey', '');
+        $newsId = (int)$this->params()->fromQuery('newsId', '');
+        $view->melisKey = $melisKey;
+        $view->newsId = $newsId;
+        return $view;
+    }
+    /**
+     * renders the tab right content paragraphs
+     * @return \Laminas\View\Model\ViewModel
+     */
+    public function renderNewsTabsSeoDetailsAction()
+    {       
+        $newsId = (int)$this->params()->fromQuery('newsId', '');  
+        $seoForm = $this->getNewsSeoForm();
+        $newsSeoTable = $this->getServiceManager()->get('MelisCmsNewsSeoTable');
+        $data = ($newsId) ? (array)$newsSeoTable->getEntryByField('cnews_id', $newsId)->toArray() : '';
+        $lang_id = $this->getLangId();        
+        $languages = $this->getOrderedLanguagesByCurrentLocale();
+        $view = new ViewModel();
+        $melisKey = $this->params()->fromRoute('melisKey', '');  
+        $view->melisKey = $melisKey;
+        $view->newsId = $newsId;  
+        $view->languages = $languages;
+        $view->lang_id = $lang_id;
+        $view->data = $data;
+        $view->seoForm = $seoForm;   
+        return $view;
+    }
+    /**
+    * This retrieves the list of languages available in the platform where the current locale used is the first in the list
+    * @return array
+    */
+    private function getOrderedLanguagesByCurrentLocale()
+    {
+        //get all languages available in the plaftform
+        $coreLang = $this->getServiceManager()->get('MelisEngineTableCmsLang');
+        $languages = $coreLang->fetchAll()->toArray();      
+        $curLangId = $this->getLangId();
+        //set the current locale as the first value in the array
+        foreach ($languages as $key => $langData) {
+            if ($langData["lang_cms_id"] == $curLangId) {
+                unset($languages[$key]);
+                array_unshift($languages,$langData);
+            }
+        }
+        return $languages;
+    }
+    private function getNewsSeoForm() 
+    {
+        $melisCoreConfig = $this->getServiceManager()->get('MelisCoreConfig');
+        $seoFormConfig = $melisCoreConfig->getFormMergedAndOrdered('MelisCmsNews/forms/meliscmsnews_seo_form', 'meliscmsnews_seo_form');
+        $factory = new Factory();
+        $formElements = $this->getServiceManager()->get('FormElementManager');
+        $factory->setFormElementManager($formElements);
+        $seoForm = $factory->createForm($seoFormConfig);
+        return $seoForm;
+    }
+    /**
+     * This function saves the seo of the news
+     * @return \Laminas\View\Model\JsonModel
+     */
+    private function saveNewsSeo($cnews_id)
+    {       
+        $translator = $this->getServiceManager()->get('translator');        
+        // Get the form properly loaded               
+        $factory = new Factory();
+        $formElements = $this->getServiceManager()->get('FormElementManager');
+        $factory->setFormElementManager($formElements);
+        $melisCoreConfig = $this->getServiceManager()->get('MelisCoreConfig');  
+        $seoFormConfig = $melisCoreConfig->getFormMergedAndOrdered('MelisCmsNews/forms/meliscmsnews_seo_form', 'meliscmsnews_seo_form');
+        $melisNewsSeoTable = $this->getServiceManager()->get('MelisCmsNewsSeoTable');
+        $melisNewsTextTable = $this->getServiceManager()->get('MelisCmsNewsTextsTable');
+        // Check if post
+        $request = $this->getRequest();
+        if ($request->isPost()) {
+            $postValues = $request->getPost()->toArray();
+            $languages = $this->getOrderedLanguagesByCurrentLocale();
+            $languageCount = count($languages);
+            if ($languages) {
+                foreach ($languages as $lang) {
+                    // Generating form for each language
+                    $seoFormtmp = $factory->createForm($seoFormConfig);
+                    //loop through the language form data
+                    $ctr = 1;
+                    foreach ($postValues['cnews_seo'] as $val) {  
+                        if ($val['cnews_seo_lang_id'] && $val['cnews_seo_lang_id'] == $lang['lang_cms_id']) {   
+                            if (!empty($val['cnews_seo_url'])) {
+                                $val['cnews_seo_url'] = $this->cleanURL($val['cnews_seo_url']);
+                            }
+                            if (!empty($val['cnews_seo_canonical'])) {
+                                $val['cnews_seo_canonical'] = $this->cleanURL($val['cnews_seo_canonical']);
+                            }
+                            if (!empty($val['cnews_seo_url_redirect'])) {
+                                $val['cnews_seo_url_redirect'] = $this->cleanURL($val['cnews_seo_url_redirect']);
+                            }
+                            if (!empty($val['cnews_seo_url_301'])) {
+                                $val['cnews_seo_url_301'] = $this->cleanURL($val['cnews_seo_url_301']);
+                            }
+                            $seoFormtmp->setData($val);    
+                            break;                
+                        }             
+                    }   
+                    if ($seoFormtmp->isValid()) {                       
+                        $seoData = $seoFormtmp->getData();
+                        $allEmpty = true;
+                        if (!empty($seoData['cnews_seo_meta_title']) || !empty($seoData['cnews_seo_meta_description']) || !empty($seoData['cnews_seo_url']) || !empty($seoData['cnews_seo_canonical']) || !empty($seoData['cnews_seo_url_redirect']) || !empty($seoData['cnews_seo_url_301'])) {
+                            $allEmpty = false;
+                        }
+                        $success = 1;
+                        $seoData['cnews_id'] = $cnews_id;//set the news id
+                        //if at least one seo property is filled up, continue
+                        if (!$allEmpty)  {
+                            // Check for unicity of the URL declared
+                            if (!empty($seoData['cnews_seo_url'])) {
+                                $newsSeo = $melisNewsSeoTable->checkSeoUrlDuplicates($seoData['cnews_seo_url'], $postValues['cnews_site_id'])->current();
+                                if (!empty($newsSeo)) {
+                                    // Not this page of course
+                                    if (empty($seoData['cnews_seo_id']) || (!empty($seoData['cnews_seo_id']) && $seoData['cnews_seo_id'] != $newsSeo->cnews_seo_id)) {
+                                        $newsTitleDuplicate = '';                                      
+                                        $newsText = $melisNewsTextTable->getEntryByField('cnews_id', $newsSeo->cnews_id)->current();
+                                        //get all languages available in the plaftform
+                                        $cmsLangTable = $this->getServiceManager()->get('MelisEngineTableCmsLang');
+                                        $languages = $cmsLangTable->getEntryByField('lang_cms_id', $newsSeo->cnews_seo_lang_id)->current();
+                                        if (!empty($newsText))
+                                            $newsTitleDuplicate = $newsText->cnews_title;                                      
+                                        // This URL is already used somewhere else
+                                        return array(
+                                                'success' => 0,                                               
+                                                'errors' => array( 'cnews_seo_url' => 
+                                                                array(
+                                                                        'cnews_seo_url' => $translator->translate('tr_meliscmsnews_page_tab_seo_error_duplicate_url') . ' '. $newsTitleDuplicate,
+                                                                        'label' => $translator->translate('tr_meliscmsnews_page_tab_seo_error_label_seo_url'). '('.$lang["lang_cms_name"].')'
+                                                                    )
+                                                                )
+                                        );
+                                    }
+                                }
+                                //check also from page seo table                                
+                                $melisTablePageSeo = $this->getServiceManager()->get('MelisEngineTablePageSeo');
+                                $datasPageSeo = $melisTablePageSeo->getEntryByField('pseo_url', $seoData['cnews_seo_url']);
+                                if (!empty($datasPageSeo))
+                                {
+                                    $datasPageSeo = $datasPageSeo->current();
+                                    if (!empty($datasPageSeo))
+                                    {                                       
+                                        $pageNameDuplicate = '';
+                                        $melisPage = $this->getServiceManager()->get('MelisEnginePage');
+                                        $datasPage = $melisPage->getDatasPage($datasPageSeo->pseo_id, 'saved');
+                                        $pageTree = $datasPage->getMelisPageTree();
+                                        if (!empty($pageTree))
+                                            $pageNameDuplicate = ' ' . $pageTree->page_name . ' (' . $datasPageSeo->pseo_id . ')';
+                                        // This URL is already used somewhere else
+                                        return array(
+                                                'success' => 0,                                              
+                                                'errors' => array( 'cnews_seo_url' =>
+                                                                array(
+                                                                        'cnews_seo_url' => $translator->translate('tr_meliscmsnews_page_tab_seo_error_duplicate_url') . $pageNameDuplicate,
+                                                                        'label' => $translator->translate('tr_meliscmsnews_page_tab_seo_error_label_seo_url'). '('.$lang["lang_cms_name"].')'
+                                                                    )
+                                                                )
+                                        );
+                                    }
+                                }                              
+                            }
+                            // Cleaning special char and white spaces on SEO Url
+                            $enginePage = $this->getServiceManager()->get('MelisEngineTree');
+                            $seoData['cnews_seo_url'] = $enginePage->cleanString(mb_strtolower($seoData['cnews_seo_url']));
+                            // Checking for spaces
+                            if (preg_match('/\s/', $seoData['cnews_seo_url'])) {
+                                $seoData['cnews_seo_url'] = str_replace(" ", "", $seoData['cnews_seo_url']);
+                            }
+                            $res = $melisNewsSeoTable->save($seoData, $seoData['cnews_seo_id']);
+                            if (!$res) {
+                                $success = 0;
+                            }
+                        } else {
+                            if (!empty($seoData['cnews_seo_id'])) {
+                                 // All fields are empty, let's delete the entry
+                                $res = $melisNewsSeoTable->deleteById($seoData['cnews_seo_id']);
+                                if (!$res) {
+                                    $success = 0;
+                                }
+                            }
+                        }
+                        $result = array(
+                            'success' => $success,
+                            'errors' => array(),
+                        );
+                    } else {
+                        // Add labels of errors
+                        $errors = $seoFormtmp->getMessages();
+                        $melisMelisCoreConfig = $this->getServiceManager()->get('MelisCoreConfig');                       
+                        $seoFormConfig = $seoFormConfig['elements'];
+                        foreach ($errors as $keyError => $valueError) {
+                            foreach ($seoFormConfig as $keyForm => $valueForm) {                          
+                                if ($valueForm['spec']['name'] == $keyError &&
+                                        !empty($valueForm['spec']['options']['label'])){
+                                            $errors[$keyError]['label'] = $valueForm['spec']['options']['label']. '('.$lang["lang_cms_name"].')';
+                                            //$errors[$keyError][key($valueError)] = sprintf(current($valueError), $lang['lang_cms_name']);
+                                        }
+                            }
+                        }
+                        return array(
+                                'success' => 0,                                               
+                                'errors' => $errors
+                        );
+                    }   
+                }//end foreach language
+            } // end if languages       
+        } else {
+            $result = array(
+                    'success' => 0,
+                    'errors' => array(array('empty' => $translator->translate('tr_meliscms_form_common_errors_Empty datas'))),
+            );
+        }
+        return $result;
+    }
+    /**
+     * Rids the URL from special characters -> reference: MelisCms/PageSeoController
+     * @param string $url
+     * @return mixed
+     */
+    private function cleanURL(string $url = '')
+    {
+        $url = str_replace(' ', '-', $url);                 // Replaces all spaces with hyphens
+        $url = preg_replace('/[^A-Za-z0-9\/\-]+/', '-', $url);  // Replaces special characters with hyphens
+        // remove "/" prefix on generated URL
+        if (substr($url, 0, 1) == '/') {
+            return preg_replace('/\//', '', $url, 1);
+        }
+        return $url;
     }
 }

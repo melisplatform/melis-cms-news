@@ -23,8 +23,25 @@ use MelisCmsNews\Listener\MelisCmsNewsSliderDeletedListener;
 use MelisCmsNews\Listener\MelisCmsNewsFlashMessengerListener;
 use MelisCmsNews\Listener\MelisCmsNewsPreviewTypeListener;
 
+/*news seo*/
+use Laminas\ModuleManager\ModuleEvent;
+use MelisCmsNews\Listener\MelisCmsNewsSEORouteListener;
+use MelisCmsNews\Listener\MelisCmsNewsRenderPageListener;
+use MelisCmsNews\Listener\MelisCmsNewsMetaPageListener;
+use MelisCmsNews\Listener\MelisCmsNewsSeoRedirectUrlListener;
+
+
 class Module
 {
+    public function init(ModuleManager $moduleManager)
+    {
+        $events = $moduleManager->getEventManager();
+        /**
+         *  - Catching PAGE SEO URLs to update Router
+         *    > create SEO route first so the modules can have a route match in creating translations
+         */
+        $events->attach(ModuleEvent::EVENT_LOAD_MODULES_POST, [new MelisCmsNewsSEORouteListener(), 'onLoadModulesPost']);
+    }
     public function onBootstrap(MvcEvent $e)
     {
         $eventManager        = $e->getApplication()->getEventManager();
@@ -57,6 +74,11 @@ class Module
             (new MelisCmsNewsTableColumnDisplayListener())->attach($eventManager);
             (new MelisCmsNewsToolCreatorEditionTypeListener())->attach($eventManager);
             (new MelisCmsNewsGdprAutoDeleteActionDeleteListener())->attach($eventManager);
+
+        } else {
+            (new MelisCmsNewsRenderPageListener())->attach($eventManager);
+            (new MelisCmsNewsMetaPageListener())->attach($eventManager);
+            (new MelisCmsNewsSeoRedirectUrlListener())->attach($eventManager);
         }
     }
     
@@ -83,6 +105,7 @@ class Module
             // Extending with MelisCmsComments module
             include __DIR__ . '/../config/comments.config.php',
             include __DIR__ . '/../config/plugins/dashboard/dashboard.latest.comments.php',
+           
         ];
         
         foreach ($configFiles as $file) {

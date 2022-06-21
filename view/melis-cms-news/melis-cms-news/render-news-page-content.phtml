@@ -18,10 +18,17 @@ if (empty($newsId)) {
     if (in_array('meliscmsnews_tabs_preview', $tabs)) {
         unset($zoneConfigInterface['meliscmsnews_tabs_preview']);
     }
+    if (in_array('meliscmsnews_workflow_comments', $tabs)) {
+        unset($zoneConfigInterface['meliscmsnews_workflow_comments']);
+    }
 } else {
     /** Post Edition: Remove Comments configuration when MelisCmsComments is disabled */
     if (!in_array('MelisCmsComments', $this->activeModules) && in_array('meliscmsnews_content_tabs_comments', $tabs)) {
         unset($zoneConfigInterface['meliscmsnews_content_tabs_comments']);
+    }
+    /*do not display the workflow comment tab if Small Business Module is disabled*/
+    if ($this->sbIsDisabled) {
+        unset($zoneConfigInterface['meliscmsnews_workflow_comments']);
     }
 }
 

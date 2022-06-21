@@ -39,7 +39,7 @@ if (!empty($this->zoneconfig['conf']['id']))
                                           echo $this->form()->closeTag();
                                           ?>
                                           	<script type="text/javascript">
-                                            	$(":file").filestyle({buttonBefore: true, input: true, buttonText: '&nbsp;<?php echo $this->translate('tr_meliscmsnews_input_file')?>', placeholder : '<?= $this->file?>'});
+                                            	$(":file").filestyle({buttonBefore: true, input: true, buttonText: '&nbsp;<?php echo $this->translate('tr_meliscmsnews_input_file')?>', placeholder : '<?= str_replace("'", "\'" ,$this->file)?>'});
                                             </script>
                                             <div class="progressContent hidden">
                                                 <?= $this->translate('tr_meliscmsnews_input_file_uploading'); ?>

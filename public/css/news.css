@@ -232,3 +232,25 @@ img.imgDocThumbnail {
 .mcn-width-100 {
     width: 100%;
 }
+
+/*for texts sortable paragraphs*/
+.slide-placeholder {
+    background: rgba(147, 46, 42, 0.3);
+    position: relative;
+}
+.slide-placeholder:after {
+    content: " ";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 15px;
+    background-color: #FFF; 
+}
+.text_paragraph_sortable .arrow-news {
+    padding-right: 5px;
+}
+.text_paragraph_sortable .ui-sortable-handle {
+    cursor: move;
+}
+/*end for texts sortable paragraphs*/

@@ -121,8 +121,9 @@ class MelisCmsNewsLatestNewsPlugin extends MelisTemplatingPlugin
             $news = $val;
             if (!empty($news)) {
                 // Generate link to news
-                $link = $pageTreeService->getPageLink($pageIdDetailNews, false);
-                $news['newsLink'] = $link . '?newsId=' . $news['cnews_id'];
+                $newsSeoService = $this->getServiceManager()->get('MelisCmsNewsSeoService');
+                $link = $newsSeoService->getPageLink($pageIdDetailNews, $news['cnews_id'], false);    
+                $news['newsLink'] = $link;                
 
                 // date formated of news
                 $news['newsDateFormated'] = date('d M Y', strtotime(($news['cnews_publish_date']) ? $news['cnews_publish_date'] : $news['cnews_creation_date']));
@@ -202,7 +203,7 @@ class MelisCmsNewsLatestNewsPlugin extends MelisTemplatingPlugin
 
                     if ($formKey == 'melis_cms_news_list_plugin_filter_form') {
                         if (!empty($post['date_min']) && !empty($post['date_max'])) {
-                            if ($post['date_min'] > $post['date_max']) {
+                            if (strtotime($post['date_min']) > strtotime($post['date_max'])) {
                                 $errors['date_max'] = [
                                     'label' => $translator->translate('tr_meliscmsnews_plugin_filter_date_range_to'),
                                     'inValidDates' => $translator->translate('tr_meliscmsnews_plugin_invalid_dates'),

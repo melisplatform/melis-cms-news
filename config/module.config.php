@@ -53,15 +53,19 @@ return array(
         'aliases' => array(
             //services
             'MelisCmsNewsService'       => \MelisCmsNews\Service\MelisCmsNewsService::class,
+            'MelisCmsNewsSeoService'    => \MelisCmsNews\Service\MelisCmsNewsSeoService::class,
+       
             //tables
             'MelisCmsNewsTable'         => \MelisCmsNews\Model\Tables\MelisCmsNewsTable::class,
             'MelisCmsNewsTextsTable'    => \MelisCmsNews\Model\Tables\MelisCmsNewsTextsTable::class,
+            'MelisCmsNewsSeoTable'      => \MelisCmsNews\Model\Tables\MelisCmsNewsSeoTable::class,
         ),
     ),
     'controllers' => array(
         'invokables' => array(
             'MelisCmsNews\Controller\MelisCmsNewsList' => \MelisCmsNews\Controller\MelisCmsNewsListController::class,
             'MelisCmsNews\Controller\MelisCmsNews' => \MelisCmsNews\Controller\MelisCmsNewsController::class,
+            'MelisCmsNews\Controller\MelisCmsNewsWorkflowComments' => \MelisCmsNews\Controller\MelisCmsNewsWorkflowCommentsController::class,
         ),
     ),
     'controller_plugins' => array(
@@ -71,7 +75,7 @@ return array(
             'MelisCmsNewsShowNewsPlugin' => 'MelisCmsNews\Controller\Plugin\MelisCmsNewsShowNewsPlugin',
 
             /** Extending MelisCmsComments module */
-            'DashboardLatestComments' => 'MelisCmsNews\Controller\Plugin\Dashboard\DashboardLatestComments'
+            'DashboardLatestComments' => 'MelisCmsNews\Controller\Plugin\Dashboard\DashboardLatestComments',
         )
     ),
 

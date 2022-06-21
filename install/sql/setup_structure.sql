@@ -47,10 +47,32 @@ CREATE TABLE IF NOT EXISTS `melis_cms_news_texts` (
   `cnews_paragraph2` LONGTEXT NULL,
   `cnews_paragraph3` LONGTEXT NULL,
   `cnews_paragraph4` LONGTEXT NULL,
+  `cnews_paragraph5` LONGTEXT NULL,
+  `cnews_paragraph6` LONGTEXT NULL,
+  `cnews_paragraph7` LONGTEXT NULL,
+  `cnews_paragraph8` LONGTEXT NULL,
+  `cnews_paragraph9` LONGTEXT NULL,
+  `cnews_paragraph10` LONGTEXT NULL,
+  `cnews_paragraph_order` VARCHAR(255) NULL,
   `cnews_id` INT(11) NULL,
   `cnews_lang_id` INT(11) NULL,
   PRIMARY KEY (`cnews_text_id`))
   ENGINE = InnoDB;
+
+
+DROP TABLE IF EXISTS `melis_cms_news_seo`;
+CREATE TABLE IF NOT EXISTS `melis_cms_news_seo` (
+  `cnews_seo_id` int(11) NOT NULL AUTO_INCREMENT,
+  `cnews_id` int(11) NOT NULL,
+  `cnews_seo_lang_id` int(11) NOT NULL,
+  `cnews_seo_url` varchar(255) DEFAULT NULL,
+  `cnews_seo_url_redirect` varchar(255) DEFAULT NULL,
+  `cnews_seo_url_301` varchar(255) DEFAULT NULL,
+  `cnews_seo_meta_title` text DEFAULT NULL,
+  `cnews_seo_meta_description` text DEFAULT NULL,
+  `cnews_seo_canonical` text DEFAULT NULL,
+  PRIMARY KEY (`cnews_seo_id`)) 
+  ENGINE=InnoDB;  
 
 
 SET SQL_MODE=@OLD_SQL_MODE;
