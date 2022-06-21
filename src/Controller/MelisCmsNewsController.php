@@ -225,19 +225,20 @@ class MelisCmsNewsController extends MelisAbstractActionController
     {
         $melisKey = $this->params()->fromRoute('melisKey', '');
         $newsId = (int)$this->params()->fromQuery('newsId', '');
+        $view = new ViewModel();
+        $view->melisKey = $melisKey;
+        $view->newsId = $newsId;
+        $view->label = $this->getTool()->getTranslation('tr_meliscmsnews_action_workflow');
         $postTitle = '';
         if (!empty($newsId)) {
             $newsService = $this->getServiceManager()->get('MelisCmsNewsService');
             $newsTextData = $newsService->getPostText($newsId)->current();
             if (!empty($newsTextData)) {
                 $newsTitle = $newsTextData->cnews_title;
+                $view->newsTitle = $newsTitle;
             }
         }
-        $view = new ViewModel();
-        $view->melisKey = $melisKey;
-        $view->newsId = $newsId;
-        $view->label = $this->getTool()->getTranslation('tr_meliscmsnews_action_workflow');
-        $view->newsTitle = $newsTitle;
+
         return $view;
     }
     /**
