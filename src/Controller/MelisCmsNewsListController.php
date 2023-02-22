@@ -268,10 +268,10 @@ class MelisCmsNewsListController extends MelisAbstractActionController
                 }
             }
 
-            $tmp = $newsSvc->getNewsList(null, null, null, null, null, null, null, null, null, null,  null, $cnews_site_id, $search);
+            $tmp = $newsSvc->getNewsList(null, null, null, null, null, null, null, null, null, null,  null, $cnews_site_id, $search, true);
             $dataFiltered = count($tmp);
 
-            $news = $newsSvc->getNewsList(null, null, null, null, null, null, null, $start, $length, $selCol, $sortOrder, $cnews_site_id, $search);
+            $news = $newsSvc->getNewsList(null, null, null, null, null, null, null, null, null, $selCol, $sortOrder, $cnews_site_id, $search);
 
             $dataArray = [];
             $idArray = [];
@@ -299,6 +299,11 @@ class MelisCmsNewsListController extends MelisAbstractActionController
                 array_multisort(array_column($dataArray, $selCol), $sortOrder, $dataArray);
             } else {
                 array_multisort(array_column($dataArray, 'cnews_id'), SORT_DESC, $dataArray);
+            }
+
+            //set the start and limit
+            if (isset($start) && isset($length)) {
+                $dataArray = array_slice($dataArray, $start, $length);
             }
 
             $dataCount = count($dataArray);
