@@ -1601,6 +1601,10 @@ class MelisCmsNewsController extends MelisAbstractActionController
                             if (preg_match('/\s/', $seoData['cnews_seo_url'])) {
                                 $seoData['cnews_seo_url'] = str_replace(" ", "", $seoData['cnews_seo_url']);
                             }
+                            //handling for empty string value
+                            if (empty($seoData['cnews_seo_id'])) {               
+                                $seoData['cnews_seo_id'] = null;
+                            }
                             $res = $melisNewsSeoTable->save($seoData, $seoData['cnews_seo_id']);
                             if (!$res) {
                                 $success = 0;
