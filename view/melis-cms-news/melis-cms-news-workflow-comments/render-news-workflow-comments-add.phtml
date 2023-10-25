@@ -25,8 +25,8 @@
 </div>
 <script type="text/javascript">
     $(document).ready(function() {
-    	var selector = "textarea#<?php echo $this->newsId.'_id_pcom_text'?>";
-
+    	var selector = "['textarea id="<?php echo $this->newsId.'_id_pcom_text'?>"']";
+		console.log("render-news-workflow-comments-add.phtml selector: ", selector);
     	melisTinyMCE.createTinyMCE("tool", selector, 
     		{
     			height: 250, 
