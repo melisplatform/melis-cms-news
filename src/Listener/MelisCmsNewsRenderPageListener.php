@@ -19,9 +19,10 @@ use Laminas\Stdlib\Parameters;
  * This listener will set newsId in the request parameter if and only if news id is not in the uri query param
  * This will be triggered if the news has seo url defined
  */
-#[\AllowDynamicProperties]
 class MelisCmsNewsRenderPageListener implements ListenerAggregateInterface
 {
+    public $listeners = [];
+
     public function attach(EventManagerInterface $events, $priority = 1)
     {
         $callBackHandler = $events->attach(
