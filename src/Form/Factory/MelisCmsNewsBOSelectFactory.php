@@ -13,6 +13,7 @@ use Laminas\ServiceManager\ServiceManager;
 use Laminas\Session\Container;
 use MelisCore\Form\Factory\MelisSelectFactory;
 use Psr\Container\ContainerInterface;
+use Laminas\Form\Element\Select;
 
 /**
  * MelisCms news select factory
@@ -23,7 +24,7 @@ class MelisCmsNewsBOSelectFactory extends MelisSelectFactory
     /**
      * @param ContainerInterface $container
      * @param $requestedName
-     * @return \Laminas\Form\Element\Select|Select
+     * @return Select
      */
     public function __invoke(ContainerInterface $container, $requestedName)
     {
