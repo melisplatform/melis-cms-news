@@ -105,7 +105,7 @@
              * Prefix value refers to the mini template filenames which include dashes
              * Example: 2-cols-left-text-right-image, prefix of 2 or 2-cols
              * */
-            templates: '/melis/MelisCore/MelisTinyMce/getTinyTemplates?siteId=<?= $this->siteId; ?>'
+            mini_templates_url: '/melis/MelisCore/MelisTinyMce/getTinyTemplates?siteId=<?= $this->siteId; ?>'
         };
         melisTinyMCE.createTinyMCE("tool", ".editme", tinyMceOption);
         $(".text_paragraph_sortable").sortable({
