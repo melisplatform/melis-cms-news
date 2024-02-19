@@ -87,7 +87,8 @@ class MelisCmsNewsTable extends MelisGenericTable
         $orderColumn        = null,
         $order              = null,
         $siteId             = null,
-        $search             = null
+        $search             = null,
+        $count              = false
     ) {
         $select = $this->tableGateway->getSql()->select();
 
@@ -150,6 +151,10 @@ class MelisCmsNewsTable extends MelisGenericTable
             }
         }
 
+        if (!empty($count)) {
+            $select->group('melis_cms_news.cnews_id');
+        }
+        
         $select->where('melis_cms_news_texts.cnews_title !=""');
 
         $resultData = $this->tableGateway->selectWith($select);
