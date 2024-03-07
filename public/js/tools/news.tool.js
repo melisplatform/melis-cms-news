@@ -18,11 +18,15 @@ $(function() {
                 toolNews.tabOpen(name, newsId);
 
             let previewNewsIframe = setInterval(function() {
-                let $previewIframe = $(".news-prev-iframe").contents().find("body");
+                let $previewIframe = $(".news-prev-iframe").contents().find("body"),
+                    $newsIframe = $(".news-prev-iframe");
+
                     if ( $previewIframe.length ) {
                         $previewIframe.append(`<scr`+`ipt type="text/javascript" src="/MelisCmsNews/assets/iframeResizer/iframeResizer.contentWindow.min.js"></scr`+`ipt>`);
                         
-                        $(".news-prev-iframe").iFrameResize({ autoResize: true });
+                        if ( $newsIframe.length ) {
+                            $newsIframe.iFrameResize({ autoResize: true });
+                        }
 
                         clearInterval( previewNewsIframe );
                     }
