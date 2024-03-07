@@ -59,6 +59,7 @@ return [
                 'js' => [
                     '/MelisCmsNews/js/tools/news.tool.js',
                     '/MelisCmsNews/assets/switch/bootstrap-switch.js',
+                    '/MelisCmsNews/assets/iframeResizer/iframeResizer.min.js'
                 ],
 
                 'css' => [

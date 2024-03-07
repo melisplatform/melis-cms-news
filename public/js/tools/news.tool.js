@@ -11,11 +11,22 @@ $(function() {
         });
 
         $body.on("click", '.newsEdit', function() {
-            var $this   = $(this),
+            let $this   = $(this),
                 newsId  = $this.closest('tr').attr('id'),
                 name    = $this.closest('tr').find("td:nth-child(3)").text();
 
                 toolNews.tabOpen(name, newsId);
+
+            let previewNewsIframe = setInterval(function() {
+                let $previewIframe = $(".news-prev-iframe").contents().find("body");
+                    if ( $previewIframe.length ) {
+                        $previewIframe.append(`<scr`+`ipt type="text/javascript" src="/MelisCmsNews/assets/iframeResizer/iframeResizer.contentWindow.min.js"></scr`+`ipt>`);
+                        
+                        $(".news-prev-iframe").iFrameResize({ autoResize: true });
+
+                        clearInterval( previewNewsIframe );
+                    }
+            }, 2000);
         });
 
         $body.on("click", '.newsListRefresh', function() {
@@ -132,6 +143,7 @@ $(function() {
                 $('#' + newsId + '_id_meliscmsnews_content_tabs_seo_details #cnews_'+activeDataLangId).find('#cnews_seo_url').val(newsTitle.replace(/\s+/g, '-').replace(/[^a-z0-9]+/gi, '-').replace(/^-+/, '').replace(/-+$/, '').toLowerCase());
             }                        
         });
+
         $body.on("click", ".saveNewsLetter", function() {
             var $this = $(this);
 
@@ -459,18 +471,21 @@ $(function() {
                }
             }
         });
+
         $body.on(
             "keyup keydown change",
             "form[name='newsSeoForm'] input[name='cnews_seo_meta_title']",
             { limit: 65 },
             charCounter
         );
+
         $body.on(
             "keyup keydown change",
             "form[name='newsSeoForm'] textarea[name='cnews_seo_meta_description']",
             { limit: 255 },
             charCounter
         );
+
         $body.on("click", ".news-details-workflow", function() {
             gActionNews = "ask"; //set back to default action 
             var $this = $(this);
@@ -481,6 +496,7 @@ $(function() {
                     renderNewsWorkFlowModal(pageData, ".news-details-workflow");
             }
         });
+
         $body.on("click", ".news-workflow", function() {
             gActionNews = "ask"; //set back to default action 
             var $this = $(this);
@@ -499,9 +515,11 @@ $(function() {
                         renderNewsWorkFlowModal(pageData, ".news-workflow");                        
                 }
         });
+
         $body.on("click",".workflow-modal-cont .btn-validate-refuse", function() {    
             gActionNews = $(this).hasClass('pw-validate') ? "validate" : "refuse" ;
         });
+
         $body.on('click', '.btnAddWorkflowCommentNews, .btnCommentModalCloseNews', function (e) {
             var newsId = MelisCmsNewsId,
                 form = "workflow-comments-modal form#idmelissbpagecomments",
@@ -546,6 +564,7 @@ $(function() {
                 alert( translations.tr_meliscore_error_message );
             });
         });
+        
         $body.on('click', '.btnAddNewsComment', function(e) {          
             var btn         = $(this),
                 newsId      = btn.data("newsid"),               
@@ -577,6 +596,7 @@ $(function() {
                 }); 
         });
 });
+
 function renderNewsWorkFlowModal(pageData, button) {
     $.ajax({
         url: '/melis/MelisSmallBusiness/MelisWorkflow/render-workflow-modal',
@@ -611,6 +631,7 @@ function renderNewsWorkFlowModal(pageData, button) {
         }
     }, 300);
 }
+
 function charCounter(event) {
     var charLength = $(this).val().length;
     var prevLabel = $(this).prev("label");

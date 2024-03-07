@@ -19,9 +19,7 @@ if (!empty($this->zoneconfig['conf']['id'])) {
                     var previewFrame = $body.find('#<?= $this->newsId; ?>_news-preview-iframe-container .news-prev-iframe');
                     var height = previewFrame.contents().height();
                     previewFrame.css('height', height);
-                })();">
-
-        </iframe>
+                })();"></iframe>
     </div>
 <?php elseif ($this->noPageDetails): ?>
     <div class="col-md-12">
