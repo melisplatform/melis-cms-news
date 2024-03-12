@@ -108,6 +108,7 @@
             mini_templates_url: '/melis/MelisCore/MelisTinyMce/getTinyTemplates?siteId=<?= $this->siteId; ?>'
         };
         melisTinyMCE.createTinyMCE("tool", ".editme", tinyMceOption);
+        
         $(".text_paragraph_sortable").sortable({
             placeholder: 'slide-placeholder',
             axis: "y",
