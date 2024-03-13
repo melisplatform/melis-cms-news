@@ -24,23 +24,22 @@
 	</div>
 </div>
 <script type="text/javascript">
-    $(document).ready(function() {
+    $(function() {
     	var selector = "textarea[id='<?php echo $this->newsId.'_id_pcom_text'; ?>']";
-    	melisTinyMCE.createTinyMCE("tool", selector, 
-    		{
-    			height: 250, 
-    	  	    setup: function (editor) {
-		            editor.on('keyup blur', function () {		            	
-		            	if (editor.getContent() != '') {
-			                $(selector).closest('form').find('.btnAddNewsComment').removeAttr('disabled');
-			            } else {
-			                $(selector).closest('form').find('.btnAddNewsComment').attr("disabled", "disabled");
-			            }	
 
-			            editor.save();	                	                
-		            });
-		        },
-    	  	}
-    	 );
+			melisTinyMCE.createTinyMCE("tool", selector, {
+				height: 250, 
+				setup: function (editor) {
+					editor.on('keyup blur', function () {		            	
+						if (editor.getContent() != '') {
+							$(selector).closest('form').find('.btnAddNewsComment').removeAttr('disabled');
+						} else {
+							$(selector).closest('form').find('.btnAddNewsComment').attr("disabled", "disabled");
+						}	
+
+						editor.save();	                	                
+					});
+				},
+			});
     });
 </script>
