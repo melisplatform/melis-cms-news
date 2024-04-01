@@ -26,7 +26,6 @@
 <script type="text/javascript">
     $(function() {
     	var selector = "textarea[id='<?php echo $this->newsId.'_id_pcom_text'; ?>']";
-
 			melisTinyMCE.createTinyMCE("tool", selector, {
 				height: 250, 
 				setup: function (editor) {
@@ -39,6 +38,9 @@
 
 						editor.save();	                	                
 					});
+
+					// calls tinyMceActionEvent for Insert/Edit Link dialog box - site tree view button
+					parent.melisTinyMCE.tinyMceActionEvent(editor);
 				},
 			});
     });
