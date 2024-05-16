@@ -345,7 +345,7 @@
   function prvgetClasses(classes) {
     var _this8 = this;
 
-    if (!$.isArray(classes)) {
+    if (!Array.isArray(classes)) {
       return [prvgetClass.call(this, classes)];
     }
     return classes.map(function (v) {
