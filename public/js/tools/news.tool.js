@@ -595,7 +595,13 @@ function renderNewsWorkFlowModal(pageData, button) {
         $("#melis-modals-container").find(".modal-content").data(pageData);
         var modalID = $(data).find(".modal").attr("id");
         melisHelper.zoneReload('id_melissb_workflow_modal_content', 'melissb_workflow_modal_content', pageData);
-        $("#" + modalID).modal({show: true});
+        //$("#" + modalID).modal({show: true});
+        const $modalNewsWorkFlow = bootstrap.Modal.getOrCreateInstance("#" + modalID, {
+            show: true
+        });
+
+        $modalNewsWorkFlow.show();
+        
         melisCoreTool.done(button);
     }).fail(function (xhr, textStatus, errorThrown) {
         melisCoreTool.done(button);
