@@ -485,12 +485,24 @@ class MelisCmsNewsController extends MelisAbstractActionController
     public function getCategoryTreeViewAction()
     {
         $langLocale = $this->params()->fromQuery('langlocale');
+        $siteId = $this->params()->fromQuery('siteId', null);
 
         $melisEngineLangTable = $this->getServiceManager()->get('MelisEngineTableCmsLang');
         $langData = $melisEngineLangTable->getEntryByField('lang_cms_locale', $langLocale)->current();
         $langId = $langData->lang_cms_id;
 
-        $categoryTree = $this->getServiceManager()->get('MelisCmsCategory2Service')->getCategoryTreeview(langId: $langId, onlyValid: true);
+        $categoryTree = $this->getServiceManager()->get('MelisCmsCategory2Service')->getCategoryTreeview(langId: $langId, siteId: $siteId ?? null);
+        function recursiveSetId(&$tree)
+        {
+            foreach($tree AS $key => $catTree) {
+                $tree[$key]['id'] = $catTree['cat2_id'];
+                if(isset($catTree['children']) && !empty($catTree['children'])) {
+                    recursiveSetId($tree[$key]['children']);
+                }
+            }
+        }
+
+        recursiveSetId($categoryTree);
 
         return new JsonModel($categoryTree);
     }
