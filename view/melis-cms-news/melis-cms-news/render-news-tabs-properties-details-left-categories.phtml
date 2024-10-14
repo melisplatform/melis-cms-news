@@ -1,0 +1,17 @@
+<?php if ($this->isCategoryModuleActive): ?>
+	<?php
+		$id = '';
+		if (!empty($this->zoneconfig['conf']['id'])) {
+			$id .= $this->newsId . '_' . $this->zoneconfig['conf']['id'];
+		}
+	?>
+	<div id="<?= $id ?>" data-melisKey="<?= $this->melisKey; ?>" data-newsId="<?= $this->newsId ?>">
+		<?php
+			if (!empty($this->zoneconfig['interface'])) {
+				foreach ($this->zoneconfig['interface'] as $keyConfig => $menuConfig) {
+					echo $this->$keyConfig;
+				}
+			}
+		?>
+	</div>
+<?php endif; ?>

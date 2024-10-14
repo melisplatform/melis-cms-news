@@ -1,0 +1,23 @@
+<?php $hasNewsCats = false ?>
+<div class="pdc-content border-bottom">
+    <div class="me-action-button-cont" id="<?= $this->newsId ?>_news_category_area">
+        <?php
+        if ($this->newsCategories) {
+            $hasNewsCats = true;
+            foreach ($this->newsCategories as $category) { ?>
+                <span class="news-cat-values" data-cnc-id="<?= $category['cnc_id']; ?>"
+                    data-cnc-cat2-id="<?= $category['cnc_cat2_id']; ?>" data-cnc-order="<?= $category['cnc_order']; ?>">
+                    <span class="ab-attr"><?= $this->escapeHtml($category['cat_name']); ?> <i
+                            class="newsDelCat fa fa-times"></i>
+                    </span>
+                </span>
+            <?php }
+        }
+        ?>
+    </div>
+    <div class="me-file-cont">
+        <p id="<?= $this->newsId; ?>_no_categories" <?php echo ($hasNewsCats) ? 'style="display: none;"' : '' ?>>
+            <?= $this->translate('tr_meliscmsnews_news_no_categories'); ?></p>
+    </div>
+    <div class="me-action-button-cont hidden" id="<?= $this->newsId ?>_deleted_news_category_area"></div>
+</div>

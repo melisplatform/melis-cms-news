@@ -272,4 +272,40 @@ class MelisCmsNewsTable extends MelisGenericTable
         return $this->tableGateway->selectWith($select);
     }
 
+
+    /**
+     * get categories of news by news id
+     * @return Object
+     */
+    public function getNewsCategories($newsId, $langId = 1, $where = [])
+    {
+        $select = $this->tableGateway->getSql()->select();
+        $select->where(['cnews_id' => $newsId]);
+        $select->join(
+            'melis_cms_news_category', 
+            'melis_cms_news_category.cnc_cnews_id = melis_cms_news.cnews_id', 
+            ['cnc_id', 'cnc_cat2_id', 'cnc_order'], 
+            $select::JOIN_LEFT
+        );
+
+        $select->join(
+            'melis_cms_category2', 
+            'melis_cms_category2.cat2_id = melis_cms_news_category.cnc_cat2_id', 
+            ['cat2_id'], 
+            $select::JOIN_LEFT
+        );
+        
+        $select->join(
+            'melis_cms_category2_trans', 
+            'melis_cms_category2_trans.catt2_category_id = melis_cms_category2.cat2_id', 
+            ['catt2_name', 'catt2_description'], 
+            $select::JOIN_LEFT
+        )->where(['melis_cms_category2_trans.catt2_lang_id' => $langId]);
+        
+        if(!empty($where)) {
+            $select->where($where);
+        }
+
+        return $this->tableGateway->selectWith($select);
+    }
 }

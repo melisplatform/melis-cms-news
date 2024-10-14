@@ -437,6 +437,44 @@ return [
                                                                                 'action' => 'render-news-tabs-properties-details-left-properties',
                                                                             ],
                                                                         ],
+                                                                        'meliscmsnews_content_tabs_properties_details_left_categories' => [
+                                                                            'conf' => [
+                                                                                'id' => 'id_meliscmsnews_content_tabs_properties_details_left_categories',
+                                                                                'melisKey' => 'meliscmsnews_content_tabs_properties_details_left_categories',
+                                                                                'name' => 'tr_meliscmsnews_content_tabs_properties_details_left_categories',
+                                                                            ],
+                                                                            'forward' => [
+                                                                                'module' => 'MelisCmsNews',
+                                                                                'controller' => 'MelisCmsNews',
+                                                                                'action' => 'render-news-tabs-properties-details-left-categories',
+                                                                            ],
+                                                                            'interface' => [
+                                                                                'meliscmsnews_content_tabs_properties_details_left_categories_header' => [
+                                                                                    'conf' => [
+                                                                                        'id' => 'id_meliscmsnews_content_tabs_properties_details_left_categories_header',
+                                                                                        'melisKey' => 'meliscmsnews_content_tabs_properties_details_left_categories_header',
+                                                                                        'name' => 'tr_meliscmsnews_content_tabs_properties_details_left_categories_header',
+                                                                                    ],
+                                                                                    'forward' => [
+                                                                                        'module' => 'MelisCmsNews',
+                                                                                        'controller' => 'MelisCmsNews',
+                                                                                        'action' => 'render-news-tabs-properties-details-left-categories-header',
+                                                                                    ],
+                                                                                ],
+                                                                                'meliscmsnews_content_tabs_properties_details_left_categories_content' => [
+                                                                                    'conf' => [
+                                                                                        'id' => 'id_meliscmsnews_content_tabs_properties_details_left_categories_content',
+                                                                                        'melisKey' => 'meliscmsnews_content_tabs_properties_details_left_categories_content',
+                                                                                        'name' => 'tr_meliscmsnews_content_tabs_properties_details_left_categories_content',
+                                                                                    ],
+                                                                                    'forward' => [
+                                                                                        'module' => 'MelisCmsNews',
+                                                                                        'controller' => 'MelisCmsNews',
+                                                                                        'action' => 'render-news-tabs-properties-details-left-categories-content',
+                                                                                    ],
+                                                                                ],
+                                                                            ]
+                                                                        ],
                                                                     ],
                                                                 ],
                                                                 'meliscmsnews_content_tabs_properties_details_right' => [
@@ -1055,6 +1093,19 @@ return [
                                 ],
                             ],
                         ],
+                    ],
+                ],
+                'meliscmsnews_content_tabs_properties_details_left_categories_modal' => [
+                    'conf' => [
+                        'id' => 'id_meliscmsnews_content_tabs_properties_details_left_categories_modal',
+                        'melisKey' => 'meliscmsnews_content_tabs_properties_details_left_categories_modal',
+                        'name' => 'tr_meliscmsnews_content_tabs_properties_details_left_categories_modal',
+                    ],
+                    'forward' => [
+                        'module' => 'MelisCmsNews',
+                        'controller' => 'MelisCmsNews',
+                        'action' => 'render-news-tabs-properties-details-left-categories-modal',
+                        'jscallback' => '',
                     ],
                 ],
                 /*for the news workflow dashboard plugin*/
