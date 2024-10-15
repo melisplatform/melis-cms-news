@@ -952,10 +952,6 @@ window.initNewsCategoryList = function(newsId, langLocale) {
                 name : 'langlocale',
                 value : target.data('langlocale')
             });
-            dataString.push({
-                name : 'siteId',
-                value : target.data('langlocale')
-            });
         
         if(newsId) {
             const siteId = $('#' + activeTabId).find('select[name=cnews_site_id]').val();
