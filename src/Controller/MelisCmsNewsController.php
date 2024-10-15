@@ -493,9 +493,11 @@ class MelisCmsNewsController extends MelisAbstractActionController
 
         $categoryTree = $this->getServiceManager()->get('MelisCmsCategory2Service')->getCategoryTreeview(langId: $langId, siteId: $siteId ?? null);
 
-        foreach($categoryTree AS $key => $catTree) {
-            if(!in_array($siteId, $categoryTree[$key]['sites'])) {
-                unset($categoryTree[$key]);
+        if(!empty($siteId)) {
+            foreach($categoryTree AS $key => $catTree) {
+                if(!in_array($siteId, $categoryTree[$key]['sites'])) {
+                    unset($categoryTree[$key]);
+                }
             }
         }
 
