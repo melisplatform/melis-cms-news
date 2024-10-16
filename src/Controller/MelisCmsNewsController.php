@@ -534,6 +534,57 @@ class MelisCmsNewsController extends MelisAbstractActionController
     }
 
     /**
+     * renders the tab tags part
+     * @return \Laminas\View\Model\ViewModel
+     */
+    public function renderNewsTabsPropertiesDetailsLeftTagsAction()
+    {
+        $moduleSvc = $this->getServiceManager()->get('ModulesService');
+        $isTagsModuleActive = $moduleSvc->isModuleLoaded('MelisCmsTags');
+        
+        $view = new ViewModel();
+        $melisKey = $this->params()->fromRoute('melisKey', '');
+        $newsId = (int)$this->params()->fromQuery('newsId', '');
+        $view->melisKey = $melisKey;
+        $view->newsId = $newsId;
+        $view->isTagsModuleActive = $isTagsModuleActive;
+        return $view;
+    }
+
+    public function renderNewsTabsPropertiesDetailsLeftTagsContentAction()
+    {
+        $container = new Container('meliscore');
+        $langId = $container['melis-lang-id'];
+
+        $newsId = (int)$this->params()->fromQuery('newsId', '');
+
+        $melisCoreConfig = $this->getServiceManager()->get('MelisCoreConfig');
+        $appConfigForm = $melisCoreConfig->getFormMergedAndOrdered('MelisCmsTags/forms/tag_select_form','tag_select_form');
+        $formElements = $this->getServiceManager()->get('FormElementManager');
+        $factory = new Factory();
+        $factory->setFormElementManager($formElements);
+        $form = $factory->createForm($appConfigForm);
+
+        $newsTable = $this->getServiceManager()->get('MelisCmsNewsTable');
+        $newsTags = $newsTable->getNewsTags($newsId, $langId)->toArray();
+        $tagOptions = [];
+        foreach($newsTags AS $key => $newsTag) {
+            $tagOptions[$key]['id'] = $newsTag['tag_id'];
+            $tagOptions[$key]['text'] = $newsTag['tag_title'];
+        }
+
+        $view = new ViewModel();
+        $melisKey = $this->params()->fromRoute('melisKey', '');
+        $view->melisKey = $melisKey;
+        $view->newsId = $newsId;
+        $view->form = $form;
+        $view->entityType = 'news';
+        $view->newsId = $newsId;
+        $view->tags = $tagOptions;
+        return $view;
+    }
+
+    /**
      * renders the tab left content documents
      * @return \Laminas\View\Model\ViewModel
      */
@@ -887,11 +938,17 @@ class MelisCmsNewsController extends MelisAbstractActionController
                         list('success' => $isCategorySuccess, 'errors' => $categoryErrors) = $this->saveNewsCategories($data['cnews_id'], $postValues['cnews_categories'] ?? [], $postValues['cnews_removed_categories'] ?? []);
                     }
 
+                    // save news tags
+                    if(isset($postValues['cnews_selected_tags'])) {
+                        $postValues['cnews_selected_tags'] = explode(',', $postValues['cnews_selected_tags']);
+                        list('success' => $isTagsSuccess, 'errors' => $tagsErrors) = $this->saveNewsTags($data['cnews_id'], $postValues['cnews_selected_tags'] ?? []);
+                    }
+
 
                     //save seo tab
                     list('success' => $isSeoSuccess, 'errors' => $errors) = $this->saveNewsSeo($data['cnews_id']);
                     //rollback here when seo saving is not successful
-                    if ($isSeoSuccess != 1 || (isset($isCategorySuccess) && $isCategorySuccess != 1)) {
+                    if ($isSeoSuccess != 1 || (isset($isCategorySuccess) && $isCategorySuccess != 1) || (isset($isTagsSuccess) && $isTagsSuccess != 1)) {
                         //delete news and news texts
                         $deleteNews = $this->forward()->dispatch(
                             'MelisCmsNews\Controller\MelisCmsNewsList',
@@ -968,6 +1025,20 @@ class MelisCmsNewsController extends MelisAbstractActionController
             return ['success' => 1, 'errors' => []];
         } catch (\Throwable $th) {
             return ['success' => 0, 'errors' => ['newsCategories' => 'tr_meliscmsnews_newcategory_error_unable_to_save']];
+        }
+    }
+
+    private function saveNewsTags($newsId, array $selectedTags = [])
+    {
+        if(empty($newsId)) return ['success' => 0, 'errors' => []];
+
+        $newsTagTable = $this->getServiceManager()->get('MelisCmsNewsTagsTable');
+        try {
+            $isSuccess = $newsTagTable->syncNewsTags($newsId, $selectedTags);
+
+            return ['success' => $isSuccess, 'errors' => []];
+        } catch (\Throwable $th) {
+            return ['success' => 0, 'errors' => ['newsTags' => 'tr_meliscmsnews_newtag_error_unable_to_save']];
         }
     }
     /**

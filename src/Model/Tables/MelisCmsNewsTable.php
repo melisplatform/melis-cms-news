@@ -308,4 +308,34 @@ class MelisCmsNewsTable extends MelisGenericTable
 
         return $this->tableGateway->selectWith($select);
     }
+
+    /**
+     * get tags of news by news id
+     * @return Object
+     */
+    public function getNewsTags($newsId, $langId = 1, $where = [])
+    {
+        $select = $this->tableGateway->getSql()->select();
+        $select->columns(['cnews_id']);
+        $select->where(['cnews_id' => $newsId]);
+        $select->join(
+            'melis_cms_tag_entity', 
+            'melis_cms_tag_entity.entity_id = melis_cms_news.cnews_id', 
+            ['id', 'tag_id', 'entity_id'], 
+            $select::JOIN_LEFT
+        );
+
+        $select->join(
+            'melis_cms_tag_texts', 
+            'melis_cms_tag_texts.tag_id = melis_cms_tag_entity.tag_id', 
+            ['tag_text_id', 'tag_title', 'tag_lang_id'], 
+            $select::JOIN_LEFT
+        )->where(['tag_lang_id' => $langId]);
+        
+        if(!empty($where)) {
+            $select->where($where);
+        }
+
+        return $this->tableGateway->selectWith($select);
+    }
 }

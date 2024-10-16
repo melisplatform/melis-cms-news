@@ -229,4 +229,5 @@ return [
     'tr_meliscmsnews_filter_text' => 'Filter',
 
     'tr_meliscmsnews_newcategory_error_unable_to_save' => 'Failed saving categories',
+    'tr_meliscmsnews_newtag_error_unable_to_save' => 'Failed saving tags',
 ];

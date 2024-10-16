@@ -475,6 +475,32 @@ return [
                                                                                 ],
                                                                             ]
                                                                         ],
+                                                                        'meliscmsnews_content_tabs_properties_details_left_tags' => [
+                                                                            'conf' => [
+                                                                                'id' => 'id_meliscmsnews_content_tabs_properties_details_left_tags',
+                                                                                'melisKey' => 'meliscmsnews_content_tabs_properties_details_left_tags',
+                                                                                'name' => 'tr_meliscmsnews_content_tabs_properties_details_left_tags',
+                                                                            ],
+                                                                            'forward' => [
+                                                                                'module' => 'MelisCmsNews',
+                                                                                'controller' => 'MelisCmsNews',
+                                                                                'action' => 'render-news-tabs-properties-details-left-tags',
+                                                                            ],
+                                                                            'interface' => [
+                                                                                'meliscmsnews_content_tabs_properties_details_left_tags_content' => [
+                                                                                    'conf' => [
+                                                                                        'id' => 'id_meliscmsnews_content_tabs_properties_details_left_tags_content',
+                                                                                        'melisKey' => 'meliscmsnews_content_tabs_properties_details_left_tags_content',
+                                                                                        'name' => 'tr_meliscmsnews_content_tabs_properties_details_left_tags_content',
+                                                                                    ],
+                                                                                    'forward' => [
+                                                                                        'module' => 'MelisCmsNews',
+                                                                                        'controller' => 'MelisCmsNews',
+                                                                                        'action' => 'render-news-tabs-properties-details-left-tags-content',
+                                                                                    ],
+                                                                                ],
+                                                                            ]
+                                                                        ],
                                                                     ],
                                                                 ],
                                                                 'meliscmsnews_content_tabs_properties_details_right' => [

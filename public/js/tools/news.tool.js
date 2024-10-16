@@ -144,7 +144,9 @@ $(function() {
                         dataString      = newsPage.find('form#newsLetterForm').serializeArray(),
                         newsId          = newsPage.data('newsid'),
                         selectedSlider  = newsPage.find('select[name=cnews_slider_id]').val(),
-                        selectedSite    = newsPage.find('select[name=cnews_site_id]').val();
+                        selectedSite    = newsPage.find('select[name=cnews_site_id]').val(),
+                        selectedTags    = newsPage.find('select#tags_select').val()
+                        ;
 
                     //newsSiteTitleSubtitleForm
                     var forms   = $('#' + newsId + '_id_meliscmsnews_content_tabs_properties_details_right_paragraphs .news-post-text-form'),
@@ -202,6 +204,13 @@ $(function() {
                                     value: index + 1
                                 });
                             });
+
+                            // tags fields
+                            dataString.push({
+                                name: `cnews_selected_tags`,
+                                value: selectedTags
+                            });
+
                             $("#" + newsId + "_deleted_news_category_area span").each(function (index) {
                                 if($(this).data('cnc-id')) {
                                     dataString.push({

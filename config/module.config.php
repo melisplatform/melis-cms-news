@@ -60,6 +60,7 @@ return array(
             'MelisCmsNewsTextsTable'    => \MelisCmsNews\Model\Tables\MelisCmsNewsTextsTable::class,
             'MelisCmsNewsSeoTable'      => \MelisCmsNews\Model\Tables\MelisCmsNewsSeoTable::class,
             'MelisCmsNewsCategoryTable' => \MelisCmsNews\Model\Tables\MelisCmsNewsCategoryTable::class,
+            'MelisCmsNewsTagsTable' => \MelisCmsNews\Model\Tables\MelisCmsNewsTagsTable::class,
         ),
     ),
     'controllers' => array(
