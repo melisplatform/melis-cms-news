@@ -74,6 +74,29 @@ class MelisCmsNewsTable extends MelisGenericTable
         return $resultData;
     }
 
+    public function getNewsByIdArray(array $newsIdArray, $langId = null, array $where = [])
+    {
+        $select = $this->tableGateway->getSql()->select();
+        
+        $select->join('melis_cms_site', 'melis_cms_site.site_id = melis_cms_news.cnews_site_id', array('site_name'), $select::JOIN_LEFT);
+        $select->join('melis_cms_news_texts', 'melis_cms_news_texts.cnews_id = melis_cms_news.cnews_id','*', $select::JOIN_LEFT);
+        
+        $select->where(['melis_cms_news.cnews_id' => $newsIdArray]);
+        
+        if (!is_null($langId)) {
+            $select->where('melis_cms_news_texts.cnews_lang_id ='.$langId);
+        }
+
+        if (!is_null($where['search'])) {
+            $search = '%'.$where['search'].'%';
+            $select->where->NEST->like('melis_cms_news.cnews_id', $search)
+            ->or->like('melis_cms_news_texts.cnews_title', $search);
+        }
+
+        $resultData = $this->tableGateway->selectWith($select);
+        return $resultData;
+    }
+
     public function getNewsList(
         $status             = null,
         $langId             = null,

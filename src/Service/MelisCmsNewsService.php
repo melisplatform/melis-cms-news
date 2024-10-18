@@ -126,6 +126,40 @@ class MelisCmsNewsService extends MelisGeneralService
     }
 
     /**
+     * Retrieves news via supplied array of news ID
+     *
+     * @param $newsId
+     * @param null $langId
+     * @param array $where
+     * @return mixed
+     */
+    public function getNewsByIdArray(array $newsIdArray, $langId, array $where = [])
+    {
+        // Event parameters prepare
+        $arrayParameters = $this->makeArrayFromParameters(__METHOD__, func_get_args());
+
+        $results = [];
+
+        // Sending service start event
+        $arrayParameters = $this->sendEvent('melis_cms_news_get_news_by_id_array_start', $arrayParameters);
+
+        // Service implementation start
+        /** @var \MelisCmsNews\Model\Tables\MelisCmsNewsTable $newsTable */
+        $newsTable = $this->getServiceManager()->get('MelisCmsNewsTable');
+
+        $results = $newsTable->getNewsByIdArray($arrayParameters['newsIdArray'], $arrayParameters['langId'], $arrayParameters['where']);
+
+        // Service implementation end
+
+        // Adding results to parameters for events treatment if needed
+        $arrayParameters['results'] = $results;
+        // Sending service end event
+        $arrayParameters = $this->sendEvent('melis_cms_news_get_news_by_id_array_end', $arrayParameters);
+
+        return $arrayParameters['results'];
+    }
+
+    /**
      * Saves the news, if news id is provided then an update will be performed
      *
      * @param $news
