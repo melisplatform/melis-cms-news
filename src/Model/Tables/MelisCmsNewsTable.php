@@ -318,16 +318,27 @@ class MelisCmsNewsTable extends MelisGenericTable
             $select::JOIN_LEFT
         );
         
-        $select->join(
-            'melis_cms_category2_trans', 
-            'melis_cms_category2_trans.catt2_category_id = melis_cms_category2.cat2_id', 
-            ['catt2_name', 'catt2_description'], 
-            $select::JOIN_LEFT
-        )->where(['melis_cms_category2_trans.catt2_lang_id' => $langId]);
+        if(is_null($langId)) {
+            $select->join(
+                'melis_cms_category2_trans', 
+                'melis_cms_category2_trans.catt2_category_id = melis_cms_category2.cat2_id', 
+                ['catt2_name', 'catt2_description', 'catt2_lang_id'], 
+                $select::JOIN_LEFT
+            );
+        } else {
+            $select->join(
+                'melis_cms_category2_trans', 
+                'melis_cms_category2_trans.catt2_category_id = melis_cms_category2.cat2_id', 
+                ['catt2_name', 'catt2_description', 'catt2_lang_id'], 
+                $select::JOIN_LEFT
+            )->where(['melis_cms_category2_trans.catt2_lang_id' => $langId]);
+        }
         
         if(!empty($where)) {
             $select->where($where);
         }
+
+        $select->having([new \Laminas\Db\Sql\Predicate\IsNotNull('catt2_name'), new \Laminas\Db\Sql\Predicate\Expression("catt2_name != ''")]);
 
         return $this->tableGateway->selectWith($select);
     }

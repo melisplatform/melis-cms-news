@@ -392,9 +392,12 @@ class MelisCmsNewsController extends MelisAbstractActionController
 
         if(!empty($newsId)) {
             $newsTable = $this->getServiceManager()->get('MelisCmsNewsTable');
-            $newsCategories = $newsTable->getNewsCategories($newsId, $langId)->toArray();
-            foreach($newsCategories AS $index => $nc) {
-                $newsCategories[$index]['cat_name'] = $nc['catt2_name'];
+            $newsCategories = $newsTable->getNewsCategories($newsId, null)->toArray();
+
+            $filtered = $this->filterByLangWithFallback($newsCategories, $langId);
+            
+            foreach($filtered AS $index => $nc) {
+                $filtered[$index]['cat_name'] = $nc['catt2_name'];
             }
         }
 
@@ -402,8 +405,51 @@ class MelisCmsNewsController extends MelisAbstractActionController
         $melisKey = $this->params()->fromRoute('melisKey', '');
         $view->melisKey = $melisKey;
         $view->newsId = $newsId;
-        $view->newsCategories = $newsCategories;
+        $view->newsCategories = $filtered;
         return $view;
+    }
+
+    private function filterByLangWithFallback($data, $preferredLangId)
+    {
+        $filtered = [];
+        $groupedByCat = [];
+    
+        // Step 1: Group items by cat_id
+        foreach ($data as $item) {
+            $groupedByCat[$item['cnc_cat2_id']][] = $item;
+        }
+    
+        // Step 2: Filter by preferred catt2_lang_id with fallback logic (ensure one item per cnc_cat2_id)
+        foreach ($groupedByCat as $cnc_cat2_id => $items) {
+            $preferredItem = null;
+            $fallbackItem = null;
+    
+            foreach ($items as $item) {
+                // Check for preferred language item
+                if ($item['catt2_lang_id'] == $preferredLangId) {
+                    $preferredItem = $item;
+                }
+    
+                // Check for fallback if name is not empty
+                if (!empty($item['catt2_name'])) {
+                    $fallbackItem = $item;
+                }
+    
+                // We only need one item per cnc_cat2_id, so stop searching after finding a preferred item
+                if ($preferredItem && !empty($preferredItem['catt2_name'])) {
+                    break; // Exit loop if the preferred item is found and has a catt2_name
+                }
+            }
+    
+            // If preferred item has a catt2_name, use it, otherwise use the fallback
+            if ($preferredItem && !empty($preferredItem['catt2_name'])) {
+                $filtered[] = $preferredItem;
+            } elseif ($fallbackItem) {
+                $filtered[] = $fallbackItem;
+            }
+        }
+    
+        return $filtered;
     }
 
     public function renderNewsTabsPropertiesDetailsLeftCategoriesModalAction()

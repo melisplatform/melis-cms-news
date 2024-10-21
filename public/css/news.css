@@ -254,3 +254,13 @@ img.imgDocThumbnail {
     cursor: move;
 }
 /*end for texts sortable paragraphs*/
+
+.category-value {
+    display: inline-block;
+	padding: 6px 7px 6px 15px;
+	vertical-align: middle;
+    background: #ECEBEB;
+    border-radius: 4px;
+    color: #7D7B7B;
+    margin-bottom: 8px;
+}

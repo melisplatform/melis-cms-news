@@ -7,7 +7,7 @@
             foreach ($this->newsCategories as $category) { ?>
                 <span class="news-cat-values" data-cnc-id="<?= $category['cnc_id']; ?>"
                     data-cnc-cat2-id="<?= $category['cnc_cat2_id']; ?>" data-cnc-order="<?= $category['cnc_order']; ?>">
-                    <span class="ab-attr"><?= $this->escapeHtml($category['cat_name']); ?> <i
+                    <span class="category-value"><?= $this->escapeHtml($category['cat_name']); ?> <i
                             class="newsDelCat fa fa-times"></i>
                     </span>
                 </span>
