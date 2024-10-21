@@ -405,7 +405,7 @@ class MelisCmsNewsController extends MelisAbstractActionController
         $melisKey = $this->params()->fromRoute('melisKey', '');
         $view->melisKey = $melisKey;
         $view->newsId = $newsId;
-        $view->newsCategories = $filtered;
+        $view->newsCategories = $filtered ?? [];
         return $view;
     }
 
