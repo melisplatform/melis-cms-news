@@ -739,7 +739,7 @@ $(function() {
                                     $.get( "/melis/MelisCmsNews/MelisCmsNews/getNewsCategoryLastOrderNum", {catId : catId, newsId : newsId}, function( data ) {
                                         $("#"+newsId+"_news_category_area").append(
                                             '<span class="news-cat-values" data-cnc-id="'+data.id+'" data-cnc-cat2-id="'+catId+'" data-cnc-order="'+data.order+'">' +
-                                            '<span class="ab-attr">' + catText +'<i class="newsDelCat fa fa-times"></i></span>' +
+                                            '<span class="category-value">' + catText +'<i class="newsDelCat fa fa-times"></i></span>' +
                                             '</span>');
                                     });
                             }
