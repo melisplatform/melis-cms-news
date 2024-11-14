@@ -541,8 +541,11 @@ $(function() {
                 if (data.success) {                        
                     melisHelper.zoneReload(newsId + '_id_meliscmsnews_center_workflow_tabs_comments_timeline', 'meliscmsnews_workflow_comments_timeline', {newsId: newsId});
                     melisCoreTool.clearForm(form);
-                    $('#workflowCommentModal').modal('hide');
-                    $("#pageWorkflowModal").modal("hide");
+
+                    /* $('#workflowCommentModal').modal('hide');
+                    $("#pageWorkflowModal").modal("hide"); */
+                    melisCoreTool.hideModal("workflowCommentModal");
+                    melisCoreTool.hideModal("pageWorkflowModal");
                 } else {
                     melisHelper.melisKoNotification(data.textTitle, data.textMessage, data.errors, 0);
                     melisCoreTool.highlightErrors(data.success, data.errors, form);
@@ -595,13 +598,10 @@ function renderNewsWorkFlowModal(pageData, button) {
         $("#melis-modals-container").find(".modal-content").data(pageData);
         var modalID = $(data).find(".modal").attr("id");
         melisHelper.zoneReload('id_melissb_workflow_modal_content', 'melissb_workflow_modal_content', pageData);
-        //$("#" + modalID).modal({show: true});
-        const $modalNewsWorkFlow = bootstrap.Modal.getOrCreateInstance("#" + modalID, {
-            show: true
-        });
 
-        $modalNewsWorkFlow.show();
-        
+        //$("#" + modalID).modal({show: true});
+        melisCoreTool.showModal(modalID);
+
         melisCoreTool.done(button);
     }).fail(function (xhr, textStatus, errorThrown) {
         melisCoreTool.done(button);
@@ -678,13 +678,18 @@ var toolNews = {
     },
 
     imageModal: function (data) {
-        $("#id_meliscmsnews_modal_documents_form_image_container").modal("hide");
+        // $("#id_meliscmsnews_modal_documents_form_image_container").modal("hide");
+        melisCoreTool.hideModal("id_meliscmsnews_modal_documents_form_image_container");
+
         melisHelper.zoneReload(data.cnews_id + "_id_meliscmsnews_content_tabs_properties_details_left_images", "meliscmsnews_content_tabs_properties_details_left_images", {'newsId': data.cnews_id});
     },
 
     fileModal: function (data) {
-        $("#id_meliscmsnews_modal_documents_form_image_container").modal("hide");
-        $("#id_meliscmsnews_modal_documents_form_container").modal("hide");
+        /* $("#id_meliscmsnews_modal_documents_form_image_container").modal("hide");
+        $("#id_meliscmsnews_modal_documents_form_container").modal("hide"); */
+        melisCoreTool.hideModal("id_meliscmsnews_modal_documents_form_image_container");
+        melisCoreTool.hideModal("id_meliscmsnews_modal_documents_form_container");
+
         melisHelper.zoneReload(data.cnews_id + "_id_meliscmsnews_content_tabs_properties_details_left_documents", "meliscmsnews_content_tabs_properties_details_left_documents", {'newsId': data.cnews_id});
     },
 
