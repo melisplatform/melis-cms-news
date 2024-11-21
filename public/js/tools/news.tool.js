@@ -567,7 +567,7 @@ $(function() {
                     value: newsId,
                 });
                 datastring = $.param(datastring);
-                btn.attr('disabled', true);
+                btn.prop('disabled', true);
                 $.ajax({
                     type        : 'POST', 
                     url         : '/melis/MelisSmallBusiness/PageComments/addComment',
@@ -697,7 +697,7 @@ var toolNews = {
         var maxLength   = 15,
             ellipsis    = "...";
 
-            text = $.trim(text);
+            text = text.trim();
 
             if (text.length > maxLength) {
                 text = text.substring(0, maxLength - ellipsis.length);
