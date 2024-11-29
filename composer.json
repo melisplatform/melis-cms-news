@@ -21,11 +21,11 @@
 	},
 	"require": {
 		"php": "^8.1|^8.3",
-		"laminas/laminas-paginator": "2.18",
-		"melisplatform/melis-core": "^5.1",
-		"melisplatform/melis-engine": "^5.1",
-		"melisplatform/melis-front": "^5.1",
-		"melisplatform/melis-cms": "^5.1"
+		"laminas/laminas-paginator": "^2.18",
+		"melisplatform/melis-core": "^5.2",
+		"melisplatform/melis-engine": "^5.2",
+		"melisplatform/melis-front": "^5.2",
+		"melisplatform/melis-cms": "^5.2"
 	},
 	"autoload": {
 		"psr-4": {
