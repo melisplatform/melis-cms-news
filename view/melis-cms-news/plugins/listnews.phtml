@@ -1,73 +1,73 @@
 <div id="<?= $this->pluginId; ?>" class="container news-list-plugin">
     <div id="news-list-plugin">
-    	<form method="get">
-        	<div class="row">
-              	<div class="col-sm-6 col-md-8">
-              		<div class="form-inline">
-              			<div class="form-group">
-                            <input type="text" class="form-control" name="date_min" id="date-min" placeholder="Date from" value="<?= $this->dateMin; ?>" readonly>
-                      	</div>
-                      	<div class="form-group">
-                            <input type="text" class="form-control" name="date_max" id="date-max"  placeholder="Date to" value="<?= $this->dateMax; ?>" readonly>
-                      	</div>
-                      	<button type="submit" class="btn btn-default">Filter</button>
-            		</div>
-              	</div>
-              	<div class="col-sm-6 col-md-4 text-right">
-                	<div class="form-inline">
-                      	<div class="form-group">
-                            <input type="text" class="form-control" name="search" placeholder="Search News..." value="<?= $this->searchKey; ?>">
-                      	</div>
-                      	<button type="submit" class="btn btn-default">Search</button>
-            		</div>
-              	</div>
-        	</div>
-    	</form>
-    	<br>
+        <form method="get">
+            <div class="row">
+                <div class="col-sm-6 col-md-8">
+                    <div class="form-inline">
+                        <div class="form-group">
+                            <input type="text" class="form-control" name="date_min" id="date-min" placeholder="Date from" value="<?= $this->dateMin; ?>" readonly="readonly" />
+                        </div>
+                        <div class="form-group">
+                            <input type="text" class="form-control" name="date_max" id="date-max"  placeholder="Date to" value="<?= $this->dateMax; ?>" readonly="readonly" />
+                        </div>
+                        <button type="submit" class="btn btn-default">Filter</button>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4 text-right">
+                    <div class="form-inline">
+                        <div class="form-group">
+                            <input type="text" class="form-control" name="search" placeholder="Search News..." value="<?= $this->searchKey; ?>" />
+                        </div>
+                        <button type="submit" class="btn btn-default">Search</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <br/>
         <div class="row news">
-        	<?php if (!empty($this->listNews->count())): ?>
-            	<?php foreach ($this->listNews as $val): ?>
-                    <?php 
-                        $paragraphOrder = !empty($val['cnews_paragraph_order']) ? explode('-', $val['cnews_paragraph_order']) : null;
-                        $firstParagraph = !empty($paragraphOrder) ? $val[$paragraphOrder[0]] : $val['cnews_paragraph1'];
+            <?php if (!empty($this->listNews->count())): ?>
+                <?php foreach ($this->listNews as $val): ?>
+                    <?php
+                    $paragraphOrder = !empty($val['cnews_paragraph_order']) ? explode('-', $val['cnews_paragraph_order']) : null;
+                    $firstParagraph = !empty($paragraphOrder) ? $val[$paragraphOrder[0]] : $val['cnews_paragraph1'];
                     ?>
-                  	<div class="col-sm-6 col-md-4 post">
+                    <div class="col-sm-6 col-md-4 post">
                         <div class="thumbnail">
-                        	<?php if(!empty($val['cnews_image1'])): ?>
-                          		<img src="<?= $val['cnews_image1']; ?>" alt="...">
-                          	<?php endif; ?>
-                          	<div class="caption">
-                          		<a href="<?= $val['newsLink']; ?>">
-                                	<h3><?= $val['cnews_title']; ?></h3>
+                            <?php if(!empty($val['cnews_image1'])): ?>
+                                <img src="<?= $val['cnews_image1']; ?>" alt="..." />
+                            <?php endif; ?>
+                            <div class="caption">
+                                <a href="<?= $val['newsLink']; ?>">
+                                    <h3><?= $val['cnews_title']; ?></h3>
                                 </a>
                                 <p><?= $firstParagraph; ?></p>
-                          	</div>
+                            </div>
                         </div>
-                  	</div>
-              	<?php endforeach; ?>
-          	<?php else: ?>
-          		<div class="col-sm-12 col-md-12">
-          			<div class="alert alert-warning" role="alert">
-            			No result
-            		</div>
-          		</div>
-          	<?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="col-sm-12 col-md-12">
+                    <div class="alert alert-warning" role="alert">
+                        No result
+                    </div>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 
     <!-- Pagination -->
     <?php
-        // Generating Pagination Control using partial view
-        echo $this->paginationControl(
-                $this->listNews,
-                'Sliding',
-                'MelisCmsNews/list-paginator',
-                array(
-                    'searchKey' => $this->searchKey,
-                    'dateMin' => $this->dateMin,
-                    'dateMax' => $this->dateMax,
-                    'nbPageBeforeAfter' => $this->nbPageBeforeAfter
-                )
-        );
+    // Generating Pagination Control using partial view
+    echo $this->paginationControl(
+        $this->listNews,
+        'Sliding',
+        'MelisCmsNews/list-paginator',
+        array(
+            'searchKey' => $this->searchKey,
+            'dateMin' => $this->dateMin,
+            'dateMax' => $this->dateMax,
+            'nbPageBeforeAfter' => $this->nbPageBeforeAfter
+        )
+    );
     ?>
 </div>
