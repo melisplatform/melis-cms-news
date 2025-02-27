@@ -985,7 +985,7 @@ class MelisCmsNewsController extends MelisAbstractActionController
                     }
 
                     // save news tags
-                    if(isset($postValues['cnews_selected_tags'])) {
+                    if(!empty($postValues['cnews_selected_tags'])) {
                         if(empty($postValues['cnews_selected_tags'])) {
                             $postValues['cnews_selected_tags'] = [];
                         } else {
