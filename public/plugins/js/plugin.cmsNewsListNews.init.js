@@ -18,6 +18,7 @@ function cmsNewsListNews_init(pluginId){
     	showClose : true,
     	ignoreReadonly : true,
     	keepOpen : true,
+        maxDate: moment().endOf('day')
     });
     // Pre-init of date min if date max has value
     if($("#"+pluginId+" #date-max").val().length){
