@@ -13,7 +13,7 @@ return array(
                         'site_id' => null,
                         
                         // Detail news landing page
-                        'pageIdNews' => null,
+                        'pageIdNews' => null, 
                         
                         // optional, filtering
                         'filter' => array(
@@ -29,9 +29,9 @@ return array(
                         // To overide a key, just add it again in your site module
                         // To delete an entry, use the keyword "disable" instead of the file path for the same key
                         'files' => array(
-                            'css' => array(
+                            'css' => array( 
                             ),
-                            'js' => array(
+                            'js' => array( 
                             ),
                         ),
                     ),

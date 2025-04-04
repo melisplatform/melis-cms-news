@@ -68,6 +68,7 @@ return array(
             'MelisCmsNews\Controller\MelisCmsNewsList' => \MelisCmsNews\Controller\MelisCmsNewsListController::class,
             'MelisCmsNews\Controller\MelisCmsNews' => \MelisCmsNews\Controller\MelisCmsNewsController::class,
             'MelisCmsNews\Controller\MelisCmsNewsWorkflowComments' => \MelisCmsNews\Controller\MelisCmsNewsWorkflowCommentsController::class,
+
         ),
     ),
     'controller_plugins' => array(

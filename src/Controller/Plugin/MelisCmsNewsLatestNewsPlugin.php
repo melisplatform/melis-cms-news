@@ -113,8 +113,12 @@ class MelisCmsNewsLatestNewsPlugin extends MelisTemplatingPlugin
 
         /** @var \MelisCmsNews\Service\MelisCmsNewsService $newsSrv */
         $newsSrv = $this->getServiceManager()->get('MelisCmsNewsService');
-        $newsList = $newsSrv->getNewsList($status, $langId, null, null, $dateMin, $dateMax, $unpublishFilter, null, $limit, $orderColumn, $order, $siteId, $search);
-
+        $newsList = $newsSrv->getNewsList($status, $langId, null, null, $dateMin, $dateMax, $unpublishFilter, null, $limit, $orderColumn, $order, $siteId, $search); 
+  
+        $melisGeneralService = $this->getServiceManager()->get('MelisGeneralService');
+        $eventRes = $melisGeneralService->sendEvent('meliscmsnews_list', ['newsList' => $newsList, 'plugin' => $this]);
+        $newsList = $eventRes['newsList']; 
+ 
         $latestNews = [];
         foreach ($newsList as $key => $val) {
             // Getting the News Data from CmsNews entity
@@ -274,6 +278,8 @@ class MelisCmsNewsLatestNewsPlugin extends MelisTemplatingPlugin
                 $configValues['site_id'] = (string)$xml->site_id;
             if (!empty($xml->pageIdNews))
                 $configValues['pageIdNews'] = (string)$xml->pageIdNews;
+            if (!empty($xml->categoryIdNews))
+                $configValues['categoryIdNews'] = (string)$xml->categoryIdNews;
             if (!empty($xml->column))
                 $configValues['filter']['column'] = (string)$xml->column;
             if (!empty($xml->order))
@@ -306,6 +312,8 @@ class MelisCmsNewsLatestNewsPlugin extends MelisTemplatingPlugin
             $xmlValueFormatted .= "\t\t" . '<site_id><![CDATA[' . $parameters['site_id'] . ']]></site_id>';
         if (!empty($parameters['pageIdNews']))
             $xmlValueFormatted .= "\t\t" . '<pageIdNews><![CDATA[' . $parameters['pageIdNews'] . ']]></pageIdNews>';
+        if (!empty($parameters['categoryIdNews']))
+            $xmlValueFormatted .= "\t\t" . '<categoryIdNews><![CDATA[' . $parameters['categoryIdNews'] . ']]></categoryIdNews>';
         if (!empty($parameters['column']))
             $xmlValueFormatted .= "\t\t" . '<column><![CDATA[' . $parameters['column'] . ']]></column>';
         if (!empty($parameters['order']))
