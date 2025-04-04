@@ -86,8 +86,14 @@ class MelisCmsNewsLatestNewsPlugin extends MelisTemplatingPlugin
 
         // convert date formats
         $dateMin = (!is_null($dateMin)) ? date('Y-m-d H:i:s', strtotime($dateMin)) : null;
-        $dateMax = (!is_null($dateMax)) ? date('Y-m-d H:i:s', strtotime($dateMax)) : null;
 
+        $dateMax = (!is_null($dateMax)) ? date('Y-m-d H:i:s', strtotime($dateMax)) : date('Y-m-d H:i:s'); 
+
+        $now = date('Y-m-d H:i:s'); 
+        if($dateMax > $now) {
+            $dateMax = date('Y-m-d H:i:s');
+        }   
+        
         $pageTreeService = $this->getServiceManager()->get('MelisEngineTree');
 
         /**
