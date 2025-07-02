@@ -7,3 +7,6 @@
 .news-list-plugin{
     margin-top: 30px;
 }
+#news-list-plugin .single-aside {
+    position: relative;
+}
