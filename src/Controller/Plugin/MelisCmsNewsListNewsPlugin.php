@@ -95,6 +95,15 @@ class MelisCmsNewsListNewsPlugin extends MelisTemplatingPlugin
 
         // convert date formats 
         $dateMax = is_null($dateMax) ? date('Y-m-d H:i:s') : date('Y-m-d H:i:s', strtotime($dateMax . ' 23:59:59'));
+        $dateMin = !empty($dateMin) ? date('Y-m-d H:i:s', strtotime($dateMin)) : '';
+        /*if(!empty($dateMin)){
+            $date = \DateTime::createFromFormat('m/d/Y', $dateMin);
+            if ($date) {
+                    $dateMin = $date->format('Y-m-d'); // Outputs: 2025-07-14
+            }
+        }*/
+
+
 
         $now = date('Y-m-d H:i:s'); 
         if($dateMax > $now) {
