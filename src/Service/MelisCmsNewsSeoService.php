@@ -11,31 +11,31 @@ namespace MelisCmsNews\Service;
 
 use MelisCore\Service\MelisGeneralService;
 
-class MelisCmsNewsSeoService extends MelisGeneralService 
+class MelisCmsNewsSeoService extends MelisGeneralService
 {
-			
+
 	/**
 	 * Returns the link of a page, MelisUrl or specific SEO
 	 * @param int $idPage, the page id of the news detail page
 	 * @param int $newsId, the news id
 	 * @param boolean $absolute If true, returns link with domain
 	 * 
-	 */ 
+	 */
 	public function getPageLink($idPage, $newsId, $absolute = false)
 	{
 		if (empty($newsId))
 			return null;
 
 		// Retrieve cache version if front mode to avoid multiple calls
-		$cacheKey = 'getNewsLink_id_' . $idPage . '_newsId_'.$newsId.'_' . $absolute;
+		$cacheKey = 'getNewsLink_id_' . $idPage . '_newsId_' . $newsId . '_' . $absolute;
 		$cacheConfig = 'engine_page_services';
 		$melisEngineCacheSystem = $this->getServiceManager()->get('MelisEngineCacheSystem');
 		$results = $melisEngineCacheSystem->getCacheByKey($cacheKey, $cacheConfig);
-		
+
 		if (!is_null($results)) return $results;
 
 		// Get the already generated link from the DB if possible    
-		$link = '';		
+		$link = '';
 		$pageDefaultUrlsSrv = $this->getServiceManager()->get('MelisEnginePageDefaultUrlsService');
 		if ($this->getRenderMode() == 'front') {
 			$defaultUrls = $pageDefaultUrlsSrv->getPageDefaultUrl($idPage);
@@ -50,18 +50,18 @@ class MelisCmsNewsSeoService extends MelisGeneralService
 		if ($link == '') {
 			// Generate real one
 			$seoUrl = '';
-	            
-	        //Check for Seo URL first of the idpage   
-        	$melisPage = $this->getServiceManager()->get('MelisEnginePage');
+
+			//Check for Seo URL first of the idpage   
+			$melisPage = $this->getServiceManager()->get('MelisEnginePage');
 			$datasPageRes = $melisPage->getDatasPage($idPage);
 			$datasPageTreeRes = $datasPageRes->getMelisPageTree();
-			
+
 			if ($datasPageTreeRes && !empty($datasPageTreeRes->pseo_url)) {
 				$seoUrl = $datasPageTreeRes->pseo_url;
 				if (substr($seoUrl, 0, 1) != '/')
 					$seoUrl = '/' . $seoUrl;
 			}
-         
+
 			$melisEngineTreeService = $this->getServiceManager()->get('MelisTreeService');
 			if ($seoUrl == '') {
 				/**
@@ -70,7 +70,7 @@ class MelisCmsNewsSeoService extends MelisGeneralService
 				 * This will check the site_opt_lang_url of the site
 				 * to determine whether the url will be modified to
 				 * add the lang locale on the url
-				 */				
+				 */
 				$siteLangOpt = $melisEngineTreeService->getSiteLangUrlOptByPageId($idPage);
 				$seoUrl = $siteLangOpt['siteLangOptVal'];
 
@@ -90,16 +90,16 @@ class MelisCmsNewsSeoService extends MelisGeneralService
 						if (!empty($datasSite) && $datasSite->site_main_page_id == $page->page_id)
 							continue;
 
-							$namePage = $page->page_name;
-	
+						$namePage = $page->page_name;
+
 						$seoUrl .= $namePage . '/';
 					}
 					$seoUrl .= 'id/' . $idPage;
 				}
 			}
 
-			$link = $melisEngineTreeService->cleanLink($seoUrl);	
-				   
+			$link = $melisEngineTreeService->cleanLink($seoUrl);
+
 			//add to DB
 			$tablePageDefaultUrls = $this->getServiceManager()->get('MelisEngineTablePageDefaultUrls');
 			$tablePageDefaultUrls->save(
@@ -108,28 +108,28 @@ class MelisCmsNewsSeoService extends MelisGeneralService
 					'purl_page_url' => $link
 				),
 				$idPage
-			);	
+			);
 		}
 		//Check for the News SEO URL
-            $newsDetailSeoLink = $this->getSeoData($newsId, $idPage)->current();
-            //add the newsId param if no news seo url is given		
-			if (empty($newsDetailSeoLink->cnews_seo_url)) {			
-				$link = $link . '?newsId=' . $newsId;
+		$newsDetailSeoLink = $this->getSeoData($newsId, $idPage)->current();
+		//add the newsId param if no news seo url is given		
+		if (empty($newsDetailSeoLink->cnews_seo_url)) {
+			$link = $link . '?newsId=' . $newsId;
+		} else {
+			//if the news has a seo url set, use it, else, get the seo url of the page	           
+			if (substr($newsDetailSeoLink->cnews_seo_url, 0, 1) != '/') {
+				$link = $link . '/' . $newsDetailSeoLink->cnews_seo_url;
 			} else {
-				//if the news has a seo url set, use it, else, get the seo url of the page	           
-            	if (substr($newsDetailSeoLink->cnews_seo_url, 0, 1) != '/'){
-					$link = $link . '/' . $newsDetailSeoLink->cnews_seo_url;           
-            	} else {
-            		$link = $link .  $newsDetailSeoLink->cnews_seo_url; 
+				$link = $link .  $newsDetailSeoLink->cnews_seo_url;
 			}
 		}
-			
+
 		$router = $this->getServiceManager()->get('router');
 		$request = $this->getServiceManager()->get('request');
 		$routeMatch = $router->match($request);
 
 		$idversion = null;
-		if (!empty($routeMatch)){
+		if (!empty($routeMatch)) {
 			$idversion = $routeMatch->getParam('idversion');
 		}
 
@@ -146,14 +146,15 @@ class MelisCmsNewsSeoService extends MelisGeneralService
 
 
 	/**
-	* Gets seo data for the given news id
-	* @param int $newsId
-	* @param int $idPage, the news detail page id
-	*/
+	 * Gets seo data for the given news id
+	 * @param int $newsId
+	 * @param int $idPage, the news detail page id
+	 */
 	public function getSeoData($newsId, $idPage)
 	{
+		$newsId = (int) $newsId;
 		// Retrieve cache version if front mode to avoid multiple calls
-		$cacheKey = 'getSeoDataNews_page_'.$idPage.'_newsID_'. $newsId;
+		$cacheKey = 'getSeoDataNews_page_' . $idPage . '_newsID_' . $newsId;
 		$cacheConfig = 'engine_memory_cache';
 		$melisEngineCacheSystem = $this->getServiceManager()->get('MelisEngineCacheSystem');
 		$results = $melisEngineCacheSystem->getCacheByKey($cacheKey, $cacheConfig);
@@ -176,7 +177,7 @@ class MelisCmsNewsSeoService extends MelisGeneralService
 
 		// Save cache key
 		$melisEngineCacheSystem->setCacheByKey($cacheKey, $cacheConfig, $seoData);
-		
+
 		return $seoData;
 	}
 
@@ -192,49 +193,48 @@ class MelisCmsNewsSeoService extends MelisGeneralService
 		$newContent = $contentGenerated;
 
 		// Check for SEO URL first from the news seo table
-	    $newsSeoService = $this->getServiceManager()->get('MelisCmsNewsSeoService');
-	    $newsTextTable = $this->getServiceManager()->get('MelisCmsNewsTextsTable');
-        $newsDetailSeo = $this->getSeoData($newsId, $idPage)->current();
-			
-		if (!empty($newsDetailSeo))	{				
+		$newsSeoService = $this->getServiceManager()->get('MelisCmsNewsSeoService');
+		$newsTextTable = $this->getServiceManager()->get('MelisCmsNewsTextsTable');
+		$newsDetailSeo = $this->getSeoData($newsId, $idPage)->current();
+
+		if (!empty($newsDetailSeo)) {
 			/**
 			 * Description tag
-			 */				
+			 */
 			if (!empty($newsDetailSeo->cnews_seo_meta_description)) {
 				$metaDescription = addslashes($newsDetailSeo->cnews_seo_meta_description);
 				$metaDescription = str_replace("\'", "'", $metaDescription);
 
-				$descriptionTag = "\n\t<meta name=\"description\" content=\"$metaDescription\" />\n";				
-				$descriptionRegex = '/(<meta[^>]*name=[\"\']description[\"\'][^>]*content=[\"\'](.*?)[\"\'][^>]*>)/i';				
-				preg_match($descriptionRegex, $contentGenerated, $descriptions);				
+				$descriptionTag = "\n\t<meta name=\"description\" content=\"$metaDescription\" />\n";
+				$descriptionRegex = '/(<meta[^>]*name=[\"\']description[\"\'][^>]*content=[\"\'](.*?)[\"\'][^>]*>)/i';
+				preg_match($descriptionRegex, $contentGenerated, $descriptions);
 
 				if (!empty($descriptions)) {
 					// Replace existing description in source with the defined meta description
-					$newContent = preg_replace($descriptionRegex, $descriptionTag, $contentGenerated,1);
+					$newContent = preg_replace($descriptionRegex, $descriptionTag, $contentGenerated, 1);
 				} else {
 					// meta desc tag doesn't exist, look for head tag to add
 					// if no head tag, then nothing will happen
 					$headRegex = '/(<head[^>]*>)/im';
-					$newContent = preg_replace($headRegex, "$1$descriptionTag", $contentGenerated,1);
-				}	
-				$contentGenerated = $newContent;		
+					$newContent = preg_replace($headRegex, "$1$descriptionTag", $contentGenerated, 1);
+				}
+				$contentGenerated = $newContent;
 			}
 
 			/**
 			 * Title tag
-			 */			
+			 */
 			$metaTitle = '';
 			if (!empty($newsDetailSeo->cnews_seo_meta_title)) {
 				$metaTitle = $newsDetailSeo->cnews_seo_meta_title;
-					
 			} else {
 				//use the news title instead if no meta title is given
 				$newsTitle = $newsTextTable->getEntryByField('cnews_id', $newsId)->current();
 				if (!empty($newsTitle)) {
 					$metaTitle = $newsTitle->cnews_title;
-				}				
+				}
 			}
-		
+
 			if ($metaTitle != '') {
 				$metaTitle = addslashes($metaTitle);
 				$metaTitle = str_replace("\'", "'", $metaTitle);
@@ -250,12 +250,12 @@ class MelisCmsNewsSeoService extends MelisGeneralService
 					// Meta Title tag doesn't exist, look for head tag to add
 					// if no head tag, then nothing will happen
 					$headRegex = '/(<head[^>]*>)/im';
-					$newContent = preg_replace($headRegex, "$1$titleTag", $newContent,1);
+					$newContent = preg_replace($headRegex, "$1$titleTag", $newContent, 1);
 				}
 
 				$contentGenerated = $newContent;
-			}	
-				
+			}
+
 
 			/**
 			 * Canonical Tag
@@ -267,17 +267,16 @@ class MelisCmsNewsSeoService extends MelisGeneralService
 				$canonicalUrlTag = "\n\t<link rel=\"canonical\" href=\"$canonicalUrl\" />\n";
 				$canonicalRegex = '/(<link[^>]*rel=[\"\']canonical[\"\'][^>]*href=[\"\'](.*?)[\"\'][^>]*>)/i';
 				preg_match($canonicalRegex, $contentGenerated, $canonicalFound);
-				if(!empty($canonicalFound)){
+				if (!empty($canonicalFound)) {
 					$newContent = preg_replace($canonicalRegex, $canonicalUrlTag, $contentGenerated, 1);
-				}else {
+				} else {
 					$headRegex = '/(<head[^>]*>)/im';
 					$newContent = preg_replace($headRegex, "$1$canonicalUrlTag", $contentGenerated, 1);
 				}
 				$contentGenerated = $newContent;
-			}	
+			}
 		}
-       
+
 		return $contentGenerated;
 	}
-
 }
