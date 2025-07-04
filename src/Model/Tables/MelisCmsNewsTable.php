@@ -74,6 +74,29 @@ class MelisCmsNewsTable extends MelisGenericTable
         return $resultData;
     }
 
+    public function getNewsByIdArray(array $newsIdArray, $langId = null, array $where = [])
+    {
+        $select = $this->tableGateway->getSql()->select();
+        
+        $select->join('melis_cms_site', 'melis_cms_site.site_id = melis_cms_news.cnews_site_id', array('site_name'), $select::JOIN_LEFT);
+        $select->join('melis_cms_news_texts', 'melis_cms_news_texts.cnews_id = melis_cms_news.cnews_id','*', $select::JOIN_LEFT);
+        
+        $select->where(['melis_cms_news.cnews_id' => $newsIdArray]);
+        
+        if (!is_null($langId)) {
+            $select->where('melis_cms_news_texts.cnews_lang_id ='.$langId);
+        }
+
+        if (!is_null($where['search'])) {
+            $search = '%'.$where['search'].'%';
+            $select->where->NEST->like('melis_cms_news.cnews_id', $search)
+            ->or->like('melis_cms_news_texts.cnews_title', $search);
+        }
+
+        $resultData = $this->tableGateway->selectWith($select);
+        return $resultData;
+    }
+
     public function getNewsList(
         $status             = null,
         $langId             = null,
@@ -272,4 +295,81 @@ class MelisCmsNewsTable extends MelisGenericTable
         return $this->tableGateway->selectWith($select);
     }
 
+
+    /**
+     * get categories of news by news id
+     * @return Object
+     */
+    public function getNewsCategories($newsId, $langId = 1, $where = [])
+    {
+        $select = $this->tableGateway->getSql()->select();
+        $select->where(['cnews_id' => $newsId]);
+        $select->join(
+            'melis_cms_news_category', 
+            'melis_cms_news_category.cnc_cnews_id = melis_cms_news.cnews_id', 
+            ['cnc_id', 'cnc_cat2_id', 'cnc_order'], 
+            $select::JOIN_LEFT
+        );
+
+        $select->join(
+            'melis_cms_category2', 
+            'melis_cms_category2.cat2_id = melis_cms_news_category.cnc_cat2_id', 
+            ['cat2_id'], 
+            $select::JOIN_LEFT
+        );
+        
+        if(is_null($langId)) {
+            $select->join(
+                'melis_cms_category2_trans', 
+                'melis_cms_category2_trans.catt2_category_id = melis_cms_category2.cat2_id', 
+                ['catt2_name', 'catt2_description', 'catt2_lang_id'], 
+                $select::JOIN_LEFT
+            );
+        } else {
+            $select->join(
+                'melis_cms_category2_trans', 
+                'melis_cms_category2_trans.catt2_category_id = melis_cms_category2.cat2_id', 
+                ['catt2_name', 'catt2_description', 'catt2_lang_id'], 
+                $select::JOIN_LEFT
+            )->where(['melis_cms_category2_trans.catt2_lang_id' => $langId]);
+        }
+        
+        if(!empty($where)) {
+            $select->where($where);
+        }
+
+        $select->having([new \Laminas\Db\Sql\Predicate\IsNotNull('catt2_name'), new \Laminas\Db\Sql\Predicate\Expression("catt2_name != ''")]);
+
+        return $this->tableGateway->selectWith($select);
+    }
+
+    /**
+     * get tags of news by news id
+     * @return Object
+     */
+    public function getNewsTags($newsId, $langId = 1, $where = [])
+    {
+        $select = $this->tableGateway->getSql()->select();
+        $select->columns(['cnews_id']);
+        $select->where(['cnews_id' => $newsId]);
+        $select->join(
+            'melis_cms_tag_entity', 
+            'melis_cms_tag_entity.entity_id = melis_cms_news.cnews_id', 
+            ['id', 'tag_id', 'entity_id'], 
+            $select::JOIN_LEFT
+        );
+
+        $select->join(
+            'melis_cms_tag_texts', 
+            'melis_cms_tag_texts.tag_id = melis_cms_tag_entity.tag_id', 
+            ['tag_text_id', 'tag_title', 'tag_lang_id'], 
+            $select::JOIN_LEFT
+        )->where(['tag_lang_id' => $langId]);
+        
+        if(!empty($where)) {
+            $select->where($where);
+        }
+
+        return $this->tableGateway->selectWith($select);
+    }
 }

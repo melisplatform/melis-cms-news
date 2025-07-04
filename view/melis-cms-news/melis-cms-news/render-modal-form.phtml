@@ -11,9 +11,8 @@ if (!empty($this->zoneconfig['conf']['id']))
 			<div class="widget widget-tabs widget-tabs-double widget-tabs-responsive margin-none border-none">
                 <div class="widget-head">
                 	<ul class="nav nav-tabs">
-                		<li class="active"><a href="#<?php echo $this->zoneconfig['conf']['id'] ?>" class="glyphicons plus" data-toggle="tab" aria-expanded="true"><i></i><?= $this->zoneconfig['conf']['name']?> 
-                		</a>
-                		
+                		<li class="nav-item active">
+                            <a data-bs-target="#<?php echo $this->zoneconfig['conf']['id'] ?>" href="#<?php echo $this->zoneconfig['conf']['id'] ?>" class="nav-link glyphicons plus" data-bs-toggle="tab" aria-expanded="true"><i></i><?= $this->zoneconfig['conf']['name']?></a>
                 		</li>                		
             		</ul>
         		</div>
@@ -51,7 +50,7 @@ if (!empty($this->zoneconfig['conf']['id']))
                         					</div>  
                                          <br> 	                
                                     <div class="footer-modal d-flex flex-row justify-content-between">
-                                 		<button data-dismiss="modal" class="btn btn-danger float-left"><i class="fa fa-times"></i> <?php echo $this->translate('tr_meliscmsnews_form_btn_cancel')?></button>
+                                 		<button data-bs-dismiss="modal" class="btn btn-danger float-left"><i class="fa fa-times"></i> <?php echo $this->translate('tr_meliscmsnews_form_btn_cancel')?></button>
                                  		<button class="btn btn-success" id="newsAttachment"><i class="fa fa-save"></i>  <?php echo $this->translate('tr_meliscmsnews_header_right_save') ?></button>
                                  	</div>                                 	
                             	</div>

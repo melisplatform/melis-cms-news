@@ -150,6 +150,32 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
         }
                    
         $finalData = array_merge($newsData, $sortedNewsData);
+
+        // Redirect to 404 if $finalData is empty  
+        $routeMatch = $this->getServiceManager()->get('router')->match($this->getServiceManager()->get('request'));
+        $renderType = null; 
+        if (!empty($routeMatch))
+        {
+            $routeName = $routeMatch->getParams();  
+            if (!empty($routeName))
+            {
+                if ($routeName['renderMode'] == 'front')
+                {
+                    $renderType = 'front';
+                }else{
+                    $renderType = 'back';
+                }
+            }
+        }
+        if($renderType == 'front' && empty($finalData)) { 
+            $siteId = $this->getSiteIdByPageId($data['pageId']); 
+            $siteConfigSrv = $this->getServiceManager()->get('MelisCmsSitesPropertiesService');
+            $siteData = $siteConfigSrv->getSitePropAnd404BySiteId($siteId, true);
+            $page404 = $siteData->s404_page_id;  
+            header("Location: /id/".$page404);
+            exit; 
+        }
+ 
         // Create an array with the variables that will be available in the view
         $viewVariables = [
             'pluginId' => $data['id'],

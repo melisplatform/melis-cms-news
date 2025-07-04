@@ -13,7 +13,7 @@ return array(
                         'site_id' => null,
                         
                         // Detail news landing page
-                        'pageIdNews' => null,
+                        'pageIdNews' => null, 
                         
                         // Optional, if found will add a pagination object
                         'pagination' => array(
@@ -56,7 +56,7 @@ return array(
                         // To delete an entry, use the keyword "disable" instead of the file path for the same key
                         'files' => array(
                             'css' => array(
-                                '/MelisCmsNews/plugins/css/plugin.cmsNewsListNews.css',
+                                '/MelisCmsNews/plugins/css/plugin.cmsNewsListNews.css', 
                                 '/MelisCmsNews/plugins/plugins/bootstrap-datetimepick/css/bootstrap-datetimepicker.min.css',
                             ),
                             'js' => array(

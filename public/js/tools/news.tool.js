@@ -144,7 +144,9 @@ $(function() {
                         dataString      = newsPage.find('form#newsLetterForm').serializeArray(),
                         newsId          = newsPage.data('newsid'),
                         selectedSlider  = newsPage.find('select[name=cnews_slider_id]').val(),
-                        selectedSite    = newsPage.find('select[name=cnews_site_id]').val();
+                        selectedSite    = newsPage.find('select[name=cnews_site_id]').val(),
+                        selectedTags    = newsPage.find('select#tags_select').val()
+                        ;
 
                     //newsSiteTitleSubtitleForm
                     var forms   = $('#' + newsId + '_id_meliscmsnews_content_tabs_properties_details_right_paragraphs .news-post-text-form'),
@@ -185,6 +187,37 @@ $(function() {
                             dataString.push({
                                 name: 'cnews_paragraph_order[' + ctr + ']',
                                 value: order
+                            });
+
+                            // categories fields
+                            $("#"+newsId+"_news_category_area span.news-cat-values").each(function(index) {
+                                dataString.push({
+                                    name: `cnews_categories[${index}][cnc_cat2_id]`,
+                                    value: $(this).data('cnc-cat2-id')
+                                });
+                                dataString.push({
+                                    name: `cnews_categories[${index}][cnc_id]`,
+                                    value: $(this).data('cnc-id') ?? ''
+                                });
+                                dataString.push({
+                                    name: `cnews_categories[${index}][cnc_order]`,
+                                    value: index + 1
+                                });
+                            });
+
+                            // tags fields
+                            dataString.push({
+                                name: `cnews_selected_tags`,
+                                value: selectedTags
+                            });
+
+                            $("#" + newsId + "_deleted_news_category_area span").each(function (index) {
+                                if($(this).data('cnc-id')) {
+                                    dataString.push({
+                                        name: `cnews_removed_categories[${index}][cnc_id]`,
+                                        value: $(this).data('cnc-id')
+                                    });
+                                }
                             });
                             ctr++;
                         });
@@ -584,6 +617,144 @@ $(function() {
                     alert( translations.tr_meliscore_error_message );
                 }); 
         });
+
+        $body.on('click', '.newsCategoryList', function (e) {
+            const btn = $(this);
+            btn.attr("disabled", true);
+
+            const newsId      = btn.data('newsid');
+            const zoneId      = 'id_meliscmsnews_content_tabs_properties_details_left_categories_modal';
+            const melisKey    = 'meliscmsnews_content_tabs_properties_details_left_categories_modal';
+            const modalUrl    = '/melis/MelisCmsNews/MelisCmsNews/renderNewsCategoryModal';
+            
+            // requesitng to create modal and display after
+            melisHelper.createModal(zoneId, melisKey, false, {newsId: newsId}, modalUrl, function(){
+                btn.attr("disabled", false);
+            });
+        });
+
+        $body.on("keyup", "#newsCategorySearch", function(e) {
+            var $this           = $(this),
+                newsId           = $this.data("newsid"),
+                searchString    = $this.val();
+
+                $("#"+newsId+"_newsCategoryList").jstree('search', searchString);
+        });
+
+        // Clear Input Search
+        $body.on("click", "#clearNewsCatSearchInputBtn", function(e) {
+            var $this       = $(this),
+                newsId       = $this.data("newsid"),
+                newsCatTree  = $("#"+newsId+"_newsCategoryList");
+
+                categoryOpeningItemFlag = false;
+                $("#newsCategorySearch").val("");
+                newsCatTree.jstree('search', '');
+        });
+
+        // Toggle Buttons for Category Tree View
+        $body.on("click", "#expandNewsCatTreeViewBtn", function(e) {
+            var $this = $(this),
+                newsId = $this.data("newsid"),
+                newsCatTree = $("#"+newsId+"_newsCategoryList");
+
+                newsCatTree.jstree("open_all");
+        });
+
+        $body.on("click", "#collapseNewsCatTreeViewBtn", function(e) {
+            var $this       = $(this),
+                newsId       = $this.data("newsid");
+                newsCatTree  = $("#"+newsId+"_newsCategoryList");
+            
+                newsCatTree.jstree("close_all");
+        });
+
+        // Refrech Category Tree View
+        $body.on("click", "#refreshNewsCatTreeView", function(e) {
+            var $this = $(this),
+                newsId = $this.data("newsid"),
+                newsCatTree = $("#"+newsId+"_newsCategoryList");
+
+                newsCatTree.jstree(true).refresh("forget_state", true);
+                newsCatTree.jstree('search', '');
+                $("#newsCategorySearch").val("");
+        });
+
+        $body.on("click", ".newsDelCat", function() {
+            var $this           = $(this),
+                cat             = $this.parent().parent(),
+                // add in the deleted_news_category
+                delNewsCatCont  = $("#" + activeTabId.split("_")[0]   + "_deleted_news_category_area");
+
+                delNewsCatCont.append('<span data-cnc-id="' + cat.data("cnc-id") + '" data-cnc-cat2-id="'+cat.data("cnc-cat2-id")+'"></span>');
+                cat.fadeOut("slow").remove();
+
+                if ( $(".newsDelCat").length === 0 ) {
+                    $("p#" + activeTabId.split("_")[0] +"_no_categories").show();
+                }
+        });
+
+        $body.on("click", ".news-category-tree-view-lang li a", function() {
+            var $this       = $(this),
+                langText    = $this.text(),
+                langLocale  = $this.data('locale'),
+                newsId   = $('.newsCategoryLangDropdown').data('newsid');
+
+                $('.newsCategoryLangDropdown span.filter-key').text(langText);
+                initNewsCategoryList(newsId, langLocale);
+        });
+
+        $body.on("click", ".addNewsCategory", function() {
+            var btn                 = $(this),
+                newsId              = btn.data("newsid"),
+                checkedCategories   = new Array;
+
+                $.each($("#"+newsId+"_newsCategoryList").jstree().get_checked(true), function(){
+                    checkedCategories.push(parseInt(this.original.cat2_id));
+                });
+
+            var uncheckedCategories = new Array,
+                addedCategories     = new Array;
+
+                $("#"+newsId+"_news_category_area span[data-cnc-cat2-id]").each(function() {
+                    var $this       = $(this),
+                        newsCatId    = parseInt( $this.data("cnc-cat2-id") );
+
+                        if ( checkedCategories.indexOf(newsCatId) !== -1 ) {
+                            addedCategories.push(newsCatId);
+                        }
+                        else {
+                            uncheckedCategories.push(newsCatId);
+                            $("span.news-cat-values[data-cnc-cat2-id='"+newsCatId+"']").remove();
+                        }
+                });
+
+                $.each( $("#"+newsId+"_newsCategoryList").jstree().get_checked(true), function(){
+                    var catId = parseInt(this.original.cat2_id);
+
+                        if ( uncheckedCategories.indexOf(catId) === -1 ) {
+                            if ( addedCategories.indexOf(catId) === -1) {
+                                var catText = this.text;
+
+                                    $.get( "/melis/MelisCmsNews/MelisCmsNews/getNewsCategoryLastOrderNum", {catId : catId, newsId : newsId}, function( data ) {
+                                        $("#"+newsId+"_news_category_area").append(
+                                            '<span class="news-cat-values" data-cnc-id="'+data.id+'" data-cnc-cat2-id="'+catId+'" data-cnc-order="'+data.order+'">' +
+                                            '<span class="category-value">' + catText +'<i class="newsDelCat fa fa-times"></i></span>' +
+                                            '</span>');
+                                    });
+                            }
+                        }
+                });
+
+                if ( checkedCategories.length ) {
+                    $("p#"+newsId+"_no_categories").hide();
+                }
+                else {
+                    $("p#"+newsId+"_no_categories").show();
+                }
+
+                $("#id_meliscmsnews_content_tabs_properties_details_left_categories_modal_container").modal("hide");
+        });
 });
 
 function renderNewsWorkFlowModal(pageData, button) {
@@ -595,7 +766,13 @@ function renderNewsWorkFlowModal(pageData, button) {
         $("#melis-modals-container").find(".modal-content").data(pageData);
         var modalID = $(data).find(".modal").attr("id");
         melisHelper.zoneReload('id_melissb_workflow_modal_content', 'melissb_workflow_modal_content', pageData);
-        $("#" + modalID).modal({show: true});
+        //$("#" + modalID).modal({show: true});
+        const $modalNewsWorkFlow = bootstrap.Modal.getOrCreateInstance("#" + modalID, {
+            show: true
+        });
+
+        $modalNewsWorkFlow.show();
+        
         melisCoreTool.done(button);
     }).fail(function (xhr, textStatus, errorThrown) {
         melisCoreTool.done(button);
@@ -725,6 +902,20 @@ var toolNews = {
                     }
             }
     },
+
+    pendingZoneStart: function (zoneId) {
+        $("#" + zoneId).append(
+            '<div id="loader" class="overlay-loader"><img class="loader-icon spinning-cog" src="/MelisCore/assets/images/cog12.svg" data-cog="cog12"></div>'
+        );
+    },
+    pendingZoneDone: function (zoneId) {
+		$("#" + zoneId + " .loader-icon")
+			.removeClass("spinning-cog")
+			.addClass("shrinking-cog");
+		setTimeout(function() {
+			$("#" + zoneId + " #loader").remove();
+		}, 500);
+	}
 };
 
 window.newsImagePreview = function (id, fileInput) {
@@ -745,3 +936,92 @@ window.initNewsList = function (data) {
             data.cnews_site_id = siteSelect.val();
         }
 };
+
+
+
+window.initNewsCategoryList = function(newsId, langLocale) {
+    // IE 11 below cross browser js
+    if ( typeof langLocale === "undefined" ) langLocale = melisLangId;
+
+    if ( $("#"+newsId+"_newsCategoryList").length ) {
+
+        var target = $("#"+newsId+"_newsCategoryList");
+
+            target.data('langlocale', langLocale);
+
+            target.jstree('destroy');
+
+        var dataString = new Array;
+
+            dataString.push({
+                name : 'newsId',
+                value : newsId
+            });
+            dataString.push({
+                name : 'langlocale',
+                value : target.data('langlocale')
+            });
+        
+        if(newsId) {
+            const siteId = $('#' + activeTabId).find('select[name=cnews_site_id]').val();
+            dataString.push({
+                name : 'siteId',
+                value : siteId
+            });
+        }
+
+        var categoriesChecked = new Array;
+        $("div#"+newsId+"_news_category_area > span.news-cat-values").each(function(){
+            categoriesChecked.push($(this).data('cnc-cat2-id'));
+        });
+
+        dataString = $.param(dataString);
+
+        target
+            .on('loading.jstree', function (e, data) {
+                toolNews.pendingZoneStart("newsCategorySearchZone");
+            })
+            .on('loaded.jstree', function (e, data) {
+                toolNews.pendingZoneDone("newsCategorySearchZone");
+            }).on('ready.jstree', function() {
+                categoriesChecked.forEach(function(nodeId) {
+                    target.jstree('check_node', nodeId); // Select the node by ID
+                });
+            })
+            .jstree({
+                "types" : {
+                    "default" : {
+                        "icon" : "fa fa-circle text-success",
+                    },
+                    "selected": {
+                        "select_node": false
+                    }
+                },
+                "core" : {
+                    //"multiple": true,
+                    "check_callback": true,
+                    "animation" : 500,
+                    "themes": {
+                        "name": "default",
+                        "responsive": false
+                    },
+                    "dblclick_toggle" : false,
+                    "data" : {
+                        "cache" : true,
+                        "url" : "/melis/MelisCmsNews/MelisCmsNews/getCategoryTreeView?"+dataString
+                    }
+                },
+                "checkbox": {
+                    three_state: false,
+                    whole_node : false,
+                    tie_selection : false
+                },
+                "plugins": [
+                    "search",
+                    "changed", // Plugins for Change and Click Event
+                    "types", // Plugins for Customizing the Nodes
+                    "checkbox"
+                ]
+            });
+    }
+}

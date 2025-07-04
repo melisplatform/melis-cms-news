@@ -219,4 +219,15 @@ return [
     'tr_meliscmsnews_workflow_tab_comments' => 'Workflow Commentaires',
     'tr_meliscmsnews_pagecomment_add_comments' => 'Ajouter un commentaire',
     'tr_meliscmsnews_comments_add' => 'Ajouter un commentaire',
+
+    'tr_meliscmsnews_categories_title' => 'Catégories',
+    'tr_meliscmsnews_news_no_categories' => 'Aucune catégorie',
+    'tr_meliscmsnews_categories_see_all_categories' => 'Voir toutes les catégories',
+    'tr_meliscmsnews_categories_list' => 'Liste des catégories',
+    'tr_meliscmsnews_news_categories_modal_text' => 'Sélectionnez la ou les catégorie(s) à associer à ce produit',
+    'tr_meliscmsnews_add_text' => 'Ajouter',
+    'tr_meliscmsnews_filter_text' => 'Filtrer',
+
+    'tr_meliscmsnews_newcategory_error_unable_to_save' => 'Échec de l\'enregistrement des catégories',
+    'tr_meliscmsnews_newtag_error_unable_to_save' => 'Échec de l\'enregistrement des tags',
 ];

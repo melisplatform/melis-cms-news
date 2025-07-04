@@ -354,6 +354,283 @@ class MelisCmsNewsController extends MelisAbstractActionController
     }
 
     /**
+     * renders the tab categories part
+     * @return \Laminas\View\Model\ViewModel
+     */
+    public function renderNewsTabsPropertiesDetailsLeftCategoriesAction()
+    {
+        $moduleSvc = $this->getServiceManager()->get('ModulesService');
+        $isCategoryModuleActive = $moduleSvc->isModuleLoaded('MelisCmsCategory2');
+        
+        $view = new ViewModel();
+        $melisKey = $this->params()->fromRoute('melisKey', '');
+        $newsId = (int)$this->params()->fromQuery('newsId', '');
+        $view->melisKey = $melisKey;
+        $view->newsId = $newsId;
+        $view->isCategoryModuleActive = $isCategoryModuleActive;
+        return $view;
+    }
+
+    public function renderNewsTabsPropertiesDetailsLeftCategoriesHeaderAction()
+    {
+        $newsId = (int)$this->params()->fromQuery('newsId', '');
+
+        $view = new ViewModel();
+        $melisKey = $this->params()->fromRoute('melisKey', '');
+        $view->melisKey = $melisKey;
+        $view->newsId = $newsId;
+        return $view;
+    }
+
+    public function renderNewsTabsPropertiesDetailsLeftCategoriesContentAction()
+    {
+        $container = new Container('meliscore');
+        $langId = $container['melis-lang-id'];
+
+        $newsId = (int)$this->params()->fromQuery('newsId', '');
+        $newsCategories = [];
+
+        if(!empty($newsId)) {
+            $newsTable = $this->getServiceManager()->get('MelisCmsNewsTable');
+            $newsCategories = $newsTable->getNewsCategories($newsId, null)->toArray();
+
+            $filtered = $this->filterByLangWithFallback($newsCategories, $langId);
+            
+            foreach($filtered AS $index => $nc) {
+                $filtered[$index]['cat_name'] = $nc['catt2_name'];
+            }
+        }
+
+        $view = new ViewModel();
+        $melisKey = $this->params()->fromRoute('melisKey', '');
+        $view->melisKey = $melisKey;
+        $view->newsId = $newsId;
+        $view->newsCategories = $filtered ?? [];
+        return $view;
+    }
+
+    private function filterByLangWithFallback($data, $preferredLangId)
+    {
+        $filtered = [];
+        $groupedByCat = [];
+    
+        // Step 1: Group items by cat_id
+        foreach ($data as $item) {
+            $groupedByCat[$item['cnc_cat2_id']][] = $item;
+        }
+    
+        // Step 2: Filter by preferred catt2_lang_id with fallback logic (ensure one item per cnc_cat2_id)
+        foreach ($groupedByCat as $cnc_cat2_id => $items) {
+            $preferredItem = null;
+            $fallbackItem = null;
+    
+            foreach ($items as $item) {
+                // Check for preferred language item
+                if ($item['catt2_lang_id'] == $preferredLangId) {
+                    $preferredItem = $item;
+                }
+    
+                // Check for fallback if name is not empty
+                if (!empty($item['catt2_name'])) {
+                    $fallbackItem = $item;
+                }
+    
+                // We only need one item per cnc_cat2_id, so stop searching after finding a preferred item
+                if ($preferredItem && !empty($preferredItem['catt2_name'])) {
+                    break; // Exit loop if the preferred item is found and has a catt2_name
+                }
+            }
+    
+            // If preferred item has a catt2_name, use it, otherwise use the fallback
+            if ($preferredItem && !empty($preferredItem['catt2_name'])) {
+                $filtered[] = $preferredItem;
+            } elseif ($fallbackItem) {
+                $filtered[] = $fallbackItem;
+            }
+        }
+    
+        return $filtered;
+    }
+
+    public function renderNewsTabsPropertiesDetailsLeftCategoriesModalAction()
+    {
+        $melisKey = $this->params()->fromRoute('melisKey', '');
+        $newsId = (int) $this->params()->fromQuery('newsId', '');
+        $isFilter = $this->params()->fromQuery('isFilter', false);
+        $currentLangName = 'Français';
+        $currentLangLocale = 'fr_FR';
+
+        $container = new Container('meliscore');
+
+        $langs = $this->getOrderedLanguagesByCurrentLocale();
+
+        if ($container) {
+            $currentLangLocale = $container['melis-lang-locale'];
+
+            $currentLang = current(array_filter($langs, function ($lang) use ($currentLangLocale) {
+                return $lang['lang_cms_locale'] == $currentLangLocale;
+            }));
+            if(!empty($currentLang)) {
+                $currentLangName = $currentLang['lang_cms_name'];
+            }
+        }
+
+        $view = new ViewModel();
+        $view->melisKey = $melisKey;
+        $view->newsId = $newsId;
+        $view->isFilter = $isFilter;
+        $view->currentLangLocale = $currentLangLocale;
+        $view->currentLangName = $currentLangName;
+        $view->langData = $langs;
+        return $view;
+    }
+
+    public function getNewsCategoryLastOrderNumAction()
+    {
+        $id = "";
+        $order = 1;
+        if ($this->getRequest()->isXmlHttpRequest()) {
+
+            $catId = (int) $this->params()->fromQuery('catId');
+            $newsId = (int) $this->params()->fromQuery('newsId');
+            $newsCatTable = $this->getServiceManager()->get('MelisCmsNewsCategoryTable');
+
+
+            $newsCatData1 = $newsCatTable->getEntryByField('cnc_cnews_id', $newsId);
+            foreach ($newsCatData1 as $data) {
+                if (($data->cnc_cnews_id == $newsId) && ($data->cnc_cat2_id == $catId)) {
+                    $id = (int) $data->cnc_id;
+                    $order = (int) $data->cnc_order;
+                }
+            }
+
+            if (!$order) {
+                // $newsCatData = $newsCatTable->getCategoryProductsByCategoryId($catId)->toArray();
+                // if ($newsCatData) {
+                //     foreach ($newsCatData as $data) {
+                //         $order = $data['pcat_order'] + 1;
+                //     }
+                // } else {
+                //     // if not data available, then return 1
+                //     $order = 1;
+                // }
+            }
+        }
+
+        return new JsonModel(array(
+            'id' => $id,
+            'order' => $order
+        ));
+    }
+
+    /**
+     * This method return Datas of the Category Tree view
+     *
+     * @return \Laminas\View\Model\JsonModel
+     */
+    public function getCategoryTreeViewAction()
+    {
+        $langLocale = $this->params()->fromQuery('langlocale');
+        $siteId = $this->params()->fromQuery('siteId', null);
+
+        $melisEngineLangTable = $this->getServiceManager()->get('MelisEngineTableCmsLang');
+        $langData = $melisEngineLangTable->getEntryByField('lang_cms_locale', $langLocale)->current();
+        $langId = $langData->lang_cms_id;
+
+        $categoryTree = $this->getServiceManager()->get('MelisCmsCategory2Service')->getCategoryTreeview(langId: $langId, siteId: $siteId ?? null);
+
+        if(!empty($siteId)) {
+            foreach($categoryTree AS $key => $catTree) {
+                if(!in_array($siteId, $categoryTree[$key]['sites'])) {
+                    unset($categoryTree[$key]);
+                }
+            }
+        }
+
+        function recursiveSetId(&$tree)
+        {
+            foreach($tree AS $key => $catTree) {
+                $tree[$key]['id'] = $catTree['cat2_id'];
+                if(isset($catTree['children']) && !empty($catTree['children'])) {
+                    recursiveSetId($tree[$key]['children']);
+                }
+            }
+        }
+
+        recursiveSetId($categoryTree);
+
+        return new JsonModel(array_values($categoryTree));
+    }
+
+    /**
+     * Category modal container
+     *
+     * @return \Laminas\View\Model\ViewModel
+     */
+    public function renderNewsCategoryModalAction()
+    {
+        $id = $this->params()->fromQuery('id');
+        $melisKey = $this->params()->fromQuery('melisKey');
+
+        $view = new ViewModel();
+        $view->setTerminal(true);
+        $view->id = $id;
+        $view->melisKey = $melisKey;
+        return $view;
+    }
+
+    /**
+     * renders the tab tags part
+     * @return \Laminas\View\Model\ViewModel
+     */
+    public function renderNewsTabsPropertiesDetailsLeftTagsAction()
+    {
+        $moduleSvc = $this->getServiceManager()->get('ModulesService');
+        $isTagsModuleActive = $moduleSvc->isModuleLoaded('MelisCmsTags');
+        
+        $view = new ViewModel();
+        $melisKey = $this->params()->fromRoute('melisKey', '');
+        $newsId = (int)$this->params()->fromQuery('newsId', '');
+        $view->melisKey = $melisKey;
+        $view->newsId = $newsId;
+        $view->isTagsModuleActive = $isTagsModuleActive;
+        return $view;
+    }
+
+    public function renderNewsTabsPropertiesDetailsLeftTagsContentAction()
+    {
+        $container = new Container('meliscore');
+        $langId = $container['melis-lang-id'];
+
+        $newsId = (int)$this->params()->fromQuery('newsId', '');
+
+        $melisCoreConfig = $this->getServiceManager()->get('MelisCoreConfig');
+        $appConfigForm = $melisCoreConfig->getFormMergedAndOrdered('MelisCmsTags/forms/tag_select_form','tag_select_form');
+        $formElements = $this->getServiceManager()->get('FormElementManager');
+        $factory = new Factory();
+        $factory->setFormElementManager($formElements);
+        $form = $factory->createForm($appConfigForm);
+
+        $newsTable = $this->getServiceManager()->get('MelisCmsNewsTable');
+        $newsTags = $newsTable->getNewsTags($newsId, $langId)->toArray();
+        $tagOptions = [];
+        foreach($newsTags AS $key => $newsTag) {
+            $tagOptions[$key]['id'] = $newsTag['tag_id'];
+            $tagOptions[$key]['text'] = $newsTag['tag_title'];
+        }
+
+        $view = new ViewModel();
+        $melisKey = $this->params()->fromRoute('melisKey', '');
+        $view->melisKey = $melisKey;
+        $view->newsId = $newsId;
+        $view->form = $form;
+        $view->entityType = 'news';
+        $view->newsId = $newsId;
+        $view->tags = $tagOptions;
+        return $view;
+    }
+
+    /**
      * renders the tab left content documents
      * @return \Laminas\View\Model\ViewModel
      */
@@ -701,10 +978,27 @@ class MelisCmsNewsController extends MelisAbstractActionController
                             }
                         }
                     }
+
+                    // save news categories
+                    if(!empty($postValues['cnews_categories']) || !empty($postValues['cnews_removed_categories'])) {
+                        list('success' => $isCategorySuccess, 'errors' => $categoryErrors) = $this->saveNewsCategories($data['cnews_id'], $postValues['cnews_categories'] ?? [], $postValues['cnews_removed_categories'] ?? []);
+                    }
+
+                    // save news tags
+                    if(!empty($postValues['cnews_selected_tags'])) {
+                        if(empty($postValues['cnews_selected_tags'])) {
+                            $postValues['cnews_selected_tags'] = [];
+                        } else {
+                            $postValues['cnews_selected_tags'] = explode(',', $postValues['cnews_selected_tags']);
+                        }
+                        list('success' => $isTagsSuccess, 'errors' => $tagsErrors) = $this->saveNewsTags($data['cnews_id'], $postValues['cnews_selected_tags'] ?? []);
+                    }
+
+
                     //save seo tab
                     list('success' => $isSeoSuccess, 'errors' => $errors) = $this->saveNewsSeo($data['cnews_id']);
                     //rollback here when seo saving is not successful
-                    if ($isSeoSuccess != 1) {
+                    if ($isSeoSuccess != 1 || (isset($isCategorySuccess) && $isCategorySuccess != 1) || (isset($isTagsSuccess) && $isTagsSuccess != 1)) {
                         //delete news and news texts
                         $deleteNews = $this->forward()->dispatch(
                             'MelisCmsNews\Controller\MelisCmsNewsList',
@@ -758,6 +1052,45 @@ class MelisCmsNewsController extends MelisAbstractActionController
         return new JsonModel($response);
     }
 
+
+    private function saveNewsCategories(int $newsId, array $categoriesInput = [], array $removedCategories = [])
+    {
+        if(empty($newsId)) return ['success' => 0, 'errors' => []];
+
+        try {
+            $newsCategoryTable = $this->getServiceManager()->get('MelisCmsNewsCategoryTable');
+            foreach($categoriesInput AS $category) {
+                $newsCategoryTable->save([
+                    'cnc_cnews_id' => $newsId,
+                    'cnc_cat2_id' => $category['cnc_cat2_id'],
+                    'cnc_order' => $category['cnc_order']
+                ], $category['cnc_id'] ?? null);
+            }
+
+            // delete removed categories
+            foreach($removedCategories AS $removedCat) {
+                $newsCategoryTable->deleteById($removedCat['cnc_id']);
+            }
+
+            return ['success' => 1, 'errors' => []];
+        } catch (\Throwable $th) {
+            return ['success' => 0, 'errors' => ['newsCategories' => 'tr_meliscmsnews_newcategory_error_unable_to_save']];
+        }
+    }
+
+    private function saveNewsTags($newsId, array $selectedTags = [])
+    {
+        if(empty($newsId)) return ['success' => 0, 'errors' => []];
+
+        $newsTagTable = $this->getServiceManager()->get('MelisCmsNewsTagsTable');
+        try {
+            $isSuccess = $newsTagTable->syncNewsTags($newsId, $selectedTags);
+
+            return ['success' => $isSuccess, 'errors' => []];
+        } catch (\Throwable $th) {
+            return ['success' => 0, 'errors' => ['newsTags' => 'tr_meliscmsnews_newtag_error_unable_to_save']];
+        }
+    }
     /**
      * Returns the Tool Service Class
      * @return array|object

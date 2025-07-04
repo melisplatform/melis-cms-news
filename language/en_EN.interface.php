@@ -219,4 +219,15 @@ return [
     'tr_meliscmsnews_workflow_tab_comments' => 'Workflow Comments',
     'tr_meliscmsnews_pagecomment_add_comments' => 'Add comments', 
     'tr_meliscmsnews_comments_add' => 'Add Comment',
+
+    'tr_meliscmsnews_categories_title' => 'Categories',
+    'tr_meliscmsnews_news_no_categories' => 'No category',
+    'tr_meliscmsnews_categories_see_all_categories' => 'See all categories',
+    'tr_meliscmsnews_categories_list' => 'List of categories',
+    'tr_meliscmsnews_news_categories_modal_text' => 'Select the categories to be associated to this product',
+    'tr_meliscmsnews_add_text' => 'Add',
+    'tr_meliscmsnews_filter_text' => 'Filter',
+
+    'tr_meliscmsnews_newcategory_error_unable_to_save' => 'Failed saving categories',
+    'tr_meliscmsnews_newtag_error_unable_to_save' => 'Failed saving tags',
 ];

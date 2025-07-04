@@ -53,8 +53,8 @@ class MelisCmsNewsService extends MelisGeneralService
         $order = null,
         $siteId = null,
         $search = null,
-        $count = false)
-    {
+        $count = false
+    ) {
         // Event parameters prepare
         $arrayParameters = $this->makeArrayFromParameters(__METHOD__, func_get_args());
         $results = array();
@@ -66,9 +66,20 @@ class MelisCmsNewsService extends MelisGeneralService
         $newsTable = $this->getServiceManager()->get('MelisCmsNewsTable');
 
         $news = $newsTable->getNewsList(
-            $arrayParameters['status'], $arrayParameters['langId'], $arrayParameters['dateMin'], $arrayParameters['dateMax'], $arrayParameters['publishDateMin'],
-            $arrayParameters['publishDateMax'], $arrayParameters['unpublishFilter'], $arrayParameters['start'], $arrayParameters['limit'],
-            $arrayParameters['orderColumn'], $arrayParameters['order'], $arrayParameters['siteId'], $arrayParameters['search'], $arrayParameters['count']
+            $arrayParameters['status'],
+            $arrayParameters['langId'],
+            $arrayParameters['dateMin'],
+            $arrayParameters['dateMax'],
+            $arrayParameters['publishDateMin'],
+            $arrayParameters['publishDateMax'],
+            $arrayParameters['unpublishFilter'],
+            $arrayParameters['start'],
+            $arrayParameters['limit'],
+            $arrayParameters['orderColumn'],
+            $arrayParameters['order'],
+            $arrayParameters['siteId'],
+            $arrayParameters['search'],
+            $arrayParameters['count']
         )->toArray();
 
         $results = $news;
@@ -100,6 +111,8 @@ class MelisCmsNewsService extends MelisGeneralService
             $results = null;
         }
 
+        $arrayParameters['newsId'] = (int) $newsId;
+
         // Sending service start event
         $arrayParameters = $this->sendEvent('melis_cms_news_get_news_by_id_start', $arrayParameters);
 
@@ -121,6 +134,40 @@ class MelisCmsNewsService extends MelisGeneralService
         $arrayParameters['results'] = $results;
         // Sending service end event
         $arrayParameters = $this->sendEvent('melis_cms_news_get_news_by_id_end', $arrayParameters);
+
+        return $arrayParameters['results'];
+    }
+
+    /**
+     * Retrieves news via supplied array of news ID
+     *
+     * @param $newsId
+     * @param null $langId
+     * @param array $where
+     * @return mixed
+     */
+    public function getNewsByIdArray(array $newsIdArray, $langId, array $where = [])
+    {
+        // Event parameters prepare
+        $arrayParameters = $this->makeArrayFromParameters(__METHOD__, func_get_args());
+
+        $results = [];
+
+        // Sending service start event
+        $arrayParameters = $this->sendEvent('melis_cms_news_get_news_by_id_array_start', $arrayParameters);
+
+        // Service implementation start
+        /** @var \MelisCmsNews\Model\Tables\MelisCmsNewsTable $newsTable */
+        $newsTable = $this->getServiceManager()->get('MelisCmsNewsTable');
+
+        $results = $newsTable->getNewsByIdArray($arrayParameters['newsIdArray'], $arrayParameters['langId'], $arrayParameters['where']);
+
+        // Service implementation end
+
+        // Adding results to parameters for events treatment if needed
+        $arrayParameters['results'] = $results;
+        // Sending service end event
+        $arrayParameters = $this->sendEvent('melis_cms_news_get_news_by_id_array_end', $arrayParameters);
 
         return $arrayParameters['results'];
     }
