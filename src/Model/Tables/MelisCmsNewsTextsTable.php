@@ -13,7 +13,7 @@ use Laminas\Db\TableGateway\TableGateway;
 use Laminas\Db\Sql\Expression;
 use MelisEngine\Model\Tables\MelisGenericTable;
 
-class MelisCmsNewsTextsTable extends MelisGenericTable 
+class MelisCmsNewsTextsTable extends MelisGenericTable
 {
     /**
      * Table name
@@ -55,9 +55,9 @@ class MelisCmsNewsTextsTable extends MelisGenericTable
     {
         $select = $this->tableGateway->getSql()->select();
         if ($title) {
-             $select->where('cnews_title !=""');
+            $select->where('cnews_title !=""');
         }
-       
+
         $select->where($where);
 
         return $this->tableGateway->selectWith($select);

@@ -13,7 +13,7 @@ use Laminas\Db\TableGateway\TableGateway;
 use Laminas\Db\Sql\Expression;
 use MelisEngine\Model\Tables\MelisGenericTable;
 
-class MelisCmsNewsSeoTable extends MelisGenericTable 
+class MelisCmsNewsSeoTable extends MelisGenericTable
 {
     /**
      * Table name
@@ -39,14 +39,14 @@ class MelisCmsNewsSeoTable extends MelisGenericTable
      */
     public function getNewsSeo($newsId, $langId = null)
     {
-        $select = $this->tableGateway->getSql()->select();  
+        $select = $this->tableGateway->getSql()->select();
 
-        $select->where('melis_cms_news_seo.cnews_id ='.$newsId);
-        
+        $select->where('melis_cms_news_seo.cnews_id =' . (int)$newsId);
+
         if (!is_null($langId)) {
-            $select->where('melis_cms_news_seo.cnews_seo_lang_id ='.$langId);
+            $select->where('melis_cms_news_seo.cnews_seo_lang_id =' . (int)$langId);
         }
-        
+
         $resultData = $this->tableGateway->selectWith($select);
         return $resultData;
     }
@@ -57,14 +57,14 @@ class MelisCmsNewsSeoTable extends MelisGenericTable
      */
     public function checkSeoUrlDuplicates($seoUrl, $siteId)
     {
-        $select = $this->tableGateway->getSql()->select();  
+        $select = $this->tableGateway->getSql()->select();
         if ($seoUrl) {
-            $select->where->like('melis_cms_news_seo.cnews_seo_url', $seoUrl);     
+            $select->where->like('melis_cms_news_seo.cnews_seo_url', $seoUrl);
         }
         if (!is_null($siteId)) {
             $select->join(array('news' => 'melis_cms_news'), 'news.cnews_id = melis_cms_news_seo.cnews_id', array(), $select::JOIN_LEFT);
             $select->join(array('site' => 'melis_cms_site'), 'site.site_id = news.cnews_site_id', array('site_name'), $select::JOIN_LEFT);
-            $select->where('news.cnews_site_id ='.$siteId);
+            $select->where('news.cnews_site_id =' . (int)$siteId);
         }
         $resultData = $this->tableGateway->selectWith($select);
         return $resultData;

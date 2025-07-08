@@ -13,7 +13,7 @@ use Laminas\Db\TableGateway\TableGateway;
 use Laminas\Db\Sql\Expression;
 use MelisEngine\Model\Tables\MelisGenericTable;
 
-class MelisCmsNewsCategoryTable extends MelisGenericTable 
+class MelisCmsNewsCategoryTable extends MelisGenericTable
 {
     /**
      * Table name

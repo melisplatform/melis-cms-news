@@ -13,7 +13,7 @@ use Laminas\Db\TableGateway\TableGateway;
 use Laminas\Db\Sql\Expression;
 use MelisEngine\Model\Tables\MelisGenericTable;
 
-class MelisCmsNewsTable extends MelisGenericTable 
+class MelisCmsNewsTable extends MelisGenericTable
 {
 
     /**
@@ -60,16 +60,16 @@ class MelisCmsNewsTable extends MelisGenericTable
     {
         $select = $this->tableGateway->getSql()->select();
         $clause = array();
-        
+
         $select->join('melis_cms_site', 'melis_cms_site.site_id = melis_cms_news.cnews_site_id', array('site_name'), $select::JOIN_LEFT);
-        $select->join('melis_cms_news_texts', 'melis_cms_news_texts.cnews_id = melis_cms_news.cnews_id','*', $select::JOIN_LEFT);
-        
-        $select->where('melis_cms_news.cnews_id ='.$newsId);
-        
+        $select->join('melis_cms_news_texts', 'melis_cms_news_texts.cnews_id = melis_cms_news.cnews_id', '*', $select::JOIN_LEFT);
+
+        $select->where('melis_cms_news.cnews_id =' . (int)$newsId);
+
         if (!is_null($langId)) {
-            $select->where('melis_cms_news_texts.cnews_lang_id ='.$langId);
+            $select->where('melis_cms_news_texts.cnews_lang_id =' . $langId);
         }
-        
+
         $resultData = $this->tableGateway->selectWith($select);
         return $resultData;
     }
@@ -77,20 +77,20 @@ class MelisCmsNewsTable extends MelisGenericTable
     public function getNewsByIdArray(array $newsIdArray, $langId = null, array $where = [])
     {
         $select = $this->tableGateway->getSql()->select();
-        
+
         $select->join('melis_cms_site', 'melis_cms_site.site_id = melis_cms_news.cnews_site_id', array('site_name'), $select::JOIN_LEFT);
-        $select->join('melis_cms_news_texts', 'melis_cms_news_texts.cnews_id = melis_cms_news.cnews_id','*', $select::JOIN_LEFT);
-        
+        $select->join('melis_cms_news_texts', 'melis_cms_news_texts.cnews_id = melis_cms_news.cnews_id', '*', $select::JOIN_LEFT);
+
         $select->where(['melis_cms_news.cnews_id' => $newsIdArray]);
-        
+
         if (!is_null($langId)) {
-            $select->where('melis_cms_news_texts.cnews_lang_id ='.$langId);
+            $select->where('melis_cms_news_texts.cnews_lang_id =' . (int)$langId);
         }
 
         if (!is_null($where['search'])) {
-            $search = '%'.$where['search'].'%';
+            $search = '%' . $where['search'] . '%';
             $select->where->NEST->like('melis_cms_news.cnews_id', $search)
-            ->or->like('melis_cms_news_texts.cnews_title', $search);
+                ->or->like('melis_cms_news_texts.cnews_title', $search);
         }
 
         $resultData = $this->tableGateway->selectWith($select);
@@ -115,51 +115,51 @@ class MelisCmsNewsTable extends MelisGenericTable
     ) {
         $select = $this->tableGateway->getSql()->select();
 
-        $select->join('melis_cms_site', 'melis_cms_site.site_id = melis_cms_news.cnews_site_id', array('site_name','site_label'), $select::JOIN_LEFT);
+        $select->join('melis_cms_site', 'melis_cms_site.site_id = melis_cms_news.cnews_site_id', array('site_name', 'site_label'), $select::JOIN_LEFT);
         $select->join('melis_cms_news_texts', 'melis_cms_news_texts.cnews_id = melis_cms_news.cnews_id', '*', $select::JOIN_LEFT);
 
         if (!is_null($search)) {
-            $search = '%'.$search.'%';
+            $search = '%' . $search . '%';
             $select->where->NEST->like('melis_cms_news.cnews_id', $search)
-            ->or->like('melis_cms_news_texts.cnews_title', $search);
+                ->or->like('melis_cms_news_texts.cnews_title', $search);
         }
 
         if (!is_null($siteId)) {
-            $select->where->equalTo('cnews_site_id', $siteId);
+            $select->where->equalTo('cnews_site_id', (int)$siteId);
         }
-        
+
         if (!is_null($status)) {
-            $select->where('cnews_status ='.$status);
+            $select->where('cnews_status =' . (int)$status);
         }
-        
+
         if (!is_null($langId)) {
-            $select->where('melis_cms_news_texts.cnews_lang_id ='.$langId);
+            $select->where('melis_cms_news_texts.cnews_lang_id =' . (int)$langId);
         }
-        
+
         if (!is_null($dateMin)) {
-            $select->where('cnews_creation_date >= "'.$dateMin.'"');
+            $select->where('cnews_creation_date >= "' . $dateMin . '"');
         }
-        
+
         if (!is_null($dateMax)) {
-            $select->where('cnews_creation_date <= "'.$dateMax.'"');
+            $select->where('cnews_creation_date <= "' . $dateMax . '"');
         }
 
         if (!is_null($publishDateMin)) {
-            $select->where('DATE(cnews_publish_date)>= "'.$publishDateMin.'"');
+            $select->where('DATE(cnews_publish_date)>= "' . $publishDateMin . '"');
         }
 
         if (!is_null($publishDateMax)) {
-            $select->where('DATE(cnews_publish_date) <= "'.$publishDateMax.'"');
+            $select->where('DATE(cnews_publish_date) <= "' . $publishDateMax . '"');
         }
 
         if (!is_null($limit)) {
-            $select->limit( (int) $limit);
+            $select->limit((int) $limit);
         }
 
         if ($unpublishFilter) {
             $select->where->nest->greaterThan('cnews_unpublish_date', date("Y-m-d H:i:s"))->or->isNull('cnews_unpublish_date')->unnest;
         }
-        
+
         if (!is_null($start)) {
             $select->offset($start);
         }
@@ -177,35 +177,35 @@ class MelisCmsNewsTable extends MelisGenericTable
         if (!empty($count)) {
             $select->group('melis_cms_news.cnews_id');
         }
-        
+
         $select->where('melis_cms_news_texts.cnews_title !=""');
 
         $resultData = $this->tableGateway->selectWith($select);
 
         return $resultData;
     }
-    
+
     public function checkForDuplicates($search)
     {
-        $search = '%'.$search.'%';
+        $search = '%' . $search . '%';
         $sql = "select Number From 
-        (select cnews_documents1 as Number from melis_cms_news WHERE cnews_documents1 LIKE '". $search ."'
+        (select cnews_documents1 as Number from melis_cms_news WHERE cnews_documents1 LIKE '" . $search . "'
         union all
-        select cnews_documents2 as Number from melis_cms_news WHERE cnews_documents2 LIKE '". $search ."'
+        select cnews_documents2 as Number from melis_cms_news WHERE cnews_documents2 LIKE '" . $search . "'
         union all
-        select cnews_documents3 as Number from melis_cms_news WHERE cnews_documents3 LIKE '". $search ."'
+        select cnews_documents3 as Number from melis_cms_news WHERE cnews_documents3 LIKE '" . $search . "'
         union all
-        select cnews_image1  as Number from melis_cms_news WHERE cnews_image1 LIKE '". $search ."'
+        select cnews_image1  as Number from melis_cms_news WHERE cnews_image1 LIKE '" . $search . "'
         union all
-        select cnews_image2  as Number from melis_cms_news WHERE cnews_image2 LIKE '". $search ."'
+        select cnews_image2  as Number from melis_cms_news WHERE cnews_image2 LIKE '" . $search . "'
         union all
-        select cnews_image3 as Number from melis_cms_news WHERE cnews_image2 LIKE '". $search ."'
+        select cnews_image3 as Number from melis_cms_news WHERE cnews_image2 LIKE '" . $search . "'
         ) myTab";
-        
+
         $resultData = $this->tableGateway->getAdapter()->driver->getConnection()->execute($sql);
         return $resultData;
     }
-    
+
     public function getNewsListByMonths($limit = null, $siteId = null)
     {
         $select = $this->tableGateway->getSql()->select();
@@ -216,7 +216,7 @@ class MelisCmsNewsTable extends MelisGenericTable
         ));
         $select->where(array('cnews_status' => '1'));
 
-        if(!is_null($siteId)){
+        if (!is_null($siteId)) {
             $select->where->equalTo('cnews_site_id', $siteId);
         }
 
@@ -228,16 +228,15 @@ class MelisCmsNewsTable extends MelisGenericTable
         $select->order(new Expression('month + " " + year'), 'DESC');
 
 
-        if (!is_null($limit))
-        {
+        if (!is_null($limit)) {
             $select->limit($limit);
         }
 
-    
+
         $resultData = $this->tableGateway->selectWith($select);
         return $resultData;
     }
-    
+
     public function getNewsByMonthYear($month, $year, $limit = null, $siteId = null)
     {
         $select = $this->tableGateway->getSql()->select();
@@ -245,16 +244,16 @@ class MelisCmsNewsTable extends MelisGenericTable
         $select->join('melis_cms_news_texts', 'melis_cms_news_texts.cnews_id = melis_cms_news.cnews_id', array('cnews_id', 'cnews_title'), $select::JOIN_LEFT);
 
         $select->where(array('cnews_status' => '1'));
-        
+
         if (!is_null($siteId)) {
             $select->where->equalTo('cnews_site_id', $siteId);
         }
-        
-        $select->where('MONTH(cnews_publish_date) = '.$month);
-        $select->where('YEAR(cnews_publish_date) ='.$year);
+
+        $select->where('MONTH(cnews_publish_date) = ' . $month);
+        $select->where('YEAR(cnews_publish_date) =' . $year);
         $select->group("melis_cms_news.cnews_id");
         $select->where->nest->greaterThan('cnews_unpublish_date', date('Y-m-d H:i:s', strtotime("now")))->or->isNull('cnews_unpublish_date')->unnest;
-        
+
         $select->order(array('cnews_publish_date' => 'DESC'));
         if (!is_null($limit)) {
             $select->limit($limit);
@@ -280,16 +279,16 @@ class MelisCmsNewsTable extends MelisGenericTable
         return $this->tableGateway->selectWith($select);
     }
 
-     /**
+    /**
      * get last news record
      * @return Object
      */
     public function getNewsData($where)
     {
         $select = $this->tableGateway->getSql()->select();
-        
+
         $select->join('melis_cms_news_texts', 'melis_cms_news_texts.cnews_id = melis_cms_news.cnews_id', array('cnews_title', 'cnews_lang_id'), $select::JOIN_LEFT);
-        
+
         $select->where($where);
 
         return $this->tableGateway->selectWith($select);
@@ -305,36 +304,36 @@ class MelisCmsNewsTable extends MelisGenericTable
         $select = $this->tableGateway->getSql()->select();
         $select->where(['cnews_id' => $newsId]);
         $select->join(
-            'melis_cms_news_category', 
-            'melis_cms_news_category.cnc_cnews_id = melis_cms_news.cnews_id', 
-            ['cnc_id', 'cnc_cat2_id', 'cnc_order'], 
+            'melis_cms_news_category',
+            'melis_cms_news_category.cnc_cnews_id = melis_cms_news.cnews_id',
+            ['cnc_id', 'cnc_cat2_id', 'cnc_order'],
             $select::JOIN_LEFT
         );
 
         $select->join(
-            'melis_cms_category2', 
-            'melis_cms_category2.cat2_id = melis_cms_news_category.cnc_cat2_id', 
-            ['cat2_id'], 
+            'melis_cms_category2',
+            'melis_cms_category2.cat2_id = melis_cms_news_category.cnc_cat2_id',
+            ['cat2_id'],
             $select::JOIN_LEFT
         );
-        
-        if(is_null($langId)) {
+
+        if (is_null($langId)) {
             $select->join(
-                'melis_cms_category2_trans', 
-                'melis_cms_category2_trans.catt2_category_id = melis_cms_category2.cat2_id', 
-                ['catt2_name', 'catt2_description', 'catt2_lang_id'], 
+                'melis_cms_category2_trans',
+                'melis_cms_category2_trans.catt2_category_id = melis_cms_category2.cat2_id',
+                ['catt2_name', 'catt2_description', 'catt2_lang_id'],
                 $select::JOIN_LEFT
             );
         } else {
             $select->join(
-                'melis_cms_category2_trans', 
-                'melis_cms_category2_trans.catt2_category_id = melis_cms_category2.cat2_id', 
-                ['catt2_name', 'catt2_description', 'catt2_lang_id'], 
+                'melis_cms_category2_trans',
+                'melis_cms_category2_trans.catt2_category_id = melis_cms_category2.cat2_id',
+                ['catt2_name', 'catt2_description', 'catt2_lang_id'],
                 $select::JOIN_LEFT
             )->where(['melis_cms_category2_trans.catt2_lang_id' => $langId]);
         }
-        
-        if(!empty($where)) {
+
+        if (!empty($where)) {
             $select->where($where);
         }
 
@@ -353,20 +352,20 @@ class MelisCmsNewsTable extends MelisGenericTable
         $select->columns(['cnews_id']);
         $select->where(['cnews_id' => $newsId]);
         $select->join(
-            'melis_cms_tag_entity', 
-            'melis_cms_tag_entity.entity_id = melis_cms_news.cnews_id', 
-            ['id', 'tag_id', 'entity_id'], 
+            'melis_cms_tag_entity',
+            'melis_cms_tag_entity.entity_id = melis_cms_news.cnews_id',
+            ['id', 'tag_id', 'entity_id'],
             $select::JOIN_LEFT
         );
 
         $select->join(
-            'melis_cms_tag_texts', 
-            'melis_cms_tag_texts.tag_id = melis_cms_tag_entity.tag_id', 
-            ['tag_text_id', 'tag_title', 'tag_lang_id'], 
+            'melis_cms_tag_texts',
+            'melis_cms_tag_texts.tag_id = melis_cms_tag_entity.tag_id',
+            ['tag_text_id', 'tag_title', 'tag_lang_id'],
             $select::JOIN_LEFT
         )->where(['tag_lang_id' => $langId]);
-        
-        if(!empty($where)) {
+
+        if (!empty($where)) {
             $select->where($where);
         }
 

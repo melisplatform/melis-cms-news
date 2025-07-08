@@ -15,7 +15,7 @@ use MelisEngine\Model\Tables\MelisGenericTable;
 use Laminas\Db\Adapter\Adapter;
 use Laminas\Db\Sql\Sql;
 
-class MelisCmsNewsTagsTable extends MelisGenericTable 
+class MelisCmsNewsTagsTable extends MelisGenericTable
 {
     /**
      * Table name
@@ -41,7 +41,7 @@ class MelisCmsNewsTagsTable extends MelisGenericTable
         $newsId = (int) $newsId;
 
         return $this->syncPivotTable(
-            $this->getTableGateway()->getAdapter(), 
+            $this->getTableGateway()->getAdapter(),
             self::TABLE,
             'entity_id',
             'tag_id',
@@ -55,9 +55,9 @@ class MelisCmsNewsTagsTable extends MelisGenericTable
 
 
     /**
-	 * Syncs the values in a pivot table<br/>
-	 * Sample Usage: syncPivotTable($this->getTableGateway()->getAdapter(), 'melis_cms_tag_entity', 'entity_id', 'tag_id', $newsId, $newValues);<br/>
-	 */
+     * Syncs the values in a pivot table<br/>
+     * Sample Usage: syncPivotTable($this->getTableGateway()->getAdapter(), 'melis_cms_tag_entity', 'entity_id', 'tag_id', $newsId, $newValues);<br/>
+     */
     private function syncPivotTable(
         Adapter $adapter,
         string $pivotTable,
@@ -69,26 +69,26 @@ class MelisCmsNewsTagsTable extends MelisGenericTable
         array $otherValues = null
     ) {
         $sql = new Sql($adapter);
-    
+
         // Fetch existing pivot table entries for the given key1Value
         $select = $sql->select();
         $select->from($pivotTable)->where([$pivotKey1 => $key1Value]);
-        if(!empty($where)) {
+        if (!empty($where)) {
             $select->where($where);
         }
-    
+
         $statement = $sql->prepareStatementForSqlObject($select);
         $result = $statement->execute();
-    
+
         $existingKey2Values = [];
         foreach ($result as $row) {
             $existingKey2Values[] = $row[$pivotKey2];
         }
-    
+
         // Determine which relations to add and which to remove
         $valuesToInsert = array_diff($newKey2Values, $existingKey2Values);
         $valuesToDelete = array_diff($existingKey2Values, $newKey2Values);
-    
+
         // Wrap in a transaction
         $adapter->getDriver()->getConnection()->beginTransaction();
         try {
@@ -99,15 +99,15 @@ class MelisCmsNewsTagsTable extends MelisGenericTable
                     $pivotKey1 => $key1Value,
                     $pivotKey2 => $value,
                 ];
-                if(!empty($otherValues)) {
+                if (!empty($otherValues)) {
                     $vals = [...$vals, ...$otherValues];
                 }
                 $insert->values($vals);
-    
+
                 $statement = $sql->prepareStatementForSqlObject($insert);
                 $statement->execute();
             }
-    
+
             // Delete outdated relationships
             foreach ($valuesToDelete as $value) {
                 $delete = $sql->delete($pivotTable);
@@ -115,11 +115,11 @@ class MelisCmsNewsTagsTable extends MelisGenericTable
                     $pivotKey1 => $key1Value,
                     $pivotKey2 => $value,
                 ]);
-    
+
                 $statement = $sql->prepareStatementForSqlObject($delete);
                 $statement->execute();
             }
-    
+
             // Commit transaction
             $adapter->getDriver()->getConnection()->commit();
             return true;
