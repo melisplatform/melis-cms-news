@@ -66,7 +66,7 @@ class MelisCmsNewsTagsTable extends MelisGenericTable
         $key1Value,
         array $newKey2Values,
         $where = null,
-        array $otherValues = null
+        ?array $otherValues = null
     ) {
         $sql = new Sql($adapter);
 
