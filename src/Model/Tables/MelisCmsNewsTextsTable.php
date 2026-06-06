@@ -67,7 +67,7 @@ class MelisCmsNewsTextsTable extends MelisGenericTable
      * @param int|null $postId
      * @return null
      */
-    public function getPostTitle(int $postId = null)
+    public function getPostTitle(?int $postId = null)
     {
         if (empty($postId)) {
             return null;

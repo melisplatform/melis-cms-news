@@ -259,7 +259,7 @@ class MelisCmsNewsService extends MelisGeneralService
      * @param int|null $newsId
      * @return mixed
      */
-    public function getPostText(int $newsId = null)
+    public function getPostText(?int $newsId = null)
     {
         // Event parameters prepare
         $arrayParameters = $this->makeArrayFromParameters(__METHOD__, func_get_args());
@@ -292,7 +292,7 @@ class MelisCmsNewsService extends MelisGeneralService
      * @param int|null $siteId
      * @return mixed
      */
-    public function getNewsDetailsPagesBySite(int $siteId = null)
+    public function getNewsDetailsPagesBySite(?int $siteId = null)
     {
         // Event parameters prepare
         $arrayParameters = $this->makeArrayFromParameters(__METHOD__, func_get_args());
