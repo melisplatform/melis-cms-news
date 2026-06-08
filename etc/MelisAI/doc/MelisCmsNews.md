@@ -137,7 +137,7 @@ Table data is loaded via AJAX from
 `/melis/MelisCmsNews/MelisCmsNewsList/renderNewsListData` (`renderNewsListDataAction`).
 An **Add** button (`render-news-list-header-right-add`) opens news creation.
 
-![News list with filters and actions](./images/news-list.png)
+![News list with filters and actions](./images/meliscmsnews-tool-news-list.png)
 *Caption: the News list — header with the Add button, left filters (limit, site), centered
 search box, the results table (ID, status, title, creation/publish/unpublish dates, site)
 and per-row Info / Delete actions.*
@@ -152,7 +152,7 @@ against an existing record (under `/media/news/`) and the preview renders the sa
 on its detail page. Once the news is saved, the screen switches to the full edit mode with
 all tabs enabled.
 
-![Creating a new news — reduced tab set (no Medias / Preview yet)](./images/news-new.png)
+![Creating a new news — reduced tab set (no Medias / Preview yet)](./images/meliscmsnews-tool-news-new.png)
 *Caption: the creation screen — only the Properties, Texts and SEO tabs are present; the
 Medias and Preview tabs are absent until the news is saved for the first time.*
 
@@ -184,23 +184,23 @@ Key controller actions:
 > path `/media/news/` are configured in `config/app.interface.php`
 > (keys `images_conf`, `documents_conf`, `paragraphs_conf`, `files.imagesPath`).
 
-![News editing — Properties tab](./images/news-edit-properties.png)
+![News editing — Properties tab](./images/meliscmsnews-tool-news-edit-properties.png)
 *Caption: Properties tab — publish/unpublish date pickers, category and tag selectors,
 site and slider selection.*
 
-![News editing — Texts tab](./images/news-edit-texts.png)
+![News editing — Texts tab](./images/meliscmsnews-tool-news-edit-texts.png)
 *Caption: Texts tab — title, subtitle and the WYSIWYG paragraph editors (paragraphs 1-10,
 reorderable via `cnews_paragraph_order`).*
 
-![News editing — Medias tab](./images/news-edit-medias.png)
+![News editing — Medias tab](./images/meliscmsnews-tool-news-edit-medias.png)
 *Caption: Medias tab — up to 3 images and 3 documents, each with upload and thumbnail
 preview, stored under `/media/news/`.*
 
-![News editing — SEO tab](./images/news-edit-seo.png)
+![News editing — SEO tab](./images/meliscmsnews-tool-news-edit-seo.png)
 *Caption: SEO tab — meta title, meta description, URL, redirect URL, 301 URL and canonical
 fields (per language).*
 
-![News editing — Preview tab](./images/news-edit-preview.png)
+![News editing — Preview tab](./images/meliscmsnews-tool-news-edit-preview.png)
 *Caption: Preview tab — the saved news rendered inside an iframe on its `NEWS_DETAIL`
 detail page.*
 
@@ -221,7 +221,7 @@ depending on the plugin (declared as `modal_form` entries in the plugin's config
 
 Plugin selector thumbnails: `public/plugins/images/*_thumb.jpg`.
 
-![News plugin selector in the page editor](./images/news-page-menu-plugins-selector.png)
+![News plugin selector in the page editor](./images/meliscmsnews-page-menu-plugins-selector.png)
 *Caption: the Melis page editor's plugin selector (MelisCms section) showing the three News
 plugin thumbnails that can be dragged into a page template.*
 
@@ -240,10 +240,10 @@ The three plugins are described individually below.
   - **Filters** (`modal-filter-form.phtml`): `column`, `order`, `limit`, `date_min`,
     `date_max`, `search`
 
-![Latest News plugin config — Properties tab](./images/news-plugin-latest-config-tab-properties.png)
+![Latest News plugin config — Properties tab](./images/meliscmsnews-page-plugin-latestnews-config-tab-properties.png)
 *Caption: Latest News › Properties tab — rendering template, source site and detail-page id.*
 
-![Latest News plugin config — Filters tab](./images/news-plugin-latest-config-tab-filters.png)
+![Latest News plugin config — Filters tab](./images/meliscmsnews-page-plugin-latestnews-config-tab-filters.png)
 *Caption: Latest News › Filters tab — sort column and direction, limit, date range and search.*
 
 #### 3.2.2 List News plugin
@@ -261,14 +261,14 @@ The three plugins are described individually below.
   - **Filters** (`modal-filter-form.phtml`): `column`, `order`, `limit`, `date_min`,
     `date_max`, `search`
 
-![List News plugin config — Properties tab](./images/news-plugin-list-config-tab-properties.png)
+![List News plugin config — Properties tab](./images/meliscmsnews-page-plugin-newslist-config-tab-properties.png)
 *Caption: List News › Properties tab — rendering template, source site and detail-page id.*
 
-![List News plugin config — Pagination tab](./images/news-plugin-list-config-tab-pagination.png)
+![List News plugin config — Pagination tab](./images/meliscmsnews-page-plugin-newslist-tab-pagination.png)
 *Caption: List News › Pagination tab — items per page (`nbPerPage`) and pages shown
 before/after the current one (`nbPageBeforeAfter`).*
 
-![List News plugin config — Filters tab](./images/news-plugin-list-config-tab-filters.png)
+![List News plugin config — Filters tab](./images/meliscmsnews-page-plugin-newslist-config-tab-filters.png)
 *Caption: List News › Filters tab — sort column and direction, limit, date range and search.*
 
 #### 3.2.3 Show News plugin
@@ -283,7 +283,7 @@ before/after the current one (`nbPageBeforeAfter`).*
   - **Properties** (`modal-template-form.phtml`): `template_path` (the single-news
     detail template)
 
-![Show News plugin config — Properties tab](./images/news-plugin-detail-config-tab-properties.png)
+![Show News plugin config — Properties tab](./images/meliscmsnews-page-plugin-newsdetail-config-tab-properties.png)
 *Caption: Show News › Properties tab — the single rendering template for the article detail.*
 
 #### Configuration field reference
@@ -517,20 +517,20 @@ each row's caption in the body gives the text-only description of what the image
 
 | Image file | Content |
 |---|---|
-| `news-list.png` | News list — the tool's landing page (table, filters, actions) |
-| `news-new.png` | Creation screen — reduced tab set (Properties, Texts, SEO; no Medias/Preview yet) |
-| `news-edit-properties.png` | Editing screen — Properties tab |
-| `news-edit-texts.png` | Editing screen — Texts tab |
-| `news-edit-medias.png` | Editing screen — Medias tab |
-| `news-edit-seo.png` | Editing screen — SEO tab |
-| `news-edit-preview.png` | Editing screen — Preview tab |
-| `news-page-menu-plugins-selector.png` | News plugin selector in the page editor |
-| `news-plugin-latest-config-tab-properties.png` | Latest News plugin config — Properties tab |
-| `news-plugin-latest-config-tab-filters.png` | Latest News plugin config — Filters tab |
-| `news-plugin-list-config-tab-properties.png` | List News plugin config — Properties tab |
-| `news-plugin-list-config-tab-pagination.png` | List News plugin config — Pagination tab |
-| `news-plugin-list-config-tab-filters.png` | List News plugin config — Filters tab |
-| `news-plugin-detail-config-tab-properties.png` | Show News (detail) plugin config — Properties tab |
+| `meliscmsnews-tool-news-list.png` | News list — the tool's landing page (table, filters, actions) |
+| `meliscmsnews-tool-news-new.png` | Creation screen — reduced tab set (Properties, Texts, SEO; no Medias/Preview yet) |
+| `meliscmsnews-tool-news-edit-properties.png` | Editing screen — Properties tab |
+| `meliscmsnews-tool-news-edit-texts.png` | Editing screen — Texts tab |
+| `meliscmsnews-tool-news-edit-medias.png` | Editing screen — Medias tab |
+| `meliscmsnews-tool-news-edit-seo.png` | Editing screen — SEO tab |
+| `meliscmsnews-tool-news-edit-preview.png` | Editing screen — Preview tab |
+| `meliscmsnews-page-menu-plugins-selector.png` | News plugin selector in the page editor |
+| `meliscmsnews-page-plugin-latestnews-config-tab-properties.png` | Latest News plugin config — Properties tab |
+| `meliscmsnews-page-plugin-latestnews-config-tab-filters.png` | Latest News plugin config — Filters tab |
+| `meliscmsnews-page-plugin-newslist-config-tab-properties.png` | List News plugin config — Properties tab |
+| `meliscmsnews-page-plugin-newslist-tab-pagination.png` | List News plugin config — Pagination tab |
+| `meliscmsnews-page-plugin-newslist-config-tab-filters.png` | List News plugin config — Filters tab |
+| `meliscmsnews-page-plugin-newsdetail-config-tab-properties.png` | Show News (detail) plugin config — Properties tab |
 
 ---
 
