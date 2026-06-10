@@ -352,9 +352,9 @@ class MelisCmsNewsTable extends MelisGenericTable
         $select->columns(['cnews_id']);
         $select->where(['cnews_id' => $newsId]);
         $select->join(
-            'melis_cms_tag_entity',
-            'melis_cms_tag_entity.entity_id = melis_cms_news.cnews_id',
-            ['id', 'tag_id', 'entity_id'],
+            'melis_cms_tag_entity', 
+            'melis_cms_tag_entity.entity_id = melis_cms_news.cnews_id', 
+            ['id', 'tag_id', 'entity_id', 'entity_type'], 
             $select::JOIN_LEFT
         );
 
@@ -364,8 +364,9 @@ class MelisCmsNewsTable extends MelisGenericTable
             ['tag_text_id', 'tag_title', 'tag_lang_id'],
             $select::JOIN_LEFT
         )->where(['tag_lang_id' => $langId]);
-
-        if (!empty($where)) {
+        
+        $select->where(['melis_cms_tag_entity.entity_type' => 'NEWS']);
+        if(!empty($where)) {
             $select->where($where);
         }
 

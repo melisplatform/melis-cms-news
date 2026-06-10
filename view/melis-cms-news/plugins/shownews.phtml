@@ -43,7 +43,7 @@
                         <div class="">
                             <h1 class="hidden-xs hidden-sm"><?= $this->news['cnews_title']; ?></h1>
                             <small><?= date('F d, Y', strtotime($this->news['cnews_publish_date'])) ?></small>
-                            <br>
+                            <br/>
                             <?php
                             $ctr = 1;
                             do {
@@ -63,9 +63,9 @@
                                     <div class="news-details-author-data">
                                         <p><span>Email :</span> <?=$userAccountData['uac_email']?></p>
                                         <?php if (! empty($userAccountData['uac_picture'])) {?>
-                                            <img src="data:image/jpge;base64,<?=  base64_encode($userAccountData['uac_picture']) ?>" class="rounded-circle">
+                                            <img src="data:image/jpge;base64,<?=  base64_encode($userAccountData['uac_picture']) ?>" class="rounded-circle"/>
                                         <?php } else {?>
-                                            <img src="MelisCore/images/profile/default_picture.jpg" alt="">
+                                            <img src="MelisCore/images/profile/default_picture.jpg" alt=""/>
                                         <?php }?>
                                     </div>
                                     <footer><?= $userAccountData['uac_firstname'] . " " . $userAccountData['uac_lastname'] ?></footer>

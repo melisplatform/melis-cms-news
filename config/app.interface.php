@@ -1165,5 +1165,23 @@ return [
                 ],
             ],
         ],
+        'melis_cms_tag' => [
+            'datas' => [
+                'associations' => [
+                    'meliscmsnews' => [
+                        'module' => 'MelisCmsNews',
+                        'entity_type' => 'NEWS',
+                        'entity_table' => 'melis_cms_news',
+                        'entity_primary_id' => 'cnews_id',
+                        'trans' => [
+                            'trans_table' => 'melis_cms_news_texts',
+                            'trans_foreign_id' => 'cnews_id',
+                            'trans_lang_key' => 'cnews_lang_id',
+                        ],
+                        'association_title_key' => 'cnews_title' 
+                    ],
+                ]
+            ]
+        ]
     ],
 ];
