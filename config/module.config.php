@@ -42,6 +42,84 @@ return array(
                             ),
                         ),
                     ),
+                    // React brick API — merges into MelisReactApi's `melis-react-api` node so the
+                    // News React pages keep calling /melis/react-api/news[...] (module-owned, modular).
+                    // Specific paths BEFORE the generic /news/:id (the :id is digit-constrained anyway).
+                    'melis-react-api' => array(
+                        'type'          => 'Literal',
+                        'options'       => array(
+                            'route' => 'react-api',
+                        ),
+                        'may_terminate' => false,
+                        'child_routes'  => array(
+                            'meliscmsnews-news-list' => array(
+                                'type' => 'Segment',
+                                'options' => array(
+                                    'route'    => '/news[/]',
+                                    'defaults' => array('__NAMESPACE__' => 'MelisCmsNews\Controller', 'controller' => 'MelisCmsNewsReactApi', 'action' => 'list'),
+                                ),
+                            ),
+                            'meliscmsnews-news-stats' => array(
+                                'type' => 'Segment',
+                                'options' => array(
+                                    'route'    => '/news/stats[/]',
+                                    'defaults' => array('__NAMESPACE__' => 'MelisCmsNews\Controller', 'controller' => 'MelisCmsNewsReactApi', 'action' => 'stats'),
+                                ),
+                            ),
+                            'meliscmsnews-news-categories' => array(
+                                'type' => 'Segment',
+                                'options' => array(
+                                    'route'    => '/news/categories[/]',
+                                    'defaults' => array('__NAMESPACE__' => 'MelisCmsNews\Controller', 'controller' => 'MelisCmsNewsReactApi', 'action' => 'categories'),
+                                ),
+                            ),
+                            'meliscmsnews-news-save' => array(
+                                'type' => 'Segment',
+                                'options' => array(
+                                    'route'    => '/news/save[/]',
+                                    'defaults' => array('__NAMESPACE__' => 'MelisCmsNews\Controller', 'controller' => 'MelisCmsNewsReactApi', 'action' => 'save'),
+                                ),
+                            ),
+                            'meliscmsnews-news-delete' => array(
+                                'type' => 'Segment',
+                                'options' => array(
+                                    'route'       => '/news/delete/:id',
+                                    'constraints' => array('id' => '[0-9]+'),
+                                    'defaults'    => array('__NAMESPACE__' => 'MelisCmsNews\Controller', 'controller' => 'MelisCmsNewsReactApi', 'action' => 'delete'),
+                                ),
+                            ),
+                            'meliscmsnews-news-preview' => array(
+                                'type' => 'Segment',
+                                'options' => array(
+                                    'route'       => '/news/preview/:id',
+                                    'constraints' => array('id' => '[0-9]+'),
+                                    'defaults'    => array('__NAMESPACE__' => 'MelisCmsNews\Controller', 'controller' => 'MelisCmsNewsReactApi', 'action' => 'previewUrl'),
+                                ),
+                            ),
+                            'meliscmsnews-news-item' => array(
+                                'type' => 'Segment',
+                                'options' => array(
+                                    'route'       => '/news/:id',
+                                    'constraints' => array('id' => '[0-9]+'),
+                                    'defaults'    => array('__NAMESPACE__' => 'MelisCmsNews\Controller', 'controller' => 'MelisCmsNewsReactApi', 'action' => 'get'),
+                                ),
+                            ),
+                            'meliscmsnews-sites' => array(
+                                'type' => 'Segment',
+                                'options' => array(
+                                    'route'    => '/sites[/]',
+                                    'defaults' => array('__NAMESPACE__' => 'MelisCmsNews\Controller', 'controller' => 'MelisCmsNewsReactApi', 'action' => 'sites'),
+                                ),
+                            ),
+                            'meliscmsnews-languages' => array(
+                                'type' => 'Segment',
+                                'options' => array(
+                                    'route'    => '/languages[/]',
+                                    'defaults' => array('__NAMESPACE__' => 'MelisCmsNews\Controller', 'controller' => 'MelisCmsNewsReactApi', 'action' => 'languages'),
+                                ),
+                            ),
+                        ),
+                    ),
                 ),
             ),
         ),
@@ -68,6 +146,9 @@ return array(
             'MelisCmsNews\Controller\MelisCmsNewsList' => \MelisCmsNews\Controller\MelisCmsNewsListController::class,
             'MelisCmsNews\Controller\MelisCmsNews' => \MelisCmsNews\Controller\MelisCmsNewsController::class,
             'MelisCmsNews\Controller\MelisCmsNewsWorkflowComments' => \MelisCmsNews\Controller\MelisCmsNewsWorkflowCommentsController::class,
+            // React brick API (native React News UI). Mounted under /melis/react-api/* via the
+            // router merge below — the module owns its own React API (modular).
+            'MelisCmsNews\Controller\MelisCmsNewsReactApi' => \MelisCmsNews\Controller\MelisCmsNewsReactApiController::class,
 
         ),
     ),

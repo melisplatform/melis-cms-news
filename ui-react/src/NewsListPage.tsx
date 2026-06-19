@@ -1,0 +1,1020 @@
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import {
+  ArrowDown, ArrowUp, ArrowUpDown, CheckCircle2, Code2, Columns3,
+  Download, Edit2, FileDown, FileSpreadsheet, FileText, GripVertical,
+  Layout, Loader2, Newspaper, Pin, Plus, Search, Trash2, X,
+} from 'lucide-react'
+import * as XLSX from 'xlsx'
+
+import { Button } from './components/ui/button'
+import { Input } from './components/ui/input'
+import { cn } from './lib/utils'
+import * as newsApi from './lib/news-api'
+
+// Host tab API (exposed by MelisCore at runtime). Optional — guarded at call sites.
+declare global {
+  interface Window {
+    __melisOpenTab?: (t: { id: string; label: string; path: string }) => void
+    __melisCloseTab?: (id: string) => void
+  }
+}
+
+// ─── Module-level cache — survit au démontage du composant (navigation) ────────
+
+type ViewMode = 'react' | 'iframe'
+
+interface ListCache {
+  items: newsApi.NewsItem[]
+  total: number
+  page: number
+  search: string
+  status: '' | '0' | '1'
+  sortCol: string | null
+  sortDir: 'asc' | 'desc'
+  kpiStats: newsApi.NewsStats | null
+  hasMore: boolean
+  mode: ViewMode
+  iframeLoaded: boolean
+}
+let _cache: ListCache | null = null
+
+// ─── Column config ────────────────────────────────────────────────────────────
+
+interface ColDef {
+  id: string
+  label: string
+  visible: boolean
+  pinned: boolean
+}
+
+// Fixed px widths for columns with known content size.
+// Columns WITHOUT an entry (title, subtitle) get no width → absorb all remaining space.
+const COL_FIXED_WIDTHS: Record<string, number> = {
+  id:             52,
+  site:          130,
+  publishDate:   124,
+  unpublishDate: 124,
+  creationDate:  124,
+  status:         88,
+  _actions:       80,
+}
+
+// Kept for tableMinWidth calculation (fallback for unmapped cols)
+const COL_MIN_WIDTHS: Record<string, number> = {
+  id:             52,
+  title:         240,
+  subtitle:      160,
+  site:          130,
+  publishDate:   124,
+  unpublishDate: 124,
+  creationDate:  124,
+  status:         88,
+  _actions:       80,
+}
+
+const DEFAULT_COLS: ColDef[] = [
+  { id: 'id',            label: 'ID',          visible: true,  pinned: false },
+  { id: 'title',         label: 'Titre',       visible: true,  pinned: false },
+  { id: 'subtitle',      label: 'Sous-titre',  visible: false, pinned: false },
+  { id: 'site',          label: 'Site',        visible: true,  pinned: false },
+  { id: 'publishDate',   label: 'Publication', visible: true,  pinned: false },
+  { id: 'unpublishDate', label: 'Expiration',  visible: false, pinned: false },
+  { id: 'creationDate',  label: 'Créé le',     visible: false, pinned: false },
+  { id: 'status',        label: 'Statut',      visible: true,  pinned: false },
+]
+
+const COL_STORAGE_KEY = 'melis-news-cols-v3'
+
+function loadCols(): ColDef[] {
+  try {
+    const raw = localStorage.getItem(COL_STORAGE_KEY)
+    if (!raw) return DEFAULT_COLS
+    const saved: { id: string; visible: boolean; pinned?: boolean }[] = JSON.parse(raw)
+    return DEFAULT_COLS
+      .map(def => {
+        const s = saved.find(c => c.id === def.id)
+        return s ? { ...def, visible: s.visible, pinned: s.pinned ?? false } : def
+      })
+      .sort((a, b) => {
+        const ai = saved.findIndex(c => c.id === a.id)
+        const bi = saved.findIndex(c => c.id === b.id)
+        return ai === -1 || bi === -1 ? 0 : ai - bi
+      })
+  } catch {
+    return DEFAULT_COLS
+  }
+}
+
+function saveCols(cols: ColDef[]) {
+  localStorage.setItem(
+    COL_STORAGE_KEY,
+    JSON.stringify(cols.map(c => ({ id: c.id, visible: c.visible, pinned: c.pinned }))),
+  )
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function fmtDate(d: string | null): string {
+  if (!d) return '—'
+  try {
+    return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+  } catch { return d }
+}
+
+function getCellText(item: newsApi.NewsItem, colId: string): string {
+  switch (colId) {
+    case 'id':            return String(item.id)
+    case 'title':         return item.title || ''
+    case 'subtitle':      return item.subtitle || ''
+    case 'site':          return item.siteName || ''
+    case 'publishDate':   return fmtDate(item.publishDate)
+    case 'unpublishDate': return fmtDate(item.unpublishDate)
+    case 'creationDate':  return fmtDate(item.creationDate)
+    case 'status':        return item.status === 1 ? 'Publié' : 'Brouillon'
+    default:              return ''
+  }
+}
+
+function getSortValue(item: newsApi.NewsItem, colId: string): string | number {
+  switch (colId) {
+    case 'id':            return item.id
+    case 'title':         return item.title || ''
+    case 'subtitle':      return item.subtitle || ''
+    case 'site':          return item.siteName || ''
+    case 'publishDate':   return item.publishDate || ''
+    case 'unpublishDate': return item.unpublishDate || ''
+    case 'creationDate':  return item.creationDate || ''
+    case 'status':        return item.status
+    default:              return ''
+  }
+}
+
+// ─── Status badge ─────────────────────────────────────────────────────────────
+
+function StatusBadge({ status }: { status: 0 | 1 }) {
+  return (
+    <span className={cn(
+      'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium',
+      status === 1
+        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+        : 'bg-muted text-muted-foreground',
+    )}>
+      {status === 1 ? 'Publié' : 'Brouillon'}
+    </span>
+  )
+}
+
+// ─── KPI card ─────────────────────────────────────────────────────────────────
+
+function KpiCard({ icon, label, value, iconBg }: {
+  icon: React.ReactNode; label: string; value: number | null; iconBg: string
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 flex-1 min-w-[150px]">
+      <div className={cn('flex size-10 shrink-0 items-center justify-center rounded-lg', iconBg)}>
+        {icon}
+      </div>
+      <div>
+        <div className="text-2xl font-bold leading-none text-foreground">
+          {value === null
+            ? <Loader2 className="size-4 animate-spin text-muted-foreground" />
+            : value.toLocaleString('fr-FR')}
+        </div>
+        <div className="mt-0.5 text-xs text-muted-foreground">{label}</div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Column manager ───────────────────────────────────────────────────────────
+
+function ColManager({ cols, onChange, onClose }: {
+  cols: ColDef[]
+  onChange: (cols: ColDef[]) => void
+  onClose: () => void
+}) {
+  const [draggingId, setDraggingId] = useState<string | null>(null)
+  const [overTarget, setOverTarget] = useState<{ id: string; panel: 'visible' | 'hidden' } | null>(null)
+
+  const visibleCols = cols.filter(c => c.visible)
+  const hiddenCols  = cols.filter(c => !c.visible)
+
+  function handleDrop(panel: 'visible' | 'hidden') {
+    if (!draggingId) return
+    const srcItem = cols.find(c => c.id === draggingId)!
+    if (srcItem.id === 'title' && panel === 'hidden') { setDraggingId(null); setOverTarget(null); return }
+
+    const updatedItem = { ...srcItem, visible: panel === 'visible' }
+    let vList = visibleCols.filter(c => c.id !== draggingId)
+    let hList = hiddenCols.filter(c => c.id !== draggingId)
+
+    if (panel === 'visible') {
+      const dstId = overTarget?.id
+      if (!dstId || dstId === '__panel__') {
+        vList = [...vList, updatedItem]
+      } else {
+        const idx = vList.findIndex(c => c.id === dstId)
+        vList = idx === -1 ? [...vList, updatedItem] : [...vList.slice(0, idx), updatedItem, ...vList.slice(idx)]
+      }
+    } else {
+      hList = [...hList, updatedItem]
+    }
+
+    onChange([...vList, ...hList])
+    setDraggingId(null)
+    setOverTarget(null)
+  }
+
+  function renderItem(col: ColDef, panel: 'visible' | 'hidden') {
+    const isMandatory = col.id === 'title'
+    const isOver = overTarget?.id === col.id && overTarget?.panel === panel
+    return (
+      <div
+        key={col.id}
+        draggable={!isMandatory}
+        onDragStart={() => setDraggingId(col.id)}
+        onDragEnd={() => { setDraggingId(null); setOverTarget(null) }}
+        onDragOver={e => {
+          e.preventDefault()
+          e.stopPropagation()
+          if (overTarget?.id !== col.id || overTarget?.panel !== panel)
+            setOverTarget({ id: col.id, panel })
+        }}
+        className={cn(
+          'flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm select-none transition-colors',
+          !isMandatory && 'cursor-grab active:cursor-grabbing',
+          draggingId === col.id && 'opacity-40',
+          isOver ? 'bg-primary/10 ring-1 ring-primary/30' : 'hover:bg-accent',
+          col.pinned && panel === 'visible' && !isOver && 'bg-primary/5',
+        )}
+      >
+        <GripVertical className={cn('size-3.5 shrink-0 text-muted-foreground/40', isMandatory && 'invisible')} />
+        <span className="flex-1 truncate">{col.label}</span>
+        {panel === 'visible' && (
+          <button
+            onClick={e => { e.stopPropagation(); onChange(cols.map(c => c.id === col.id ? { ...c, pinned: !c.pinned } : c)) }}
+            title={col.pinned ? 'Désépingler' : 'Épingler'}
+            className={cn(
+              'flex size-5 shrink-0 items-center justify-center rounded transition-colors hover:bg-primary/10',
+              col.pinned ? 'text-primary' : 'text-muted-foreground/30 hover:text-muted-foreground',
+            )}
+          >
+            <Pin className={cn('size-3', col.pinned && 'fill-primary')} />
+          </button>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="absolute right-0 top-full z-50 mt-1.5 w-[420px] rounded-xl border border-border bg-card shadow-xl">
+      <div className="flex items-center justify-between border-b border-border px-3 py-2.5">
+        <span className="text-sm font-semibold">Colonnes</span>
+        <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+          <X className="size-4" />
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 p-3">
+        <div
+          className="flex flex-col gap-0.5 min-h-[140px] rounded-lg border border-dashed border-border p-1.5"
+          onDragOver={e => {
+            e.preventDefault()
+            if (overTarget?.id !== '__panel__' || overTarget?.panel !== 'hidden')
+              setOverTarget({ id: '__panel__', panel: 'hidden' })
+          }}
+          onDrop={e => { e.preventDefault(); handleDrop('hidden') }}
+        >
+          <p className="px-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Masquées</p>
+          {hiddenCols.length === 0
+            ? <div className="flex flex-1 items-center justify-center py-4 text-[11px] text-muted-foreground/40">Glisser ici</div>
+            : hiddenCols.map(col => renderItem(col, 'hidden'))}
+        </div>
+
+        <div
+          className="flex flex-col gap-0.5 min-h-[140px] rounded-lg border border-dashed border-border p-1.5"
+          onDragOver={e => {
+            e.preventDefault()
+            if (overTarget?.id !== '__panel__' || overTarget?.panel !== 'visible')
+              setOverTarget({ id: '__panel__', panel: 'visible' })
+          }}
+          onDrop={e => { e.preventDefault(); handleDrop('visible') }}
+        >
+          <p className="px-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Visibles</p>
+          {visibleCols.map(col => renderItem(col, 'visible'))}
+        </div>
+      </div>
+
+      <div className="border-t border-border p-1.5">
+        <button
+          onClick={() => onChange(DEFAULT_COLS)}
+          className="w-full rounded-lg px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        >
+          Réinitialiser
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ─── Export modal ─────────────────────────────────────────────────────────────
+
+function ExportModal({ cols, search, status, total, onClose }: {
+  cols: ColDef[]
+  search: string
+  status: '' | '0' | '1'
+  total: number
+  onClose: () => void
+}) {
+  const [included, setIncluded] = useState<ColDef[]>(() => cols.filter(c => c.visible))
+  const [excluded, setExcluded] = useState<ColDef[]>(() => cols.filter(c => !c.visible))
+  const [format, setFormat]     = useState<'csv' | 'xlsx'>('xlsx')
+  const [exporting, setExporting] = useState(false)
+
+  const [draggingId, setDraggingId] = useState<string | null>(null)
+  const [overTarget, setOverTarget] = useState<{ id: string; panel: 'included' | 'excluded' } | null>(null)
+
+  function handleDrop(panel: 'included' | 'excluded') {
+    if (!draggingId) return
+    const src = [...included, ...excluded].find(c => c.id === draggingId)!
+    let inc = included.filter(c => c.id !== draggingId)
+    let exc = excluded.filter(c => c.id !== draggingId)
+    if (panel === 'included') {
+      const dstId = overTarget?.id
+      if (!dstId || dstId === '__panel__') { inc = [...inc, src] }
+      else {
+        const idx = inc.findIndex(c => c.id === dstId)
+        inc = idx === -1 ? [...inc, src] : [...inc.slice(0, idx), src, ...inc.slice(idx)]
+      }
+    } else { exc = [...exc, src] }
+    setIncluded(inc); setExcluded(exc)
+    setDraggingId(null); setOverTarget(null)
+  }
+
+  function renderItem(col: ColDef, panel: 'included' | 'excluded') {
+    const isOver = overTarget?.id === col.id && overTarget?.panel === panel
+    return (
+      <div
+        key={col.id}
+        draggable
+        onDragStart={() => setDraggingId(col.id)}
+        onDragEnd={() => { setDraggingId(null); setOverTarget(null) }}
+        onDragOver={e => {
+          e.preventDefault(); e.stopPropagation()
+          if (overTarget?.id !== col.id || overTarget?.panel !== panel)
+            setOverTarget({ id: col.id, panel })
+        }}
+        className={cn(
+          'flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm select-none cursor-grab active:cursor-grabbing transition-colors',
+          draggingId === col.id && 'opacity-40',
+          isOver ? 'bg-primary/10 ring-1 ring-primary/30' : 'hover:bg-accent',
+        )}
+      >
+        <GripVertical className="size-3.5 shrink-0 text-muted-foreground/40" />
+        <span className="flex-1 truncate">{col.label}</span>
+      </div>
+    )
+  }
+
+  async function doExport() {
+    if (included.length === 0) return
+    setExporting(true)
+    try {
+      const result = await newsApi.fetchNewsList({ page: 1, limit: 9999, search: search || undefined, status: status || undefined })
+      const rows = result.items.map(item => included.map(c => getCellText(item, c.id)))
+      const date = new Date().toISOString().slice(0, 10)
+      if (format === 'xlsx') {
+        const ws = XLSX.utils.aoa_to_sheet([included.map(c => c.label), ...rows])
+        const wb = XLSX.utils.book_new()
+        XLSX.utils.book_append_sheet(wb, ws, 'Actualités')
+        XLSX.writeFile(wb, `actualites-${date}.xlsx`)
+      } else {
+        const csv = [included.map(c => c.label), ...rows]
+          .map(row => row.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','))
+          .join('\n')
+        const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+        const url  = URL.createObjectURL(blob)
+        const a    = Object.assign(document.createElement('a'), { href: url, download: `actualites-${date}.csv` })
+        document.body.appendChild(a); a.click(); document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+      }
+      onClose()
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Erreur lors de l'export")
+    } finally { setExporting(false) }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div className="w-full max-w-lg rounded-2xl border border-border bg-card shadow-2xl">
+        <div className="flex items-start justify-between border-b border-border px-5 py-4">
+          <div>
+            <h2 className="text-sm font-semibold">Exporter</h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {total.toLocaleString('fr-FR')} article{total !== 1 ? 's' : ''} avec les filtres actifs
+            </p>
+          </div>
+          <button onClick={onClose} className="ml-4 text-muted-foreground hover:text-foreground transition-colors">
+            <X className="size-4" />
+          </button>
+        </div>
+
+        <div className="p-4 space-y-4">
+          {/* Format */}
+          <div>
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Format</p>
+            <div className="flex gap-2">
+              {(['xlsx', 'csv'] as const).map(f => (
+                <button key={f} onClick={() => setFormat(f)} className={cn(
+                  'flex flex-1 items-center justify-center gap-2 rounded-lg border py-2 text-sm font-medium transition-colors',
+                  format === f ? 'border-primary bg-primary/5 text-primary' : 'border-input text-muted-foreground hover:border-foreground/30 hover:text-foreground',
+                )}>
+                  {f === 'xlsx' ? <><FileSpreadsheet className="size-4 text-emerald-600" />Excel (.xlsx)</> : <><FileText className="size-4 text-blue-500" />CSV (.csv)</>}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Colonnes DnD */}
+          <div>
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Colonnes à exporter <span className="font-normal text-muted-foreground/60">— glisser pour inclure et ordonner</span>
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <div
+                className="flex flex-col gap-0.5 min-h-[100px] rounded-lg border border-dashed border-border p-1.5"
+                onDragOver={e => { e.preventDefault(); if (overTarget?.id !== '__panel__' || overTarget?.panel !== 'excluded') setOverTarget({ id: '__panel__', panel: 'excluded' }) }}
+                onDrop={e => { e.preventDefault(); handleDrop('excluded') }}
+              >
+                <p className="px-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Non incluses</p>
+                {excluded.length === 0
+                  ? <div className="flex flex-1 items-center justify-center py-3 text-[11px] text-muted-foreground/40">Glisser ici</div>
+                  : excluded.map(col => renderItem(col, 'excluded'))}
+              </div>
+              <div
+                className="flex flex-col gap-0.5 min-h-[100px] rounded-lg border border-dashed border-border p-1.5"
+                onDragOver={e => { e.preventDefault(); if (overTarget?.id !== '__panel__' || overTarget?.panel !== 'included') setOverTarget({ id: '__panel__', panel: 'included' }) }}
+                onDrop={e => { e.preventDefault(); handleDrop('included') }}
+              >
+                <p className="px-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">À exporter</p>
+                {included.length === 0
+                  ? <div className="flex flex-1 items-center justify-center py-3 text-[11px] text-muted-foreground/40">Glisser ici</div>
+                  : included.map(col => renderItem(col, 'included'))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2 border-t border-border px-4 py-3">
+          <Button variant="outline" size="sm" onClick={onClose} disabled={exporting}>Annuler</Button>
+          <Button size="sm" onClick={doExport} disabled={exporting || included.length === 0} className="gap-1.5">
+            {exporting ? <Loader2 className="size-3.5 animate-spin" /> : <FileDown className="size-3.5" />}
+            {exporting ? 'Export…' : `Télécharger ${format.toUpperCase()}`}
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── NewsListPage ─────────────────────────────────────────────────────────────
+
+const LIMIT = 25
+
+// Brick route base — the host mounts this Component at NEWS_ROUTE and NEWS_ROUTE/:id.
+const NEWS_ROUTE = '/melis-cms/news'
+
+export default function NewsListPage() {
+  const navigate  = useNavigate()
+
+  // ── View mode toggle ─────────────────────────────────────────────────────────
+  const [mode, setMode] = useState<ViewMode>(_cache?.mode ?? 'react')
+  const [iframeLoaded, setIframeLoaded] = useState(_cache?.iframeLoaded ?? false)
+
+  // ── Register/activate this tab when page mounts ────────────────────────────
+  // The host owns the top-tab bar; ensure the list tab exists/activates on mount.
+  useEffect(() => {
+    window.__melisOpenTab?.({ id: NEWS_ROUTE, label: 'Actualités', path: NEWS_ROUTE })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // ── Column config ──────────────────────────────────────────────────────────
+  const [cols, setCols] = useState<ColDef[]>(loadCols)
+
+  function updateCols(next: ColDef[]) { setCols(next); saveCols(next) }
+
+  // Pinned columns always appear first in the table
+  const visibleCols = useMemo(() => {
+    const v = cols.filter(c => c.visible)
+    return [...v.filter(c => c.pinned), ...v.filter(c => !c.pinned)]
+  }, [cols])
+
+  // Minimum table width = sum of column min-widths
+  const tableMinWidth = useMemo(
+    () => visibleCols.reduce((s, c) => s + (COL_MIN_WIDTHS[c.id] ?? 100), 0) + COL_MIN_WIDTHS._actions,
+    [visibleCols],
+  )
+
+  // ── Pin offset measurement (DOM-based for accuracy) ────────────────────────
+  const headerTableRef = useRef<HTMLTableElement>(null)
+  const [pinOffsets,   setPinOffsets]   = useState<Record<string, number>>({})
+  const [lastPinnedId, setLastPinnedId] = useState<string | undefined>()
+
+  function measurePinOffsets() {
+    const table = headerTableRef.current
+    if (!table?.tHead?.rows[0]) return
+    const offsets: Record<string, number> = {}
+    let left = 0
+    let last: string | undefined
+    Array.from(table.tHead.rows[0].cells).forEach(cell => {
+      const id = cell.dataset.colId
+      if (!id) return
+      const col = visibleCols.find(c => c.id === id)
+      if (col?.pinned) {
+        offsets[id] = left
+        left += cell.offsetWidth
+        last = id
+      }
+    })
+    setPinOffsets(offsets)
+    setLastPinnedId(last)
+  }
+
+  useLayoutEffect(() => { measurePinOffsets() }, [visibleCols])
+
+  useEffect(() => {
+    const table = headerTableRef.current
+    if (!table) return
+    const ro = new ResizeObserver(measurePinOffsets)
+    ro.observe(table)
+    return () => ro.disconnect()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visibleCols])
+
+  // ── Scroll sync: body horizontal ↔ header ─────────────────────────────────
+  const headerScrollRef = useRef<HTMLDivElement>(null)
+  const bodyScrollRef   = useRef<HTMLDivElement>(null)
+  const sentinelRef     = useRef<HTMLDivElement>(null)
+  const loadMoreRef     = useRef<() => void>(() => {})
+
+  // ── List state ─────────────────────────────────────────────────────────────
+  const [items,       setItems]       = useState<newsApi.NewsItem[]>(_cache?.items ?? [])
+  const [total,       setTotal]       = useState(_cache?.total ?? 0)
+  const [loading,     setLoading]     = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMore,     setHasMore]     = useState(_cache?.hasMore ?? true)
+  const [error,       setError]       = useState<string | null>(null)
+  const [page,        setPage]        = useState(_cache?.page ?? 1)
+  const [search,      setSearch]      = useState(_cache?.search ?? '')
+  const [status,      setStatus]      = useState<'' | '0' | '1'>(_cache?.status ?? '')
+  const [deleting,    setDeleting]    = useState<number | null>(null)
+
+  // ── Sort ───────────────────────────────────────────────────────────────────
+  const [sortCol, setSortCol] = useState<string | null>(_cache?.sortCol ?? null)
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>(_cache?.sortDir ?? 'asc')
+
+  function handleSort(colId: string) {
+    if (sortCol === colId) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setSortCol(colId); setSortDir('asc') }
+  }
+
+  const sortedItems = useMemo(() => {
+    if (!sortCol) return items
+    return [...items].sort((a, b) => {
+      const va = getSortValue(a, sortCol)
+      const vb = getSortValue(b, sortCol)
+      const cmp = typeof va === 'number' && typeof vb === 'number'
+        ? va - vb
+        : String(va).localeCompare(String(vb), 'fr', { sensitivity: 'base' })
+      return sortDir === 'asc' ? cmp : -cmp
+    })
+  }, [items, sortCol, sortDir])
+
+  // ── KPIs (from dedicated stats endpoint) ──────────────────────────────────
+  const [kpiStats, setKpiStats] = useState<newsApi.NewsStats | null>(_cache?.kpiStats ?? null)
+
+  function loadKpis() {
+    newsApi.fetchNewsStats().then(setKpiStats).catch(() => {})
+  }
+
+  useEffect(() => { loadKpis() }, [])
+
+  // ── Cache: track current state + save on unmount ───────────────────────────
+  const cacheRef = useRef({ items, total, page, search, status, sortCol, sortDir, kpiStats, hasMore, mode, iframeLoaded })
+  useEffect(() => { cacheRef.current = { items, total, page, search, status, sortCol, sortDir, kpiStats, hasMore, mode, iframeLoaded } })
+  useEffect(() => () => { _cache = cacheRef.current }, [])
+
+  // ── List loading ───────────────────────────────────────────────────────────
+  useEffect(() => {
+    // Restore from cache on re-mount (navigate back): items already in state, skip API call
+    if (_cache?.items?.length) {
+      _cache = null  // consume → next filter change will reload normally
+      return
+    }
+    setPage(1); setHasMore(true); setLoading(true); setError(null)
+    newsApi.fetchNewsList({ page: 1, limit: LIMIT, search: search || undefined, status: status || undefined })
+      .then(res => { setItems(res.items); setTotal(res.total); setHasMore(res.items.length === LIMIT) })
+      .catch(e => setError(e instanceof Error ? e.message : 'Erreur'))
+      .finally(() => setLoading(false))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, status])
+
+  function loadMore() {
+    if (loadingMore || !hasMore || loading) return
+    const next = page + 1
+    setPage(next)
+    setLoadingMore(true)
+    newsApi.fetchNewsList({ page: next, limit: LIMIT, search: search || undefined, status: status || undefined })
+      .then(res => { setItems(prev => [...prev, ...res.items]); setHasMore(res.items.length === LIMIT) })
+      .catch(() => {})
+      .finally(() => setLoadingMore(false))
+  }
+
+  useLayoutEffect(() => { loadMoreRef.current = loadMore })
+
+  // Infinite scroll sentinel
+  useEffect(() => {
+    const el = sentinelRef.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      entries => { if (entries[0].isIntersecting) loadMoreRef.current() },
+      { threshold: 0.1 },
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // ── UI panels ──────────────────────────────────────────────────────────────
+  const [showColMgr, setShowColMgr] = useState(false)
+  const [showExport, setShowExport] = useState(false)
+  const colMgrRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!showColMgr) return
+    function handler(e: MouseEvent) {
+      if (colMgrRef.current && !colMgrRef.current.contains(e.target as Node))
+        setShowColMgr(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [showColMgr])
+
+  // ── Delete ─────────────────────────────────────────────────────────────────
+  async function handleDelete(id: number, title: string) {
+    if (!confirm(`Supprimer « ${title} » ?`)) return
+    setDeleting(id)
+    try {
+      await newsApi.deleteNews(id)
+      setItems(prev => prev.filter(n => n.id !== id))
+      setTotal(t => t - 1)
+      loadKpis()
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Erreur')
+    } finally {
+      setDeleting(null)
+    }
+  }
+
+  // ── Pin styles ─────────────────────────────────────────────────────────────
+  function pinStyle(col: ColDef, isHeader = false): React.CSSProperties {
+    if (!col.pinned) return {}
+    return {
+      position: 'sticky',
+      left: pinOffsets[col.id] ?? 0,
+      zIndex: isHeader ? 20 : 2,
+      backgroundColor: 'var(--color-card)',
+      boxShadow: col.id === lastPinnedId ? '3px 0 6px -2px rgba(0,0,0,0.10)' : undefined,
+    }
+  }
+
+  // ── Colgroup ───────────────────────────────────────────────────────────────
+  function Colgroup() {
+    return (
+      <colgroup>
+        {visibleCols.map(col => {
+          const fixed = COL_FIXED_WIDTHS[col.id]
+          return (
+            <col
+              key={col.id}
+              style={fixed ? { width: fixed, minWidth: fixed } : { minWidth: COL_MIN_WIDTHS[col.id] ?? 160 }}
+            />
+          )
+        })}
+        <col style={{ width: COL_FIXED_WIDTHS._actions, minWidth: COL_FIXED_WIDTHS._actions }} />
+      </colgroup>
+    )
+  }
+
+  // ── Render cell content ────────────────────────────────────────────────────
+  function renderCell(item: newsApi.NewsItem, col: ColDef) {
+    switch (col.id) {
+      case 'id':
+        return (
+          <span className="tabular-nums text-xs font-medium text-muted-foreground">
+            {item.id}
+          </span>
+        )
+      case 'title':
+        return (
+          <button
+            onClick={() => navigate(`${NEWS_ROUTE}/${item.id}`)}
+            className="w-full truncate text-left font-medium text-foreground hover:text-primary transition-colors"
+          >
+            {item.title || <span className="italic text-muted-foreground">Sans titre</span>}
+          </button>
+        )
+      case 'subtitle':
+        return <span className="block truncate text-xs text-muted-foreground">{item.subtitle || '—'}</span>
+      case 'site':
+        return <span className="block truncate text-muted-foreground">{item.siteName || '—'}</span>
+      case 'publishDate':
+        return <span className="whitespace-nowrap text-xs text-muted-foreground">{fmtDate(item.publishDate)}</span>
+      case 'unpublishDate':
+        return <span className="whitespace-nowrap text-xs text-muted-foreground">{fmtDate(item.unpublishDate)}</span>
+      case 'creationDate':
+        return <span className="whitespace-nowrap text-xs text-muted-foreground">{fmtDate(item.creationDate)}</span>
+      case 'status':
+        return <StatusBadge status={item.status} />
+      default:
+        return null
+    }
+  }
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+  return (
+    <div className="flex flex-1 flex-col gap-5 p-6">
+
+      {/* KPI strip */}
+      <div className="flex flex-wrap gap-3">
+        <KpiCard
+          icon={<Newspaper    className="size-5 text-blue-500"    />}
+          label="Total articles"
+          value={kpiStats?.total    ?? null}
+          iconBg="bg-blue-500/10"
+        />
+        <KpiCard
+          icon={<CheckCircle2 className="size-5 text-emerald-500" />}
+          label="Publiés"
+          value={kpiStats?.published ?? null}
+          iconBg="bg-emerald-500/10"
+        />
+        <KpiCard
+          icon={<FileText     className="size-5 text-orange-500"  />}
+          label="Brouillons"
+          value={kpiStats?.draft     ?? null}
+          iconBg="bg-orange-500/10"
+        />
+      </div>
+
+      {/* Header */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight">Actualités</h1>
+          <p className="text-sm text-muted-foreground">Gestion des articles de news</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {/* Mode toggle */}
+          <div className="flex items-center rounded-lg border border-border bg-muted/40 p-1 gap-1">
+            <button
+              type="button"
+              onClick={() => setMode('react')}
+              className={cn(
+                'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+                mode === 'react'
+                  ? 'bg-card shadow-sm text-foreground'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              <Code2 className="size-3.5" />
+              New
+            </button>
+            <button
+              type="button"
+              onClick={() => { setMode('iframe'); setIframeLoaded(true) }}
+              className={cn(
+                'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+                mode === 'iframe'
+                  ? 'bg-card shadow-sm text-foreground'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              <Layout className="size-3.5" />
+              Old
+            </button>
+          </div>
+          <Button onClick={() => navigate(`${NEWS_ROUTE}/new`)} size="sm" className="gap-1.5">
+            <Plus className="size-4" />
+            Nouvel article
+          </Button>
+        </div>
+      </div>
+
+      {/* Vue Melis classique — gardée montée pour ne pas recharger au retoggle */}
+      {iframeLoaded && (
+        <div className={cn('flex-1 rounded-xl border border-border overflow-hidden', mode === 'iframe' ? 'flex' : 'hidden')}>
+          <iframe
+            src="/melis/react-tool-page?key=meliscmsnews_left_menu"
+            className="h-full w-full border-0"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+            title="News — Vue Melis"
+          />
+        </div>
+      )}
+
+      {/* React native view */}
+      <div className={cn('flex flex-1 flex-col gap-4', mode !== 'react' && 'hidden')}>
+
+      {/* Filters + actions */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative min-w-[200px] flex-1 max-w-sm">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Rechercher…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="pl-9 h-9"
+          />
+        </div>
+        <div className="flex h-9 items-center rounded-lg border border-border bg-muted/40 p-0.5 gap-0.5">
+          {([
+            { value: '',  label: 'Tous',    dot: null              },
+            { value: '1', label: 'Actif',   dot: 'bg-emerald-500' },
+            { value: '0', label: 'Inactif', dot: 'bg-red-500'     },
+          ] as const).map(opt => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => setStatus(opt.value)}
+              className={cn(
+                'flex h-full items-center gap-1.5 rounded-md px-3 text-xs font-medium whitespace-nowrap transition-colors',
+                status === opt.value
+                  ? 'bg-card shadow-sm text-foreground'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              {opt.dot && <span className={cn('size-1.5 shrink-0 rounded-full', opt.dot)} />}
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="ml-auto flex items-center gap-2">
+          <div ref={colMgrRef} className="relative">
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setShowColMgr(v => !v)}>
+              <Columns3 className="size-3.5" />
+              Colonnes
+            </Button>
+            {showColMgr && (
+              <ColManager cols={cols} onChange={updateCols} onClose={() => setShowColMgr(false)} />
+            )}
+          </div>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setShowExport(true)}>
+            <Download className="size-3.5" />
+            Exporter
+          </Button>
+        </div>
+      </div>
+
+      {error && (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          {error}
+        </div>
+      )}
+
+      {/* Table: sticky header + scrollable body */}
+      <div className="rounded-xl border border-border bg-card" style={{ overflow: 'clip' }}>
+
+        {/* Sticky header */}
+        <div className="sticky top-0 z-10 border-b border-border bg-card">
+          <div ref={headerScrollRef} style={{ overflowX: 'hidden' }}>
+            <table
+              ref={headerTableRef}
+              className="w-full text-sm"
+              style={{ tableLayout: 'fixed', minWidth: tableMinWidth }}
+            >
+              <Colgroup />
+              <thead>
+                <tr className="bg-muted/40">
+                  {visibleCols.map(col => (
+                    <th
+                      key={col.id}
+                      data-col-id={col.id}
+                      className="px-4 py-3 text-left font-medium text-muted-foreground whitespace-nowrap cursor-pointer select-none group/th hover:text-foreground transition-colors"
+                      style={pinStyle(col, true)}
+                      onClick={() => handleSort(col.id)}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        {col.label}
+                        {col.pinned && <Pin className="size-3 fill-primary text-primary opacity-60" />}
+                        {sortCol === col.id
+                          ? sortDir === 'asc'
+                            ? <ArrowUp className="size-3 text-primary" />
+                            : <ArrowDown className="size-3 text-primary" />
+                          : <ArrowUpDown className="size-3 opacity-0 group-hover/th:opacity-40 transition-opacity" />}
+                      </div>
+                    </th>
+                  ))}
+                  <th className="px-4 py-3 text-right font-medium text-muted-foreground whitespace-nowrap">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+            </table>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div
+          ref={bodyScrollRef}
+          className="overflow-x-auto"
+          onScroll={e => {
+            if (headerScrollRef.current)
+              headerScrollRef.current.scrollLeft = e.currentTarget.scrollLeft
+          }}
+        >
+          {loading && sortedItems.length === 0 ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="size-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : sortedItems.length === 0 ? (
+            <div className="py-20 text-center text-sm text-muted-foreground">Aucun article trouvé</div>
+          ) : (
+            <table
+              className="w-full text-sm"
+              style={{ tableLayout: 'fixed', minWidth: tableMinWidth }}
+            >
+              <Colgroup />
+              <tbody>
+                {sortedItems.map(item => (
+                  <tr
+                    key={item.id}
+                    className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors cursor-pointer"
+                    onClick={() => navigate(`${NEWS_ROUTE}/${item.id}`)}
+                  >
+                    {visibleCols.map(col => (
+                      <td key={col.id} className="px-4 py-3" style={pinStyle(col)}>
+                        {renderCell(item, col)}
+                      </td>
+                    ))}
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost" size="icon" className="size-8"
+                          onClick={() => navigate(`${NEWS_ROUTE}/${item.id}`)} title="Modifier"
+                        >
+                          <Edit2 className="size-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost" size="icon"
+                          className="size-8 text-destructive hover:text-destructive"
+                          onClick={(e) => { e.stopPropagation(); handleDelete(item.id, item.title) }}
+                          disabled={deleting === item.id} title="Supprimer"
+                        >
+                          {deleting === item.id
+                            ? <Loader2 className="size-3.5 animate-spin" />
+                            : <Trash2 className="size-3.5" />}
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+
+          {/* Infinite scroll sentinel */}
+          <div ref={sentinelRef} className="h-1" />
+          {loadingMore && (
+            <div className="flex items-center justify-center gap-2 py-4 text-xs text-muted-foreground">
+              <Loader2 className="size-3.5 animate-spin" />
+              Chargement…
+            </div>
+          )}
+          {!hasMore && items.length > 0 && (
+            <div className="py-4 text-center text-xs text-muted-foreground">
+              {total.toLocaleString('fr-FR')} article{total > 1 ? 's' : ''} — fin de la liste
+            </div>
+          )}
+        </div>
+      </div>
+
+      </div>{/* end React native view */}
+
+      {/* Export modal */}
+      {showExport && (
+        <ExportModal
+          cols={cols}
+          search={search}
+          status={status}
+          total={total}
+          onClose={() => setShowExport(false)}
+        />
+      )}
+    </div>
+  )
+}

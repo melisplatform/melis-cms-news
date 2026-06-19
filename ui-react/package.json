@@ -1,0 +1,26 @@
+{
+  "name": "melis-cms-news-brick",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@tiptap/extension-link": "^3.26.0",
+    "@tiptap/extension-placeholder": "^3.26.0",
+    "@tiptap/extension-text-align": "^3.26.0",
+    "@tiptap/extension-underline": "^3.26.0",
+    "@tiptap/pm": "^3.26.0",
+    "@tiptap/react": "^3.26.0",
+    "@tiptap/starter-kit": "^3.26.0",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.17.0",
+    "tailwind-merge": "^3.6.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.0",
+    "tailwindcss": "^4.3.0",
+    "vite": "^8.0.12"
+  }
+}
