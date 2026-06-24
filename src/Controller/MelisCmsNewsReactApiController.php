@@ -26,9 +26,7 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
 
     public function languagesAction(): HttpResponse
     {
-        if (!$this->isAuthenticated()) {
-            return $this->jsonResponse(['success' => false, 'error' => 'Unauthenticated'], 401);
-        }
+        if ($deny = $this->denyUnlessAccess()) { return $deny; }
 
         try {
             $db   = $this->getServiceManager()->get('Laminas\Db\Adapter\AdapterInterface');
@@ -57,9 +55,7 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
 
     public function listAction(): HttpResponse
     {
-        if (!$this->isAuthenticated()) {
-            return $this->jsonResponse(['success' => false, 'error' => 'Unauthenticated'], 401);
-        }
+        if ($deny = $this->denyUnlessAccess()) { return $deny; }
 
         try {
             $page   = max(1, (int) $this->params()->fromQuery('page', 1));
@@ -116,9 +112,7 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
 
     public function getAction(): HttpResponse
     {
-        if (!$this->isAuthenticated()) {
-            return $this->jsonResponse(['success' => false, 'error' => 'Unauthenticated'], 401);
-        }
+        if ($deny = $this->denyUnlessAccess()) { return $deny; }
 
         try {
             $id       = (int) $this->params('id');
@@ -167,9 +161,7 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
 
     public function saveAction(): HttpResponse
     {
-        if (!$this->isAuthenticated()) {
-            return $this->jsonResponse(['success' => false, 'error' => 'Unauthenticated'], 401);
-        }
+        if ($deny = $this->denyUnlessAccess()) { return $deny; }
 
         try {
             $body   = json_decode($this->getRequest()->getContent(), true) ?? [];
@@ -238,9 +230,7 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
 
     public function deleteAction(): HttpResponse
     {
-        if (!$this->isAuthenticated()) {
-            return $this->jsonResponse(['success' => false, 'error' => 'Unauthenticated'], 401);
-        }
+        if ($deny = $this->denyUnlessAccess()) { return $deny; }
 
         try {
             $id = (int) $this->params('id');
@@ -261,9 +251,7 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
 
     public function statsAction(): HttpResponse
     {
-        if (!$this->isAuthenticated()) {
-            return $this->jsonResponse(['success' => false, 'error' => 'Unauthenticated'], 401);
-        }
+        if ($deny = $this->denyUnlessAccess()) { return $deny; }
 
         try {
             $db  = $this->getServiceManager()->get('Laminas\Db\Adapter\AdapterInterface');
@@ -295,9 +283,7 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
 
     public function categoriesAction(): HttpResponse
     {
-        if (!$this->isAuthenticated()) {
-            return $this->jsonResponse(['success' => false, 'error' => 'Unauthenticated'], 401);
-        }
+        if ($deny = $this->denyUnlessAccess()) { return $deny; }
 
         try {
             $rawLang = $this->params()->fromQuery('langId', '');
@@ -337,9 +323,7 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
 
     public function previewUrlAction(): HttpResponse
     {
-        if (!$this->isAuthenticated()) {
-            return $this->jsonResponse(['success' => false, 'error' => 'Unauthenticated'], 401);
-        }
+        if ($deny = $this->denyUnlessAccess()) { return $deny; }
 
         try {
             $id = (int) $this->params('id');
@@ -385,9 +369,7 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
 
     public function sitesAction(): HttpResponse
     {
-        if (!$this->isAuthenticated()) {
-            return $this->jsonResponse(['success' => false, 'error' => 'Unauthenticated'], 401);
-        }
+        if ($deny = $this->denyUnlessAccess()) { return $deny; }
 
         try {
             $db   = $this->getServiceManager()->get('Laminas\Db\Adapter\AdapterInterface');
@@ -640,5 +622,24 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
     private function isAuthenticated(): bool
     {
         return $this->getServiceManager()->get('MelisCoreAuth')->hasIdentity();
+    }
+
+    /**
+     * Rights guard for the News tool: every endpoint requires ACCESS to the tool
+     * (`meliscmsnews_left_menu`), not merely an authenticated session — a user without the tool in
+     * their rights can't read/write news via the API (mirrors the Users tool guard). Returns the
+     * deny response or null.
+     */
+    private function denyUnlessAccess(): ?HttpResponse
+    {
+        if (!$this->isAuthenticated()) {
+            return $this->jsonResponse(['success' => false, 'error' => 'Unauthenticated'], 401);
+        }
+        try {
+            if (!$this->getServiceManager()->get('MelisCoreRights')->canAccess('meliscmsnews_left_menu')) {
+                return $this->jsonResponse(['success' => false, 'error' => 'Forbidden'], 403);
+            }
+        } catch (\Throwable) {}
+        return null;
     }
 }
