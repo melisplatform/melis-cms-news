@@ -747,7 +747,7 @@ export default function NewsListPage() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-1 flex-col gap-5 p-6">
+    <div className="flex h-full flex-col gap-5 overflow-y-auto p-6">
 
       {/* KPI strip */}
       <div className="flex flex-wrap gap-3">
@@ -816,7 +816,7 @@ export default function NewsListPage() {
 
       {/* Vue Melis classique — gardée montée pour ne pas recharger au retoggle */}
       {iframeLoaded && (
-        <div className={cn('flex-1 rounded-xl border border-border overflow-hidden', mode === 'iframe' ? 'flex' : 'hidden')}>
+        <div className={cn('flex-1 min-h-[480px] rounded-xl border border-border overflow-hidden', mode === 'iframe' ? 'flex' : 'hidden')}>
           <iframe
             src="/melis/react-tool-page?key=meliscmsnews_left_menu"
             className="h-full w-full border-0"
