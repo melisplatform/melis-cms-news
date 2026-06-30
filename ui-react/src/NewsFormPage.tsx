@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
-  ArrowLeft, Save, Loader2, Sparkles, ChevronDown, ChevronUp,
+  ArrowLeft, Save, Loader2, ChevronDown, ChevronUp,
   Plus, X, Eye, Calendar, Globe, Tag, Search, SlidersHorizontal,
   GitBranch, Image, Paperclip,
 } from 'lucide-react'
@@ -20,6 +20,15 @@ declare global {
   interface Window {
     __melisOpenTab?: (t: { id: string; label: string; path: string }) => void
     __melisCloseTab?: (id: string) => void
+    /** Extension point: optional modules (e.g. melis-ai-community-extensions) register
+     *  extra actions to render in each paragraph's header bar. */
+    __melisNewsExtensions?: {
+      renderParagraphActions?: (
+        paraIdx: number,
+        onContent: (text: string) => void,
+        context: { newsId?: string; title?: string; subtitle?: string; paragraphs?: string[]; images?: string[] }
+      ) => React.ReactNode
+    }
   }
 }
 
@@ -105,27 +114,14 @@ function SidebarSection({
   )
 }
 
-// ─── AI generate button ───────────────────────────────────────────────────────
-
-function AiButton() {
-  return (
-    <button
-      type="button"
-      className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm transition-all hover:from-violet-600 hover:to-indigo-600 hover:shadow-md active:scale-95"
-    >
-      <Sparkles className="size-3 shrink-0" />
-      Generate with AI
-    </button>
-  )
-}
-
 // ─── Paragraph editor ─────────────────────────────────────────────────────────
 
 function ParagraphEditor({
-  index, value, onChange, onRemove, canRemove, engine,
+  index, value, onChange, onRemove, canRemove, engine, extraActions,
 }: {
   index: number; value: string; onChange: (v: string) => void
   onRemove: () => void; canRemove: boolean; engine: RichEditorEngine
+  extraActions?: React.ReactNode
 }) {
   return (
     <div>
@@ -134,7 +130,7 @@ function ParagraphEditor({
           Paragraph {index + 1}
         </span>
         <div className="flex items-center gap-2">
-          <AiButton />
+          {extraActions}
           {canRemove && (
             <button
               type="button"
@@ -538,6 +534,17 @@ export default function NewsFormPage() {
                 onRemove={() => removeParagraph(i)}
                 canRemove={form.paragraphs.length > 1}
                 engine={editorEngine}
+                extraActions={window.__melisNewsExtensions?.renderParagraphActions?.(
+                  i,
+                  (text) => updateParagraph(i, text),
+                  {
+                    newsId: isNew ? undefined : id,
+                    title: form.title,
+                    subtitle: form.subtitle,
+                    paragraphs: form.paragraphs,
+                    images: [form.image1, form.image2, form.image3].filter((x): x is string => x !== null),
+                  }
+                )}
               />
             ))}
 
