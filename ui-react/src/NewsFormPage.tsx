@@ -369,6 +369,8 @@ export default function NewsFormPage() {
         seo:         form.seo,
       }
       const res = await newsApi.saveNews(payload)
+      const lang = (document.documentElement.lang || 'en').slice(0, 2)
+      window.postMessage({ __melisNotif: true, kind: 'ok', title: 'News', message: lang === 'fr' ? 'Article enregistré.' : 'Article saved.' }, '*')
       // Saved: if we were on the "new" tab, close it; open/activate the saved article's tab.
       if (isNew) window.__melisCloseTab?.(`${NEWS_ROUTE}/new`)
       window.__melisOpenTab?.({ id: `${NEWS_ROUTE}/${res.id}`, label: form.title.trim() || `Article #${res.id}`, path: `${NEWS_ROUTE}/${res.id}` })
