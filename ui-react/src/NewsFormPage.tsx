@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
 import {
-  ArrowLeft, Save, Loader2, ChevronDown, ChevronUp,
+  Save, Loader2, ChevronDown, ChevronUp,
   Plus, X, Eye, Calendar, Globe, Tag, Search, SlidersHorizontal,
-  GitBranch, Image, Paperclip,
+  GitBranch, Image, Paperclip, GripVertical,
 } from 'lucide-react'
 
 import { Button } from './components/ui/button'
@@ -12,14 +11,9 @@ import { RichEditor, type RichEditorEngine } from './components/ui/rich-editor'
 import { cn } from './lib/utils'
 import * as newsApi from './lib/news-api'
 
-// Brick route base — host mounts the Component at NEWS_ROUTE and NEWS_ROUTE/:id.
-const NEWS_ROUTE = '/melis-cms/news'
-
-// Host tab API (exposed by MelisCore at runtime). Optional — guarded at call sites.
+// Host API (exposed by MelisCore at runtime). Optional — guarded at call sites.
 declare global {
   interface Window {
-    __melisOpenTab?: (t: { id: string; label: string; path: string }) => void
-    __melisCloseTab?: (id: string) => void
     /** Extension point: optional modules (e.g. melis-ai-community-extensions) register
      *  extra actions to render in each paragraph's header bar. */
     __melisNewsExtensions?: {
@@ -39,7 +33,7 @@ type Status = '0' | '1'
 interface FormState {
   title: string
   subtitle: string
-  paragraphs: string[]   // maps to cnews_paragraph1-4
+  paragraphs: string[]   // maps to cnews_paragraph1-10
   status: Status
   siteId: string
   publishDate: string
@@ -67,19 +61,40 @@ const EMPTY: FormState = {
   document1: null, document2: null, document3: null,
 }
 
-const MAX_PARAGRAPHS = 4  // cnews_paragraph1-4 in DB
+const MAX_PARAGRAPHS = 10  // cnews_paragraph1-10 in DB
 
+// La valeur BDD ("YYYY-MM-DD HH:MM:SS") et la valeur <input datetime-local> ("YYYY-MM-DDTHH:MM")
+// sont des heures MURALES (sans fuseau). On les manipule en chaînes — JAMAIS via new Date().toISOString()
+// (qui applique un décalage de fuseau et fait dériver la date à chaque save/load, indépendamment de la langue).
 function toInputDate(d: string | null | undefined): string {
   if (!d) return ''
-  try { return new Date(d).toISOString().slice(0, 16) } catch { return '' }
+  const m = String(d).match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/)
+  return m ? `${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}` : ''
+}
+// "YYYY-MM-DDTHH:MM" → "YYYY-MM-DD HH:MM:SS" (pour la BDD), sans conversion de fuseau.
+function toDbDate(v: string): string | null {
+  const m = v && v.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})$/)
+  return m ? `${m[1]} ${m[2]}:00` : null
+}
+// Aperçu lisible dans la langue active (fr → "12 juillet 2026 à 14:30", en → "12 July 2026 at 14:30").
+function formatDatePreview(v: string, lang: string): string {
+  const m = v && v.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/)
+  if (!m) return ''
+  const dt = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5])
+  return dt.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-GB', { dateStyle: 'long', timeStyle: 'short' })
 }
 
-function localeToFlag(locale: string): string {
-  const map: Record<string, string> = {
-    en_EN: '🇬🇧', fr_FR: '🇫🇷', de_DE: '🇩🇪', es_ES: '🇪🇸',
-    it_IT: '🇮🇹', nl_NL: '🇳🇱', pt_PT: '🇵🇹',
-  }
-  return map[locale] ?? '🌐'
+// Vrais drapeaux servis par MelisCore (les emojis de drapeaux ne s'affichent pas sous Windows).
+function Flag({ locale }: { locale: string }) {
+  const short = (locale || 'en').slice(0, 2).toLowerCase()
+  return (
+    <img
+      src={`/MelisCore/assets/images/lang/${short}.png`}
+      alt=""
+      className="h-3 w-[18px] shrink-0 rounded-[2px] object-cover"
+      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+    />
+  )
 }
 
 // ─── Sidebar section ──────────────────────────────────────────────────────────
@@ -118,15 +133,41 @@ function SidebarSection({
 
 function ParagraphEditor({
   index, value, onChange, onRemove, canRemove, engine, extraActions,
+  canReorder, isDragging, onDragStart, onDrop, onDragEnd,
 }: {
   index: number; value: string; onChange: (v: string) => void
   onRemove: () => void; canRemove: boolean; engine: RichEditorEngine
   extraActions?: React.ReactNode
+  canReorder: boolean
+  isDragging: boolean
+  onDragStart: () => void
+  onDrop: () => void
+  onDragEnd: () => void
 }) {
+  // La carte n'est « draggable » qu'après un appui sur la poignée — sinon la sélection de
+  // texte dans l'éditeur riche déclencherait un glisser intempestif.
+  const [armed, setArmed] = useState(false)
   return (
-    <div>
+    <div
+      draggable={armed}
+      onDragStart={(e) => { e.dataTransfer.effectAllowed = 'move'; onDragStart() }}
+      onDragOver={(e) => { if (canReorder) e.preventDefault() }}
+      onDrop={(e) => { e.preventDefault(); setArmed(false); onDrop() }}
+      onDragEnd={() => { setArmed(false); onDragEnd() }}
+      className={cn('rounded-lg transition-opacity', isDragging && 'opacity-40')}
+    >
       <div className="mb-1.5 flex items-center justify-between">
-        <span className="text-[11px] font-medium text-muted-foreground tracking-wide">
+        <span className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground tracking-wide">
+          {canReorder && (
+            <span
+              onMouseDown={() => setArmed(true)}
+              onMouseUp={() => setArmed(false)}
+              title="Glisser pour réordonner"
+              className="cursor-grab active:cursor-grabbing rounded p-0.5 text-muted-foreground/40 hover:text-foreground transition-colors"
+            >
+              <GripVertical className="size-3.5" />
+            </span>
+          )}
           Paragraph {index + 1}
         </span>
         <div className="flex items-center gap-2">
@@ -193,28 +234,26 @@ let _siteCache:  newsApi.Site[]        | null = null
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function NewsFormPage() {
-  const { id } = useParams<{ id?: string }>()
-  const navigate = useNavigate()
-  const isNew = !id || id === 'new'
-
-  // The original used a per-module sub-tab store; the host only exposes flat top tabs via
-  // window.__melisOpenTab / __melisCloseTab. We map the form view to a top tab at its own path,
-  // and re-open with the same id to update its label (host treats same-id open as an update).
-  const subTabPath = id ? `${NEWS_ROUTE}/${id}` : `${NEWS_ROUTE}/new`
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    // When opening an existing article, drop a lingering "new" tab if any.
-    if (id && id !== 'new') window.__melisCloseTab?.(`${NEWS_ROUTE}/new`)
-    window.__melisOpenTab?.({ id: subTabPath, label: isNew ? 'Nouvel article' : 'Chargement…', path: subTabPath })
-  }, [])
+export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
+  newsId: number | 'new'
+  onSaved: (id: number, title: string) => void
+  onTitleChange?: (title: string) => void
+}) {
+  const isNew = newsId === 'new'
+  // On garde `id` en string|undefined (comme l'ancien useParams) pour ne rien changer au reste.
+  const id = isNew ? undefined : String(newsId)
 
   const [languages, setLanguages]       = useState<newsApi.Language[]>([])
   const [sites, setSites]               = useState<newsApi.Site[]>([])
-  const [categories, setCategories]     = useState<newsApi.NewsCategory[]>([])
+  const [sliders, setSliders]           = useState<newsApi.Slider[]>([])
+  const [sliderActive, setSliderActive] = useState(false)   // vrai ssi le module Slider est actif
+  const [sbActive, setSbActive]         = useState(false)   // vrai ssi MelisSmallBusiness est actif (→ bouton Workflow)
+  const [dragIndex, setDragIndex]       = useState<number | null>(null)  // paragraphe en cours de glisser
   const [previewUrl, setPreviewUrl]     = useState<string | null>(null)
   const [editorEngine, setEditorEngine] = useState<RichEditorEngine>('tiptap')
+
+  // Langue de l'app (chrome hôte) → format de date fr/en.
+  const appLang = (document.documentElement.lang || 'en').slice(0, 2)
 
   const [langId, setLangId]   = useState<number>(1)
   const [form, setForm]       = useState<FormState>(EMPTY)
@@ -229,8 +268,7 @@ export default function NewsFormPage() {
       setForm({
         title:         d.title    ?? '',
         subtitle:      d.subtitle ?? '',
-        paragraphs:    [d.paragraph1, d.paragraph2, d.paragraph3, d.paragraph4]
-                         .filter((_, i) => i === 0 || d[`paragraph${i + 1}` as keyof typeof d]),
+        paragraphs:    d.paragraphs && d.paragraphs.length ? d.paragraphs : [''],
         status:        d.status === 1 ? '1' : '0',
         siteId:        d.siteId ? String(d.siteId) : '',
         publishDate:   toInputDate(d.publishDate),
@@ -260,7 +298,13 @@ export default function NewsFormPage() {
       _siteCache
         ? Promise.resolve().then(() => setSites(_siteCache!))
         : newsApi.fetchSites().then(s => { _siteCache = s; setSites(s) }).catch(() => {}),
-      newsApi.fetchCategories().then(setCategories).catch(() => {}),
+      // Slider : modulaire — n'apparaît que si l'outil Slider (migré) est actif (route 404 sinon).
+      newsApi.fetchSliders().then((s) => { setSliders(s); setSliderActive(true) }).catch(() => setSliderActive(false)),
+      // MelisSmallBusiness : apporte le workflow de validation. Le bouton « Workflow » n'existe
+      // dans la barre latérale QUE si ce module est actif (détecté via /react-modules).
+      newsApi.fetchActiveModules().then((mods) => setSbActive(mods.includes('MelisSmallBusiness'))).catch(() => {}),
+      // Categories : RETIRÉ du module de base — appartient à l'outil categorie-v2 (non migré). À réactiver
+      // quand categorie-v2 sera migré. newsApi.fetchCategories().then(setCategories).catch(() => {}),
     ]
 
     if (!isNew) {
@@ -286,17 +330,15 @@ export default function NewsFormPage() {
 
   useEffect(() => {
     if (!isNew && !loading) {
-      newsApi.fetchCategories(langId).then(setCategories).catch(() => {})
+      // (Categories retiré — cf. plus haut.) Recharge l'article dans la langue sélectionnée.
       loadNews(Number(id), langId)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [langId])
 
   useEffect(() => {
-    if (!isNew && form.title) {
-      // Re-opening with the same id updates the tab label (host treats same-id as update).
-      window.__melisOpenTab?.({ id: subTabPath, label: form.title, path: subTabPath })
-    }
+    // Met à jour le libellé du sous-onglet quand le titre change (article existant).
+    if (!isNew && form.title) onTitleChange?.(form.title)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.title])
 
@@ -329,6 +371,18 @@ export default function NewsFormPage() {
     })
   }
 
+  // Réordonnancement des paragraphes par glisser-déposer (drag'n'drop). L'ordre est
+  // persisté à la sauvegarde (colonnes 1..N séquentielles + cnews_paragraph_order).
+  function moveParagraph(from: number, to: number) {
+    if (from === to) return
+    setForm((prev) => {
+      const p = [...prev.paragraphs]
+      const [moved] = p.splice(from, 1)
+      p.splice(to, 0, moved)
+      return { ...prev, paragraphs: p }
+    })
+  }
+
   function toggleCategory(catId: number) {
     setForm((prev) => {
       const ids = prev.categoryIds.includes(catId)
@@ -358,12 +412,8 @@ export default function NewsFormPage() {
         paragraphs:    form.paragraphs,
         status:        form.status === '1' ? 1 : 0,
         siteId:        Number(form.siteId),
-        publishDate:   form.publishDate
-          ? new Date(form.publishDate).toISOString().slice(0, 19).replace('T', ' ')
-          : null,
-        unpublishDate: form.unpublishDate
-          ? new Date(form.unpublishDate).toISOString().slice(0, 19).replace('T', ' ')
-          : null,
+        publishDate:   toDbDate(form.publishDate),
+        unpublishDate: toDbDate(form.unpublishDate),
         sliderId:    form.sliderId ? Number(form.sliderId) : null,
         categoryIds: form.categoryIds,
         seo:         form.seo,
@@ -371,10 +421,9 @@ export default function NewsFormPage() {
       const res = await newsApi.saveNews(payload)
       const lang = (document.documentElement.lang || 'en').slice(0, 2)
       window.postMessage({ __melisNotif: true, kind: 'ok', title: 'News', message: lang === 'fr' ? 'Article enregistré.' : 'Article saved.' }, '*')
-      // Saved: if we were on the "new" tab, close it; open/activate the saved article's tab.
-      if (isNew) window.__melisCloseTab?.(`${NEWS_ROUTE}/new`)
-      window.__melisOpenTab?.({ id: `${NEWS_ROUTE}/${res.id}`, label: form.title.trim() || `Article #${res.id}`, path: `${NEWS_ROUTE}/${res.id}` })
-      navigate(`${NEWS_ROUTE}/${res.id}`, { replace: true })
+      // Le conteneur (NewsPage) convertit l'onglet « new » en onglet de l'article créé,
+      // ou met à jour le libellé d'un article existant.
+      onSaved(res.id, form.title.trim() || `Article #${res.id}`)
     } catch (e) {
       setApiError(e instanceof Error ? e.message : 'Error saving article')
     } finally {
@@ -399,20 +448,9 @@ export default function NewsFormPage() {
   return (
     <div className="flex flex-col">
 
-      {/* Sticky header */}
-      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-background/95 px-5 py-2.5 backdrop-blur-sm">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <Button variant="ghost" size="icon" className="size-8 shrink-0" onClick={() => navigate(NEWS_ROUTE)}>
-            <ArrowLeft className="size-4" />
-          </Button>
-          <div className="min-w-0">
-            <p className="text-[11px] leading-none text-muted-foreground mb-0.5">News</p>
-            <h1 className="truncate text-sm font-semibold leading-tight max-w-xs">
-              {form.title || (isNew ? 'New article' : `Article #${id}`)}
-            </h1>
-          </div>
-        </div>
-
+      {/* Sticky header — le titre/retour vit dans la barre de sous-onglets (NewsPage) ;
+          ici on ne garde que les actions (Preview / statut / Save). */}
+      <header className="sticky top-0 z-10 flex items-center justify-end border-b border-border bg-background/95 px-5 py-2.5 backdrop-blur-sm">
         <div className="flex items-center gap-2">
           {previewUrl && (
             <Button
@@ -435,7 +473,7 @@ export default function NewsFormPage() {
             )}
           >
             <span className={cn('size-1.5 rounded-full', statusDot)} />
-            {isPublished ? 'Published' : 'Draft'}
+            {isPublished ? 'Published' : 'Unpublished'}
           </button>
 
           {apiError && <span className="text-xs text-destructive">{apiError}</span>}
@@ -469,7 +507,7 @@ export default function NewsFormPage() {
                         : 'text-muted-foreground hover:text-foreground',
                     )}
                   >
-                    <span className="text-sm leading-none">{localeToFlag(lang.locale)}</span>
+                    <Flag locale={lang.locale} />
                     {lang.name}
                   </button>
                 ))
@@ -535,6 +573,11 @@ export default function NewsFormPage() {
                 onChange={(v) => updateParagraph(i, v)}
                 onRemove={() => removeParagraph(i)}
                 canRemove={form.paragraphs.length > 1}
+                canReorder={form.paragraphs.length > 1}
+                isDragging={dragIndex === i}
+                onDragStart={() => setDragIndex(i)}
+                onDrop={() => { if (dragIndex !== null) moveParagraph(dragIndex, i); setDragIndex(null) }}
+                onDragEnd={() => setDragIndex(null)}
                 engine={editorEngine}
                 extraActions={window.__melisNewsExtensions?.renderParagraphActions?.(
                   i,
@@ -596,42 +639,61 @@ export default function NewsFormPage() {
 
           <SidebarSection title="Status" icon={GitBranch}>
             <div className="flex items-center justify-between gap-2">
+              {/* Switch published/unpublished — vert = publié (ON), rouge = non publié (OFF). */}
               <button
                 type="button"
+                role="switch"
+                aria-checked={isPublished}
                 onClick={() => set('status', isPublished ? '0' : '1')}
-                className={cn(
-                  'inline-flex cursor-pointer items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors select-none',
-                  statusClass,
-                )}
+                className="inline-flex cursor-pointer items-center gap-2 select-none"
               >
-                <span className={cn('size-1.5 rounded-full', statusDot)} />
-                {isPublished ? 'Published' : 'Draft'}
+                <span
+                  className={cn(
+                    'relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors',
+                    isPublished ? 'bg-emerald-500' : 'bg-red-500',
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'inline-block size-4 rounded-full bg-white shadow transition-transform',
+                      isPublished ? 'translate-x-[18px]' : 'translate-x-0.5',
+                    )}
+                  />
+                </span>
+                <span className="text-xs font-medium text-foreground">
+                  {isPublished ? 'Published' : 'Unpublished'}
+                </span>
               </button>
-              <Button variant="outline" size="sm" className="h-7 gap-1.5 text-xs px-2.5">
-                <GitBranch className="size-3" />
-                Workflow
-              </Button>
+              {/* Le workflow de validation est apporté par MelisSmallBusiness — bouton masqué si inactif. */}
+              {sbActive && (
+                <Button variant="outline" size="sm" className="h-7 gap-1.5 text-xs px-2.5">
+                  <GitBranch className="size-3" />
+                  Workflow
+                </Button>
+              )}
             </div>
           </SidebarSection>
 
           <SidebarSection title="Publication" icon={Calendar}>
             <div>
-              <label className="mb-1 block text-[11px] text-muted-foreground">Publish on</label>
+              <label className="mb-1 block text-[11px] text-muted-foreground">{appLang === 'fr' ? 'Publier le' : 'Publish on'}</label>
               <Input
                 type="datetime-local"
                 value={form.publishDate}
                 onChange={(e) => set('publishDate', e.target.value)}
                 className="h-8 text-xs"
               />
+              {form.publishDate && <p className="mt-1 text-[11px] text-muted-foreground/80">{formatDatePreview(form.publishDate, appLang)}</p>}
             </div>
             <div>
-              <label className="mb-1 block text-[11px] text-muted-foreground">Unpublish on</label>
+              <label className="mb-1 block text-[11px] text-muted-foreground">{appLang === 'fr' ? 'Dépublier le' : 'Unpublish on'}</label>
               <Input
                 type="datetime-local"
                 value={form.unpublishDate}
                 onChange={(e) => set('unpublishDate', e.target.value)}
                 className="h-8 text-xs"
               />
+              {form.unpublishDate && <p className="mt-1 text-[11px] text-muted-foreground/80">{formatDatePreview(form.unpublishDate, appLang)}</p>}
             </div>
           </SidebarSection>
 
@@ -652,25 +714,10 @@ export default function NewsFormPage() {
             {errors.siteId && <p className="mt-1 text-xs text-destructive">{errors.siteId}</p>}
           </SidebarSection>
 
-          <SidebarSection title="Categories" icon={Tag} collapsible defaultOpen>
-            {categories.length === 0 ? (
-              <p className="text-[11px] text-muted-foreground/60">No categories available</p>
-            ) : (
-              <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
-                {categories.map((cat) => (
-                  <label key={cat.id} className="flex cursor-pointer items-center gap-2 rounded-md px-1 py-0.5 hover:bg-accent transition-colors">
-                    <input
-                      type="checkbox"
-                      checked={form.categoryIds.includes(cat.id)}
-                      onChange={() => toggleCategory(cat.id)}
-                      className="size-3.5 accent-primary"
-                    />
-                    <span className="text-xs">{cat.name || `Category #${cat.id}`}</span>
-                  </label>
-                ))}
-              </div>
-            )}
-          </SidebarSection>
+          {/* Categories : RETIRÉ du module News de base. Ce n'est PAS une notion du module de base —
+              c'est une partie modulaire apportée par l'outil « categorie-v2 » (melis-cms-category2),
+              pas encore migré en React. À réintégrer quand categorie-v2 sera migré : rétablir l'état
+              `categories`, `fetchCategories`, `toggleCategory`, et ce bloc <SidebarSection title="Categories">. */}
 
           <SidebarSection title="SEO" icon={Search} collapsible defaultOpen={false}>
             {(
@@ -703,16 +750,22 @@ export default function NewsFormPage() {
             ))}
           </SidebarSection>
 
-          <SidebarSection title="Slider" icon={SlidersHorizontal} collapsible defaultOpen={false}>
-            <Input
-              value={form.sliderId}
-              onChange={(e) => set('sliderId', e.target.value)}
-              placeholder="Slider ID…"
-              className="h-8 text-xs"
-              type="number"
-              min={0}
-            />
-          </SidebarSection>
+          {/* Slider : modulaire — l'outil Slider EST migré, donc on l'affiche SEULEMENT s'il est actif
+              (la route /melis/react-api/sliders répond ; sinon la section est masquée). Liste dynamique. */}
+          {sliderActive && (
+            <SidebarSection title="Slider" icon={SlidersHorizontal} collapsible defaultOpen={false}>
+              <select
+                value={form.sliderId}
+                onChange={(e) => set('sliderId', e.target.value)}
+                className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="">{appLang === 'fr' ? 'Aucun slider' : 'No slider'}</option>
+                {sliders.map((s) => (
+                  <option key={s.id} value={String(s.id)}>{s.name}</option>
+                ))}
+              </select>
+            </SidebarSection>
+          )}
         </aside>
       </div>
     </div>

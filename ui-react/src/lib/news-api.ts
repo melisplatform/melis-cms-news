@@ -36,10 +36,7 @@ export interface NewsItem {
 }
 
 export interface NewsDetail extends NewsItem {
-  paragraph1: string
-  paragraph2: string
-  paragraph3: string
-  paragraph4: string
+  paragraphs: string[]   // colonnes cnews_paragraph1-10, non vides, dans l'ordre d'affichage
   image1: string | null
   image2: string | null
   image3: string | null
@@ -168,4 +165,34 @@ export async function fetchCategories(langId?: number): Promise<NewsCategory[]> 
 
 export async function fetchSites(): Promise<Site[]> {
   return apiFetch<Site[]>('/melis/react-api/news-sites')
+}
+
+// ─── Sliders (modular — only present when MelisCmsSlider is active) ──────────────
+// Fournis par le module melis-cms-slider (migré). L'appel échoue (404) si l'outil
+// n'est pas actif → la section Slider du formulaire est masquée.
+
+export interface Slider {
+  id: number
+  name: string
+}
+
+export async function fetchSliders(): Promise<Slider[]> {
+  const data = await apiFetch<{ items: Slider[]; total: number }>('/melis/react-api/sliders')
+  return data.items ?? []
+}
+
+// ─── Modules actifs (gating d'UI modulaire) ─────────────────────────────────────
+// /react-modules liste les modules ACTIFS livrant une brique React. On s'en sert pour
+// n'afficher un bout d'UI apporté par un module optionnel que si ce module est actif.
+// Ex. le bouton « Workflow » de la barre latérale appartient à MelisSmallBusiness.
+
+interface ReactModuleEntry { module?: string }
+
+export async function fetchActiveModules(): Promise<string[]> {
+  try {
+    const list = await apiFetch<ReactModuleEntry[]>('/melis/react-api/react-modules')
+    return list.map((m) => m.module ?? '').filter(Boolean)
+  } catch {
+    return []
+  }
 }

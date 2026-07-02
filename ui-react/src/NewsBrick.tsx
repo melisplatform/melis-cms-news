@@ -1,15 +1,11 @@
-import { useParams } from 'react-router-dom'
-import NewsListPage from './NewsListPage'
-import NewsFormPage from './NewsFormPage'
+import NewsPage from './NewsPage'
 
 /**
- * Single brick Component. The host mounts it at both `{route}` and `{route}/:id`:
- *   - no id            → the News list
- *   - id === 'new' / N → the News form (create / edit)
- * Each page reads its own params/navigation, so we only branch on presence of `id`.
+ * Single brick Component. Monté une fois par le shell sur l'onglet « Actualités ».
+ * Toute la navigation liste ⇄ édition se fait EN INTERNE via des sous-onglets
+ * (NewsPage), sans toucher à l'URL ni créer d'onglet général du shell — exactement
+ * comme l'outil Slider.
  */
 export default function NewsBrick() {
-  const { id } = useParams<{ id?: string }>()
-  if (!id) return <NewsListPage />
-  return <NewsFormPage />
+  return <NewsPage />
 }

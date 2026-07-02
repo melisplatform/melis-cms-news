@@ -1,5 +1,4 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import {
   ArrowDown, ArrowUp, ArrowUpDown, CheckCircle2, Code2, Columns3,
   Download, Edit2, FileDown, FileSpreadsheet, FileText, GripVertical,
@@ -11,14 +10,6 @@ import { Button } from './components/ui/button'
 import { Input } from './components/ui/input'
 import { cn } from './lib/utils'
 import * as newsApi from './lib/news-api'
-
-// Host tab API (exposed by MelisCore at runtime). Optional — guarded at call sites.
-declare global {
-  interface Window {
-    __melisOpenTab?: (t: { id: string; label: string; path: string }) => void
-    __melisCloseTab?: (id: string) => void
-  }
-}
 
 // ─── Module-level cache — survit au démontage du composant (navigation) ────────
 
@@ -485,22 +476,18 @@ function ExportModal({ cols, search, status, total, onClose }: {
 
 const LIMIT = 25
 
-// Brick route base — the host mounts this Component at NEWS_ROUTE and NEWS_ROUTE/:id.
-const NEWS_ROUTE = '/melis-cms/news'
-
-export default function NewsListPage() {
-  const navigate  = useNavigate()
-
+/**
+ * Liste des articles. Pilotée par le conteneur NewsPage (sous-onglets) : `onOpen`/`onNew`
+ * ouvrent un sous-onglet d'édition DANS l'outil (plus de navigation d'URL ni d'onglet de shell).
+ */
+export default function NewsListPage({ active, onOpen, onNew }: {
+  active: boolean
+  onOpen: (id: number, title: string) => void
+  onNew: () => void
+}) {
   // ── View mode toggle ─────────────────────────────────────────────────────────
   const [mode, setMode] = useState<ViewMode>(_cache?.mode ?? 'react')
   const [iframeLoaded, setIframeLoaded] = useState(_cache?.iframeLoaded ?? false)
-
-  // ── Register/activate this tab when page mounts ────────────────────────────
-  // The host owns the top-tab bar; ensure the list tab exists/activates on mount.
-  useEffect(() => {
-    window.__melisOpenTab?.({ id: NEWS_ROUTE, label: 'Actualités', path: NEWS_ROUTE })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   // ── Column config ──────────────────────────────────────────────────────────
   const [cols, setCols] = useState<ColDef[]>(loadCols)
@@ -602,6 +589,8 @@ export default function NewsListPage() {
   }
 
   useEffect(() => { loadKpis() }, [])
+  // Rafraîchit les compteurs quand on revient sur la liste (retour depuis un sous-onglet).
+  useEffect(() => { if (active) loadKpis() }, [active])
 
   // ── Cache: track current state + save on unmount ───────────────────────────
   const cacheRef = useRef({ items, total, page, search, status, sortCol, sortDir, kpiStats, hasMore, mode, iframeLoaded })
@@ -722,7 +711,7 @@ export default function NewsListPage() {
       case 'title':
         return (
           <button
-            onClick={() => navigate(`${NEWS_ROUTE}/${item.id}`)}
+            onClick={() => onOpen(item.id, item.title)}
             className="w-full truncate text-left font-medium text-foreground hover:text-primary transition-colors"
           >
             {item.title || <span className="italic text-muted-foreground">Sans titre</span>}
@@ -807,7 +796,7 @@ export default function NewsListPage() {
               Old
             </button>
           </div>
-          <Button onClick={() => navigate(`${NEWS_ROUTE}/new`)} size="sm" className="gap-1.5">
+          <Button onClick={onNew} size="sm" className="gap-1.5">
             <Plus className="size-4" />
             Nouvel article
           </Button>
@@ -954,7 +943,7 @@ export default function NewsListPage() {
                   <tr
                     key={item.id}
                     className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors cursor-pointer"
-                    onClick={() => navigate(`${NEWS_ROUTE}/${item.id}`)}
+                    onClick={() => onOpen(item.id, item.title)}
                   >
                     {visibleCols.map(col => (
                       <td key={col.id} className="px-4 py-3" style={pinStyle(col)}>
@@ -965,7 +954,7 @@ export default function NewsListPage() {
                       <div className="flex items-center justify-end gap-1">
                         <Button
                           variant="ghost" size="icon" className="size-8"
-                          onClick={() => navigate(`${NEWS_ROUTE}/${item.id}`)} title="Modifier"
+                          onClick={(e) => { e.stopPropagation(); onOpen(item.id, item.title) }} title="Modifier"
                         >
                           <Edit2 className="size-3.5" />
                         </Button>

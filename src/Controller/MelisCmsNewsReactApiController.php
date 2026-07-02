@@ -127,20 +127,32 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
 
             $service = $this->getServiceManager()->get('MelisCmsNewsService');
 
-            // Try requested language; fall back to any available translation if none exists
-            $result = $service->getNewsById($id, $langId);
-            if (empty($result)) {
-                $result = $service->getNewsById($id); // returns array of all lang rows
-            }
+            // Le CONTENU (titre, sous-titre, paragraphes) est stocké PAR LANGUE dans
+            // melis_cms_news_texts (clé cnews_id + cnews_lang_id). On charge la traduction
+            // de la langue demandée. Si elle n'existe pas encore, on NE retombe PAS sur une
+            // autre langue : on garde les champs INDÉPENDANTS de la langue (site, statut, dates,
+            // slider — table melis_cms_news) et on laisse le TEXTE VIDE pour que l'utilisateur
+            // saisisse la nouvelle traduction (le save créera la ligne de cette langue).
+            $langRow = $service->getNewsById($id, $langId); // ligne base+texte de CETTE langue (ou vide)
 
-            if (empty($result)) {
-                return $this->jsonResponse(['success' => false, 'error' => 'Not found'], 404);
+            if (!empty($langRow)) {
+                $row = (array) $langRow;
+            } else {
+                $anyRows = $service->getNewsById($id); // toutes les langues → champs de base
+                if (empty($anyRows)) {
+                    return $this->jsonResponse(['success' => false, 'error' => 'Not found'], 404);
+                }
+                $row = (array) current($anyRows);
+                // Vide le texte spécifique à la langue (garde site/statut/dates/slider).
+                foreach ([
+                    'cnews_text_id', 'cnews_lang_id', 'cnews_title', 'cnews_subtitle',
+                    'cnews_paragraph1', 'cnews_paragraph2', 'cnews_paragraph3', 'cnews_paragraph4',
+                    'cnews_paragraph5', 'cnews_paragraph6', 'cnews_paragraph7', 'cnews_paragraph8',
+                    'cnews_paragraph9', 'cnews_paragraph10', 'cnews_paragraph_order',
+                ] as $k) {
+                    $row[$k] = null;
+                }
             }
-
-            // getNewsById(id, langId) → single object; getNewsById(id) → array of objects
-            $row = is_object($result)
-                ? (array) $result
-                : (is_array($result) ? (array) current($result) : []);
 
             // SEO (separate table, language-specific)
             $seoRow = $this->getNewsSeoRow($id, $langId);
@@ -196,16 +208,25 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
                 return $this->jsonResponse(['success' => false, 'error' => 'Échec de la sauvegarde'], 500);
             }
 
-            // Save multilingual text content (paragraphs 1-4)
-            $paragraphs = $body['paragraphs'] ?? [];
-            $this->saveNewsText((int) $newsId, $langId, [
-                'cnews_title'      => $body['title']         ?? '',
-                'cnews_subtitle'   => $body['subtitle']      ?? '',
-                'cnews_paragraph1' => $paragraphs[0]         ?? '',
-                'cnews_paragraph2' => $paragraphs[1]         ?? '',
-                'cnews_paragraph3' => $paragraphs[2]         ?? '',
-                'cnews_paragraph4' => $paragraphs[3]         ?? '',
-            ]);
+            // Save multilingual text content (paragraphs 1-10, dans l'ordre reçu).
+            // Le front envoie déjà les paragraphes RÉORDONNÉS (drag'n'drop) : on les écrit
+            // séquentiellement dans les colonnes 1..N et on enregistre cnews_paragraph_order
+            // (liste des colonnes remplies, dans l'ordre) pour que le rendu front respecte
+            // l'ordre. Les colonnes non utilisées sont vidées.
+            $paragraphs = array_values($body['paragraphs'] ?? []);
+            $textData   = [
+                'cnews_title'    => $body['title']    ?? '',
+                'cnews_subtitle' => $body['subtitle'] ?? '',
+            ];
+            $usedCols = [];
+            for ($i = 0; $i < 10; $i++) {
+                $col     = 'cnews_paragraph' . ($i + 1);
+                $content = isset($paragraphs[$i]) ? (string) $paragraphs[$i] : '';
+                $textData[$col] = $content;
+                if ($content !== '') { $usedCols[] = $col; }
+            }
+            $textData['cnews_paragraph_order'] = implode('-', $usedCols);
+            $this->saveNewsText((int) $newsId, $langId, $textData);
 
             // Save SEO (language-specific)
             if (!empty($body['seo'])) {
@@ -410,14 +431,47 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
         ];
     }
 
+    /**
+     * Renvoie les paragraphes NON VIDES d'une ligne de texte, dans l'ordre d'affichage
+     * défini par cnews_paragraph_order (liste de noms de colonnes séparés par '-').
+     * Ordre absent/incomplet → complété par l'ordre naturel cnews_paragraph1..10.
+     *
+     * @return string[]
+     */
+    private function orderedParagraphs(array $row): array
+    {
+        $natural = [];
+        for ($i = 1; $i <= 10; $i++) { $natural[] = 'cnews_paragraph' . $i; }
+
+        $order = [];
+        if (!empty($row['cnews_paragraph_order'])) {
+            foreach (explode('-', (string) $row['cnews_paragraph_order']) as $col) {
+                $col = trim($col);
+                if ($col !== '' && in_array($col, $natural, true) && !in_array($col, $order, true)) {
+                    $order[] = $col;
+                }
+            }
+        }
+        // Complète avec les colonnes manquantes (ordre naturel) pour ne rien perdre.
+        foreach ($natural as $col) {
+            if (!in_array($col, $order, true)) { $order[] = $col; }
+        }
+
+        $paragraphs = [];
+        foreach ($order as $col) {
+            $val = isset($row[$col]) ? (string) $row[$col] : '';
+            if ($val !== '') { $paragraphs[] = $val; }
+        }
+        return $paragraphs;
+    }
+
     private function formatNewsDetail(array $row, array $seoRow, array $categoryIds): array
     {
         return array_merge($this->formatNewsItem($row), [
-            // Paragraphes (colonnes BDD paragraph1-4)
-            'paragraph1'  => (string) ($row['cnews_paragraph1'] ?? ''),
-            'paragraph2'  => (string) ($row['cnews_paragraph2'] ?? ''),
-            'paragraph3'  => (string) ($row['cnews_paragraph3'] ?? ''),
-            'paragraph4'  => (string) ($row['cnews_paragraph4'] ?? ''),
+            // Paragraphes (colonnes BDD paragraph1-10) renvoyés DANS L'ORDRE d'affichage.
+            // cnews_paragraph_order (legacy) = liste de noms de colonnes séparés par '-'
+            // (ex. "cnews_paragraph2-cnews_paragraph1"). Vide → ordre naturel 1..10.
+            'paragraphs'  => $this->orderedParagraphs($row),
             // Images et documents
             'image1'      => $row['cnews_image1']      ?: null,
             'image2'      => $row['cnews_image2']      ?: null,
