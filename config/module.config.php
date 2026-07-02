@@ -107,14 +107,14 @@ return array(
                             'meliscmsnews-sites' => array(
                                 'type' => 'Segment',
                                 'options' => array(
-                                    'route'    => '/sites[/]',
+                                    'route'    => '/news-sites[/]',
                                     'defaults' => array('__NAMESPACE__' => 'MelisCmsNews\Controller', 'controller' => 'MelisCmsNewsReactApi', 'action' => 'sites'),
                                 ),
                             ),
                             'meliscmsnews-languages' => array(
                                 'type' => 'Segment',
                                 'options' => array(
-                                    'route'    => '/languages[/]',
+                                    'route'    => '/news-languages[/]',
                                     'defaults' => array('__NAMESPACE__' => 'MelisCmsNews\Controller', 'controller' => 'MelisCmsNewsReactApi', 'action' => 'languages'),
                                 ),
                             ),

@@ -116,7 +116,7 @@ async function apiFetch<T>(url: string, opts?: RequestInit): Promise<T> {
 // ─── Languages ─────────────────────────────────────────────────────────────────
 
 export async function fetchLanguages(): Promise<Language[]> {
-  return apiFetch<Language[]>('/melis/react-api/languages')
+  return apiFetch<Language[]>('/melis/react-api/news-languages')
 }
 
 // ─── News ──────────────────────────────────────────────────────────────────────
@@ -167,5 +167,5 @@ export async function fetchCategories(langId?: number): Promise<NewsCategory[]> 
 // ─── Sites ─────────────────────────────────────────────────────────────────────
 
 export async function fetchSites(): Promise<Site[]> {
-  return apiFetch<Site[]>('/melis/react-api/sites')
+  return apiFetch<Site[]>('/melis/react-api/news-sites')
 }
