@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import {
   Save, Loader2, ChevronDown, ChevronUp,
   Plus, X, Eye, Calendar, Globe, Tag, Search, SlidersHorizontal,
-  GitBranch, Image, Paperclip, GripVertical,
+  GitBranch, Image, Paperclip, GripVertical, FolderTree,
 } from 'lucide-react'
 
 import { Button } from './components/ui/button'
@@ -84,6 +84,103 @@ function formatDatePreview(v: string, lang: string): string {
   return dt.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-GB', { dateStyle: 'long', timeStyle: 'short' })
 }
 
+// ─── Champ date+heure localisé (langue du BO, dynamique) ─────────────────────────
+// `<input type="datetime-local">` s'affiche dans la locale du NAVIGATEUR (ignore l'attribut
+// `lang` sous Chromium) → un BO FR sur navigateur EN montrerait mm/dd/yyyy. Ce champ affiche/édite
+// dans le format de la LANGUE DU BO tout en stockant la valeur interne "YYYY-MM-DDTHH:MM", et garde
+// un calendrier natif (input datetime-local caché + showPicker()). L'ordre jour/mois est déduit de
+// la locale via Intl → fonctionne pour N'IMPORTE QUELLE langue du BO (dynamique), pas seulement fr/en.
+function localeDayFirst(locale: string): boolean {
+  try {
+    const parts = new Intl.DateTimeFormat(locale || 'en').formatToParts(new Date(2000, 0, 2))
+    const di = parts.findIndex((p) => p.type === 'day')
+    const mi = parts.findIndex((p) => p.type === 'month')
+    return di !== -1 && mi !== -1 && di < mi
+  } catch {
+    return false
+  }
+}
+// "YYYY-MM-DDTHH:MM" → "jj/mm/aaaa HH:MM" (ou "mm/jj/aaaa HH:MM").
+function dtToDisplay(value: string, dayFirst: boolean): string {
+  const m = value && value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/)
+  if (!m) return ''
+  const [, y, mo, d, h, mi] = m
+  const date = dayFirst ? `${d}/${mo}/${y}` : `${mo}/${d}/${y}`
+  return `${date} ${h}:${mi}`
+}
+// Saisie localisée "jj/mm/aaaa[ HH:MM]" (ou mm/jj) → "YYYY-MM-DDTHH:MM". '' si vide, null si invalide.
+function dtFromDisplay(text: string, dayFirst: boolean): string | null {
+  const s = text.trim()
+  if (s === '') return ''
+  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ T](\d{1,2}):(\d{2}))?$/)
+  if (!m) return null
+  const a = m[1], b = m[2], y = m[3]
+  const h = m[4] ?? '00', mi = m[5] ?? '00'
+  const day = dayFirst ? a : b
+  const mon = dayFirst ? b : a
+  const D = +day, M = +mon, H = +h, MI = +mi
+  if (M < 1 || M > 12 || D < 1 || D > 31 || H > 23 || MI > 59) return null
+  const p2 = (n: number) => String(n).padStart(2, '0')
+  return `${y}-${p2(M)}-${p2(D)}T${p2(H)}:${p2(MI)}`
+}
+
+function DateTimeField({ value, onChange, locale }: {
+  value: string
+  onChange: (v: string) => void
+  locale: string
+}) {
+  const dayFirst = useMemo(() => localeDayFirst(locale), [locale])
+  const [text, setText] = useState(() => dtToDisplay(value, dayFirst))
+  const nativeRef = useRef<HTMLInputElement>(null)
+
+  // Resynchronise l'affichage quand la valeur change de l'extérieur (chargement, changement de langue).
+  useEffect(() => { setText(dtToDisplay(value, dayFirst)) }, [value, dayFirst])
+
+  const commit = () => {
+    const iso = dtFromDisplay(text, dayFirst)
+    if (iso === null) { setText(dtToDisplay(value, dayFirst)); return } // saisie invalide → on revient à la valeur
+    onChange(iso)
+  }
+  const openPicker = () => {
+    const el = nativeRef.current as (HTMLInputElement & { showPicker?: () => void }) | null
+    if (el?.showPicker) el.showPicker()
+    else el?.focus()
+  }
+
+  return (
+    <div className="relative">
+      <Input
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => { if (e.key === 'Enter') (e.currentTarget as HTMLInputElement).blur() }}
+        placeholder={dayFirst ? 'jj/mm/aaaa hh:mm' : 'mm/dd/yyyy hh:mm'}
+        inputMode="numeric"
+        className="h-8 pr-8 text-xs"
+      />
+      <button
+        type="button"
+        onClick={openPicker}
+        tabIndex={-1}
+        aria-label="Calendrier"
+        className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+      >
+        <Calendar className="size-3.5" />
+      </button>
+      {/* Input natif caché : fournit le calendrier via showPicker(), valeur au format datetime-local. */}
+      <input
+        ref={nativeRef}
+        type="datetime-local"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        tabIndex={-1}
+        aria-hidden="true"
+        className="pointer-events-none absolute size-0 opacity-0"
+      />
+    </div>
+  )
+}
+
 // Vrais drapeaux servis par MelisCore (les emojis de drapeaux ne s'affichent pas sous Windows).
 function Flag({ locale }: { locale: string }) {
   const short = (locale || 'en').slice(0, 2).toLowerCase()
@@ -127,6 +224,49 @@ function SidebarSection({
       {open && <div className="mt-2.5 space-y-2.5">{children}</div>}
     </div>
   )
+}
+
+// ─── Category tree (apporté par le module MelisCmsCategory2) ─────────────────────
+// Sélecteur multi-catégories rendu en ARBRE (cnews ↔ cat2 via melis_cms_news_category).
+// Les catégories arrivent à plat avec `fatherCatId` ; on reconstruit la hiérarchie (racine =
+// père absent de la liste ou -1) et on indente les enfants.
+
+function CategoryTree({ categories, selected, onToggle }: {
+  categories: newsApi.NewsCategory[]
+  selected: number[]
+  onToggle: (id: number) => void
+}) {
+  const byParent = useMemo(() => {
+    const ids = new Set(categories.map((c) => c.id))
+    const map = new Map<number, newsApi.NewsCategory[]>()
+    for (const c of categories) {
+      const parent = ids.has(c.fatherCatId) ? c.fatherCatId : -1
+      if (!map.has(parent)) map.set(parent, [])
+      map.get(parent)!.push(c)
+    }
+    return map
+  }, [categories])
+
+  const render = (parentId: number, depth: number): React.ReactNode =>
+    (byParent.get(parentId) ?? []).map((c) => (
+      <div key={c.id}>
+        <label
+          className="flex items-center gap-2 py-0.5 text-xs text-foreground cursor-pointer hover:text-primary"
+          style={{ paddingLeft: depth * 14 }}
+        >
+          <input
+            type="checkbox"
+            checked={selected.includes(c.id)}
+            onChange={() => onToggle(c.id)}
+            className="size-3.5 shrink-0 rounded border-input accent-primary"
+          />
+          <span className="truncate">{c.name}</span>
+        </label>
+        {render(c.id, depth + 1)}
+      </div>
+    ))
+
+  return <>{render(-1, 0)}</>
 }
 
 // ─── Paragraph editor ─────────────────────────────────────────────────────────
@@ -248,6 +388,8 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
   const [sliders, setSliders]           = useState<newsApi.Slider[]>([])
   const [sliderActive, setSliderActive] = useState(false)   // vrai ssi le module Slider est actif
   const [sbActive, setSbActive]         = useState(false)   // vrai ssi MelisSmallBusiness est actif (→ bouton Workflow)
+  const [categories, setCategories]     = useState<newsApi.NewsCategory[]>([])
+  const [categoryActive, setCategoryActive] = useState(false) // vrai ssi MelisCmsCategory2 est actif (→ section Catégories)
   const [dragIndex, setDragIndex]       = useState<number | null>(null)  // paragraphe en cours de glisser
   const [previewUrl, setPreviewUrl]     = useState<string | null>(null)
   const [editorEngine, setEditorEngine] = useState<RichEditorEngine>('tiptap')
@@ -300,11 +442,15 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
         : newsApi.fetchSites().then(s => { _siteCache = s; setSites(s) }).catch(() => {}),
       // Slider : modulaire — n'apparaît que si l'outil Slider (migré) est actif (route 404 sinon).
       newsApi.fetchSliders().then((s) => { setSliders(s); setSliderActive(true) }).catch(() => setSliderActive(false)),
-      // MelisSmallBusiness : apporte le workflow de validation. Le bouton « Workflow » n'existe
-      // dans la barre latérale QUE si ce module est actif (détecté via /react-modules).
-      newsApi.fetchActiveModules().then((mods) => setSbActive(mods.includes('MelisSmallBusiness'))).catch(() => {}),
-      // Categories : RETIRÉ du module de base — appartient à l'outil categorie-v2 (non migré). À réactiver
-      // quand categorie-v2 sera migré. newsApi.fetchCategories().then(setCategories).catch(() => {}),
+      // Modules optionnels détectés via /react-modules (listé ssi actif) :
+      //  - MelisSmallBusiness → bouton « Workflow » de la barre latérale.
+      //  - MelisCmsCategory2  → section « Catégories » du formulaire (l'outil categorie-v2 est
+      //    désormais migré en React ; les catégories sont chargées par un effet dédié réactif à
+      //    la langue une fois `categoryActive` vrai).
+      newsApi.fetchActiveModules().then((mods) => {
+        setSbActive(mods.includes('MelisSmallBusiness'))
+        setCategoryActive(mods.includes('MelisCmsCategory2'))
+      }).catch(() => {}),
     ]
 
     if (!isNew) {
@@ -330,11 +476,19 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
 
   useEffect(() => {
     if (!isNew && !loading) {
-      // (Categories retiré — cf. plus haut.) Recharge l'article dans la langue sélectionnée.
+      // Recharge l'article dans la langue sélectionnée.
       loadNews(Number(id), langId)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [langId])
+
+  // Catégories (module optionnel MelisCmsCategory2) : chargées ssi le module est actif, et
+  // re-fetchées quand la langue du BO change (les noms de catégories sont traduits par langue ;
+  // la SÉLECTION `categoryIds`, elle, est indépendante de la langue → conservée).
+  useEffect(() => {
+    if (!categoryActive) return
+    newsApi.fetchCategories(langId).then(setCategories).catch(() => {})
+  }, [langId, categoryActive])
 
   useEffect(() => {
     // Met à jour le libellé du sous-onglet quand le titre change (article existant).
@@ -677,21 +831,19 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
           <SidebarSection title="Publication" icon={Calendar}>
             <div>
               <label className="mb-1 block text-[11px] text-muted-foreground">{appLang === 'fr' ? 'Publier le' : 'Publish on'}</label>
-              <Input
-                type="datetime-local"
+              <DateTimeField
                 value={form.publishDate}
-                onChange={(e) => set('publishDate', e.target.value)}
-                className="h-8 text-xs"
+                onChange={(v) => set('publishDate', v)}
+                locale={appLang}
               />
               {form.publishDate && <p className="mt-1 text-[11px] text-muted-foreground/80">{formatDatePreview(form.publishDate, appLang)}</p>}
             </div>
             <div>
               <label className="mb-1 block text-[11px] text-muted-foreground">{appLang === 'fr' ? 'Dépublier le' : 'Unpublish on'}</label>
-              <Input
-                type="datetime-local"
+              <DateTimeField
                 value={form.unpublishDate}
-                onChange={(e) => set('unpublishDate', e.target.value)}
-                className="h-8 text-xs"
+                onChange={(v) => set('unpublishDate', v)}
+                locale={appLang}
               />
               {form.unpublishDate && <p className="mt-1 text-[11px] text-muted-foreground/80">{formatDatePreview(form.unpublishDate, appLang)}</p>}
             </div>
@@ -713,11 +865,6 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
             </select>
             {errors.siteId && <p className="mt-1 text-xs text-destructive">{errors.siteId}</p>}
           </SidebarSection>
-
-          {/* Categories : RETIRÉ du module News de base. Ce n'est PAS une notion du module de base —
-              c'est une partie modulaire apportée par l'outil « categorie-v2 » (melis-cms-category2),
-              pas encore migré en React. À réintégrer quand categorie-v2 sera migré : rétablir l'état
-              `categories`, `fetchCategories`, `toggleCategory`, et ce bloc <SidebarSection title="Categories">. */}
 
           <SidebarSection title="SEO" icon={Search} collapsible defaultOpen={false}>
             {(
@@ -749,6 +896,29 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
               </div>
             ))}
           </SidebarSection>
+
+          {/* Catégories : partie MODULAIRE apportée par l'outil « categorie-v2 » (melis-cms-category2,
+              migré en React) — placée SOUS le SEO (module de base), comme le Slider. La section
+              n'apparaît QUE si ce module est actif (détecté via /react-modules). Le back-office news
+              lit/écrit déjà melis_cms_category2 + la table de liaison melis_cms_news_category. */}
+          {categoryActive && (
+            <SidebarSection
+              title={appLang === 'fr' ? 'Catégories' : 'Categories'}
+              icon={FolderTree}
+              collapsible
+              defaultOpen={false}
+            >
+              {categories.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  {appLang === 'fr' ? 'Aucune catégorie disponible' : 'No category available'}
+                </p>
+              ) : (
+                <div className="max-h-64 space-y-0.5 overflow-auto pr-1">
+                  <CategoryTree categories={categories} selected={form.categoryIds} onToggle={toggleCategory} />
+                </div>
+              )}
+            </SidebarSection>
+          )}
 
           {/* Slider : modulaire — l'outil Slider EST migré, donc on l'affiche SEULEMENT s'il est actif
               (la route /melis/react-api/sliders répond ; sinon la section est masquée). Liste dynamique. */}
