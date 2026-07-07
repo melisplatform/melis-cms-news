@@ -10,6 +10,10 @@ import { Button } from './components/ui/button'
 import { Input } from './components/ui/input'
 import { cn } from './lib/utils'
 import * as newsApi from './lib/news-api'
+import { useCaps } from './shared/useCaps'
+
+// melisKey de l'outil Actualités — clé des capacités (cf. config/react.capabilities.php)
+const NEWS_MELIS_KEY = 'meliscmsnews_left_menu'
 
 // ─── Module-level cache — survit au démontage du composant (navigation) ────────
 
@@ -485,6 +489,10 @@ export default function NewsListPage({ active, onOpen, onNew }: {
   onOpen: (id: number, title: string) => void
   onNew: () => void
 }) {
+  // ── Capacités (droits avancés list/create/edit/delete/export) ────────────────
+  const { can, loaded: capsLoaded } = useCaps(NEWS_MELIS_KEY)
+  const canList = can('list')
+
   // ── View mode toggle ─────────────────────────────────────────────────────────
   const [mode, setMode] = useState<ViewMode>(_cache?.mode ?? 'react')
   const [iframeLoaded, setIframeLoaded] = useState(_cache?.iframeLoaded ?? false)
@@ -585,6 +593,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
   const [kpiStats, setKpiStats] = useState<newsApi.NewsStats | null>(_cache?.kpiStats ?? null)
 
   function loadKpis() {
+    if (capsLoaded && !canList) return   // liste refusée → pas de compteurs
     newsApi.fetchNewsStats().then(setKpiStats).catch(() => {})
   }
 
@@ -599,6 +608,10 @@ export default function NewsListPage({ active, onOpen, onNew }: {
 
   // ── List loading ───────────────────────────────────────────────────────────
   useEffect(() => {
+    // Attendre la résolution des capacités avant tout appel (évite un flash « Forbidden »).
+    if (!capsLoaded) return
+    // Liste refusée → on n'appelle pas l'API (la vue « pas de droits » sera rendue à la place).
+    if (!canList) { setItems([]); setTotal(0); setHasMore(false); setLoading(false); setError(null); return }
     // Restore from cache on re-mount (navigate back): items already in state, skip API call
     if (_cache?.items?.length) {
       _cache = null  // consume → next filter change will reload normally
@@ -610,7 +623,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
       .catch(e => setError(e instanceof Error ? e.message : 'Erreur'))
       .finally(() => setLoading(false))
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, status])
+  }, [search, status, capsLoaded, canList])
 
   function loadMore() {
     if (loadingMore || !hasMore || loading) return
@@ -738,27 +751,29 @@ export default function NewsListPage({ active, onOpen, onNew }: {
   return (
     <div className="flex h-full flex-col gap-5 overflow-y-auto p-6">
 
-      {/* KPI strip */}
-      <div className="flex flex-wrap gap-3">
-        <KpiCard
-          icon={<Newspaper    className="size-5 text-blue-500"    />}
-          label="Total articles"
-          value={kpiStats?.total    ?? null}
-          iconBg="bg-blue-500/10"
-        />
-        <KpiCard
-          icon={<CheckCircle2 className="size-5 text-emerald-500" />}
-          label="Publiés"
-          value={kpiStats?.published ?? null}
-          iconBg="bg-emerald-500/10"
-        />
-        <KpiCard
-          icon={<FileText     className="size-5 text-orange-500"  />}
-          label="Brouillons"
-          value={kpiStats?.draft     ?? null}
-          iconBg="bg-orange-500/10"
-        />
-      </div>
+      {/* KPI strip — masqué si la liste est refusée (fait partie de la « liste ») */}
+      {canList && (
+        <div className="flex flex-wrap gap-3">
+          <KpiCard
+            icon={<Newspaper    className="size-5 text-blue-500"    />}
+            label="Total articles"
+            value={kpiStats?.total    ?? null}
+            iconBg="bg-blue-500/10"
+          />
+          <KpiCard
+            icon={<CheckCircle2 className="size-5 text-emerald-500" />}
+            label="Publiés"
+            value={kpiStats?.published ?? null}
+            iconBg="bg-emerald-500/10"
+          />
+          <KpiCard
+            icon={<FileText     className="size-5 text-orange-500"  />}
+            label="Brouillons"
+            value={kpiStats?.draft     ?? null}
+            iconBg="bg-orange-500/10"
+          />
+        </div>
+      )}
 
       {/* Header */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -796,10 +811,12 @@ export default function NewsListPage({ active, onOpen, onNew }: {
               Old
             </button>
           </div>
-          <Button onClick={onNew} size="sm" className="gap-1.5">
-            <Plus className="size-4" />
-            Nouvel article
-          </Button>
+          {can('create') && (
+            <Button onClick={onNew} size="sm" className="gap-1.5">
+              <Plus className="size-4" />
+              Nouvel article
+            </Button>
+          )}
         </div>
       </div>
 
@@ -817,6 +834,13 @@ export default function NewsListPage({ active, onOpen, onNew }: {
 
       {/* React native view */}
       <div className={cn('flex flex-1 flex-col gap-4', mode !== 'react' && 'hidden')}>
+
+      {/* Liste refusée (capacité `list`) → seule la zone liste (filtres + tableau) est remplacée. */}
+      {!canList ? (
+        <p className="text-sm text-muted-foreground">
+          Vous n'avez pas les droits pour consulter la liste des articles.
+        </p>
+      ) : (<>
 
       {/* Filters + actions */}
       <div className="flex flex-wrap items-center gap-2">
@@ -862,10 +886,12 @@ export default function NewsListPage({ active, onOpen, onNew }: {
               <ColManager cols={cols} onChange={updateCols} onClose={() => setShowColMgr(false)} />
             )}
           </div>
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setShowExport(true)}>
-            <Download className="size-3.5" />
-            Exporter
-          </Button>
+          {can('export') && (
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setShowExport(true)}>
+              <Download className="size-3.5" />
+              Exporter
+            </Button>
+          )}
         </div>
       </div>
 
@@ -926,7 +952,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
               headerScrollRef.current.scrollLeft = e.currentTarget.scrollLeft
           }}
         >
-          {loading && sortedItems.length === 0 ? (
+          {(!capsLoaded || loading) && sortedItems.length === 0 ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="size-5 animate-spin text-muted-foreground" />
             </div>
@@ -952,22 +978,26 @@ export default function NewsListPage({ active, onOpen, onNew }: {
                     ))}
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1">
-                        <Button
-                          variant="ghost" size="icon" className="size-8"
-                          onClick={(e) => { e.stopPropagation(); onOpen(item.id, item.title) }} title="Modifier"
-                        >
-                          <Edit2 className="size-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost" size="icon"
-                          className="size-8 text-destructive hover:text-destructive"
-                          onClick={(e) => { e.stopPropagation(); handleDelete(item.id, item.title) }}
-                          disabled={deleting === item.id} title="Supprimer"
-                        >
-                          {deleting === item.id
-                            ? <Loader2 className="size-3.5 animate-spin" />
-                            : <Trash2 className="size-3.5" />}
-                        </Button>
+                        {can('edit') && (
+                          <Button
+                            variant="ghost" size="icon" className="size-8"
+                            onClick={(e) => { e.stopPropagation(); onOpen(item.id, item.title) }} title="Modifier"
+                          >
+                            <Edit2 className="size-3.5" />
+                          </Button>
+                        )}
+                        {can('delete') && (
+                          <Button
+                            variant="ghost" size="icon"
+                            className="size-8 text-destructive hover:text-destructive"
+                            onClick={(e) => { e.stopPropagation(); handleDelete(item.id, item.title) }}
+                            disabled={deleting === item.id} title="Supprimer"
+                          >
+                            {deleting === item.id
+                              ? <Loader2 className="size-3.5 animate-spin" />
+                              : <Trash2 className="size-3.5" />}
+                          </Button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -991,6 +1021,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
           )}
         </div>
       </div>
+      </>)}
 
       </div>{/* end React native view */}
 

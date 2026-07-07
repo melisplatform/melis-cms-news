@@ -10,6 +10,10 @@ import { Input } from './components/ui/input'
 import { RichEditor, type RichEditorEngine } from './components/ui/rich-editor'
 import { cn } from './lib/utils'
 import * as newsApi from './lib/news-api'
+import { useCaps } from './shared/useCaps'
+
+// melisKey de l'outil Actualités — clé des capacités (cf. config/react.capabilities.php)
+const NEWS_MELIS_KEY = 'meliscmsnews_left_menu'
 
 // Host API (exposed by MelisCore at runtime). Optional — guarded at call sites.
 declare global {
@@ -383,6 +387,10 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
   // On garde `id` en string|undefined (comme l'ancien useParams) pour ne rien changer au reste.
   const id = isNew ? undefined : String(newsId)
 
+  // Capacités : droit d'enregistrer = create (nouvel article) ou edit (existant).
+  const { can } = useCaps(NEWS_MELIS_KEY)
+  const canSave = isNew ? can('create') : can('edit')
+
   const [languages, setLanguages]       = useState<newsApi.Language[]>([])
   const [sites, setSites]               = useState<newsApi.Site[]>([])
   const [sliders, setSliders]           = useState<newsApi.Slider[]>([])
@@ -632,11 +640,13 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
 
           {apiError && <span className="text-xs text-destructive">{apiError}</span>}
 
-          <Button size="sm" className="h-8 gap-1.5 min-w-[88px] text-xs" onClick={handleSave} disabled={saving}>
-            {saving
-              ? <><Loader2 className="size-3.5 animate-spin" />Saving…</>
-              : <><Save className="size-3.5" />Save</>}
-          </Button>
+          {canSave && (
+            <Button size="sm" className="h-8 gap-1.5 min-w-[88px] text-xs" onClick={handleSave} disabled={saving}>
+              {saving
+                ? <><Loader2 className="size-3.5 animate-spin" />Saving…</>
+                : <><Save className="size-3.5" />Save</>}
+            </Button>
+          )}
         </div>
       </header>
 

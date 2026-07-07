@@ -105,7 +105,10 @@ class Module
             // Extending with MelisCmsComments module
             include __DIR__ . '/../config/comments.config.php',
             include __DIR__ . '/../config/plugins/dashboard/dashboard.latest.comments.php',
-           
+
+            // Capacités d'outils React (droits avancés : list/create/edit/delete/export)
+            include __DIR__ . '/../config/react.capabilities.php',
+
         ];
         
         foreach ($configFiles as $file) {

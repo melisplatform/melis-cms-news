@@ -5,6 +5,7 @@ namespace MelisCmsNews\Controller;
 use Laminas\Http\PhpEnvironment\Response as HttpResponse;
 use Laminas\Session\Container as SessionContainer;
 use MelisCore\Controller\MelisAbstractActionController;
+use MelisReactApi\Controller\CapabilityGuardTrait;
 
 /**
  * API REST pour les actualités (MelisCmsNews).
@@ -22,6 +23,11 @@ use MelisCore\Controller\MelisAbstractActionController;
  */
 class MelisCmsNewsReactApiController extends MelisAbstractActionController
 {
+    use CapabilityGuardTrait;
+
+    // Outil Actualités — clé des capacités (cf. config/react.capabilities.php + denyUnlessCan()).
+    private const MELIS_KEY = 'meliscmsnews_left_menu';
+
     // ─── GET /languages ─────────────────────────────────────────────────────
 
     public function languagesAction(): HttpResponse
@@ -56,6 +62,7 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
     public function listAction(): HttpResponse
     {
         if ($deny = $this->denyUnlessAccess()) { return $deny; }
+        if ($deny = $this->denyUnlessCan('list')) { return $deny; }
 
         try {
             $page   = max(1, (int) $this->params()->fromQuery('page', 1));
@@ -182,6 +189,9 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
                 : $this->getCurrentLangId();
             $id     = isset($body['id']) && $body['id'] ? (int) $body['id'] : null;
 
+            // Enforcement capacité : créer (nouvel article) vs éditer (existant).
+            if ($deny = $this->denyUnlessCan($id ? 'edit' : 'create')) { return $deny; }
+
             if (empty($body['title'])) {
                 return $this->jsonResponse(['success' => false, 'error' => 'Le titre est obligatoire'], 422);
             }
@@ -252,6 +262,7 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
     public function deleteAction(): HttpResponse
     {
         if ($deny = $this->denyUnlessAccess()) { return $deny; }
+        if ($deny = $this->denyUnlessCan('delete')) { return $deny; }
 
         try {
             $id = (int) $this->params('id');
