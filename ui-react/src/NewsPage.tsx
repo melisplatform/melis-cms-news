@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import NewsListPage from './NewsListPage'
 import NewsFormPage from './NewsFormPage'
+import { t } from './lib/i18n'
 
 /**
  * Conteneur de l'outil Actualités (brique MelisCmsNews), monté une fois par le shell sur
@@ -25,8 +26,7 @@ const NewsIcon = () => (
 function SubTabBar({ tabs, activeId, onBack, onSelect, onClose }: {
   tabs: OpenTab[]; activeId: EditId | null; onBack: () => void; onSelect: (id: EditId) => void; onClose: (id: EditId) => void
 }) {
-  const appLang = (typeof document !== 'undefined' ? document.documentElement.lang : 'en').slice(0, 2)
-  const back = appLang === 'fr' ? 'Retour' : 'Back'
+  const back = t('back')
   return (
     <div style={{ display: 'flex', alignItems: 'stretch', borderBottom: '1px solid var(--color-border,#e5e7eb)', background: 'var(--color-background,#fff)', padding: '0 8px', overflowX: 'auto', flexShrink: 0 }}>
       <button onClick={onBack}
@@ -58,7 +58,7 @@ export default function NewsPage() {
   const [view, setView] = useState<View>({ kind: 'list' })
   const [open, setOpen] = useState<OpenTab[]>([])
 
-  const newLabel = () => ((typeof document !== 'undefined' ? document.documentElement.lang : 'en').slice(0, 2) === 'fr' ? 'Nouvel article' : 'New article')
+  const newLabel = () => t('new_article')
 
   function openEditor(id: number, name: string) {
     const label = name || `#${id}`

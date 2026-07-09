@@ -8,8 +8,11 @@ import {
 import { Button } from './components/ui/button'
 import { Input } from './components/ui/input'
 import { RichEditor, type RichEditorEngine } from './components/ui/rich-editor'
+import WorkflowModal from './components/WorkflowModal'
 import { cn } from './lib/utils'
+import { t } from './lib/i18n'
 import * as newsApi from './lib/news-api'
+import { newsWorkflowContext } from './lib/workflow-api'
 import { useCaps } from './shared/useCaps'
 
 // melisKey de l'outil Actualités — clé des capacités (cf. config/react.capabilities.php)
@@ -166,7 +169,7 @@ function DateTimeField({ value, onChange, locale }: {
         type="button"
         onClick={openPicker}
         tabIndex={-1}
-        aria-label="Calendrier"
+        aria-label={t('calendar')}
         className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
       >
         <Calendar className="size-3.5" />
@@ -306,13 +309,13 @@ function ParagraphEditor({
             <span
               onMouseDown={() => setArmed(true)}
               onMouseUp={() => setArmed(false)}
-              title="Glisser pour réordonner"
+              title={t('drag_reorder')}
               className="cursor-grab active:cursor-grabbing rounded p-0.5 text-muted-foreground/40 hover:text-foreground transition-colors"
             >
               <GripVertical className="size-3.5" />
             </span>
           )}
-          Paragraph {index + 1}
+          {t('paragraph_n', { n: index + 1 })}
         </span>
         <div className="flex items-center gap-2">
           {extraActions}
@@ -320,7 +323,7 @@ function ParagraphEditor({
             <button
               type="button"
               onClick={onRemove}
-              title="Remove paragraph"
+              title={t('remove_paragraph')}
               className="rounded p-0.5 text-muted-foreground/50 hover:text-destructive transition-colors"
             >
               <X className="size-3.5" />
@@ -332,38 +335,99 @@ function ParagraphEditor({
         engine={engine}
         value={value}
         onChange={onChange}
-        placeholder="Write your content here…"
+        placeholder={t('editor_ph')}
         minRows={6}
       />
     </div>
   )
 }
 
-// ─── Image slot ───────────────────────────────────────────────────────────────
+// Empêche le « scroll-au-focus » : cliquer une zone d'upload met le focus sur l'input fichier,
+// et le navigateur scrolle alors le conteneur pour l'amener « à la vue » → tout le contenu News
+// (avec ses sous-onglets) saute hors écran (onglet « vide »). On mémorise la position de scroll de
+// TOUS les ancêtres au mousedown (avant le focus) et on la restaure sur quelques frames.
+function preserveScrollOnFocus(target: HTMLElement) {
+  const snaps: Array<[HTMLElement, number, number]> = []
+  let el: HTMLElement | null = target
+  while (el) { snaps.push([el, el.scrollTop, el.scrollLeft]); el = el.parentElement }
+  const wx = window.scrollX, wy = window.scrollY
+  const restore = () => {
+    snaps.forEach(([n, top, left]) => { if (n.scrollTop !== top) n.scrollTop = top; if (n.scrollLeft !== left) n.scrollLeft = left })
+    if (window.scrollX !== wx || window.scrollY !== wy) window.scrollTo(wx, wy)
+  }
+  requestAnimationFrame(restore)
+  setTimeout(restore, 0)
+  setTimeout(restore, 60)
+}
 
-function ImageSlot({ src, label }: { src: string | null; label: string }) {
+// ─── Image slot (upload fonctionnel vers cnews_image1..3) ───────────────────────
+
+function ImageSlot({ src, label, disabled, uploading, onPick, onRemove }: {
+  src: string | null; label: string; disabled: boolean; uploading: boolean
+  onPick: (file: File) => void; onRemove: () => void
+}) {
   if (src) {
     return (
       <div className="group relative overflow-hidden rounded-xl border border-border bg-card">
-        <img
-          src={src}
-          alt={label}
-          className="h-32 w-full object-cover"
-          onError={(e) => { (e.currentTarget as HTMLImageElement).src = '' }}
-        />
-        <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+        <img src={src} alt={label} className="h-32 w-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).src = '' }} />
+        <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
           <span className="text-xs font-medium text-white">{label}</span>
+          <button type="button" onClick={onRemove} disabled={uploading}
+            className="rounded-md bg-white/15 px-2 py-1 text-[11px] font-medium text-white hover:bg-red-500/80">
+            {uploading ? '…' : t('remove')}
+          </button>
         </div>
       </div>
     )
   }
   return (
-    <label className="group flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-card py-5 transition-colors hover:border-primary/50 hover:bg-primary/5">
-      <div className="flex size-9 items-center justify-center rounded-full bg-muted group-hover:bg-primary/10 transition-colors">
-        <Image className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />
+    <label className={cn('relative group flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-card py-5 transition-colors',
+      disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:border-primary/50 hover:bg-primary/5')}
+      onMouseDown={(e) => preserveScrollOnFocus(e.currentTarget)}>
+      <div className="flex size-9 items-center justify-center rounded-full bg-muted group-hover:bg-primary/10">
+        {uploading ? <Loader2 className="size-4 animate-spin text-primary" /> : <Image className="size-4 text-muted-foreground group-hover:text-primary" />}
       </div>
       <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
-      <input type="file" accept="image/*" className="sr-only" />
+      {/* Input positionné DANS la zone (absolute inset-0 opacity-0) et NON en sr-only hors écran :
+          un input caché hors écran, une fois focus (via le label), fait scroller le conteneur pour
+          l'amener « à la vue » → tout le contenu saute hors écran (onglet « vide »). Ici il reste
+          dans le cadre visible → aucun scroll parasite. */}
+      <input type="file" accept="image/*" className="absolute inset-0 cursor-pointer opacity-0" disabled={disabled || uploading}
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) onPick(f); e.currentTarget.value = '' }} />
+    </label>
+  )
+}
+
+// ─── File attachment slot (upload fonctionnel vers cnews_documents1..3) ──────────
+
+function FileSlot({ src, disabled, uploading, onPick, onRemove }: {
+  src: string | null; disabled: boolean; uploading: boolean
+  onPick: (file: File) => void; onRemove: () => void
+}) {
+  if (src) {
+    const name = src.split('/').pop() || src
+    return (
+      <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3">
+        <div className="flex size-8 items-center justify-center rounded-full bg-muted"><Paperclip className="size-4 text-muted-foreground" /></div>
+        <a href={src} target="_blank" rel="noreferrer" className="flex-1 truncate text-xs text-foreground hover:underline">{name}</a>
+        <button type="button" onClick={onRemove} disabled={uploading}
+          className="rounded-md px-2 py-1 text-[11px] font-medium text-destructive hover:bg-destructive/10">
+          {uploading ? '…' : t('remove')}
+        </button>
+      </div>
+    )
+  }
+  return (
+    <label className={cn('relative group flex items-center gap-3 rounded-xl border border-dashed border-border px-4 py-3 transition-colors',
+      disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:border-primary/50 hover:bg-primary/5')}
+      onMouseDown={(e) => preserveScrollOnFocus(e.currentTarget)}>
+      <div className="flex size-8 items-center justify-center rounded-full bg-muted group-hover:bg-primary/10">
+        {uploading ? <Loader2 className="size-4 animate-spin text-primary" /> : <Paperclip className="size-4 text-muted-foreground group-hover:text-primary" />}
+      </div>
+      <span className="text-xs text-muted-foreground">{t('attach_file')}</span>
+      {/* cf. ImageSlot : input dans la zone (pas sr-only hors écran) pour éviter le scroll au focus. */}
+      <input type="file" className="absolute inset-0 cursor-pointer opacity-0" disabled={disabled || uploading}
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) onPick(f); e.currentTarget.value = '' }} />
     </label>
   )
 }
@@ -396,6 +460,8 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
   const [sliders, setSliders]           = useState<newsApi.Slider[]>([])
   const [sliderActive, setSliderActive] = useState(false)   // vrai ssi le module Slider est actif
   const [sbActive, setSbActive]         = useState(false)   // vrai ssi MelisSmallBusiness est actif (→ bouton Workflow)
+  const [wfOpen, setWfOpen]             = useState(false)   // modale Workflow (validation) ouverte
+  const [uploadingCol, setUploadingCol] = useState<string | null>(null) // colonne média en cours d'upload/suppression
   const [categories, setCategories]     = useState<newsApi.NewsCategory[]>([])
   const [categoryActive, setCategoryActive] = useState(false) // vrai ssi MelisCmsCategory2 est actif (→ section Catégories)
   const [dragIndex, setDragIndex]       = useState<number | null>(null)  // paragraphe en cours de glisser
@@ -434,7 +500,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
         document3:     d.document3 ?? null,
       })
     } catch (e) {
-      setApiError(e instanceof Error ? e.message : 'Error loading article')
+      setApiError(e instanceof Error ? e.message : t('err_load'))
     }
   }, [])
 
@@ -556,8 +622,8 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
 
   function validate() {
     const errs: Partial<Record<string, string>> = {}
-    if (!form.title.trim()) errs.title  = 'Title is required'
-    if (!form.siteId)       errs.siteId = 'Please select a site'
+    if (!form.title.trim()) errs.title  = t('title_required')
+    if (!form.siteId)       errs.siteId = t('site_required')
     setErrors(errs)
     return Object.keys(errs).length === 0
   }
@@ -581,16 +647,42 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
         seo:         form.seo,
       }
       const res = await newsApi.saveNews(payload)
-      const lang = (document.documentElement.lang || 'en').slice(0, 2)
-      window.postMessage({ __melisNotif: true, kind: 'ok', title: 'News', message: lang === 'fr' ? 'Article enregistré.' : 'Article saved.' }, '*')
+      window.postMessage({ __melisNotif: true, kind: 'ok', title: 'News', message: t('saved_ok') }, '*')
       // Le conteneur (NewsPage) convertit l'onglet « new » en onglet de l'article créé,
       // ou met à jour le libellé d'un article existant.
       onSaved(res.id, form.title.trim() || `Article #${res.id}`)
     } catch (e) {
-      setApiError(e instanceof Error ? e.message : 'Error saving article')
+      setApiError(e instanceof Error ? e.message : t('err_save'))
     } finally {
       setSaving(false)
     }
+  }
+
+  // ─── Médias (upload/suppression image + fichier) ──────────────────────────────
+  // L'upload cible l'article existant (id numérique) ; désactivé tant qu'il n'est pas
+  // enregistré. Après succès, on recharge UNIQUEMENT les champs média (préserve les edits).
+  async function refreshMedia() {
+    if (isNew || !id) return
+    try {
+      const media = await newsApi.fetchNewsMedia(Number(id), langId)
+      setForm((f) => ({ ...f, ...media }))
+    } catch { /* ignore */ }
+  }
+  async function uploadMedia(kind: newsApi.MediaKind, slot: 1 | 2 | 3, file: File) {
+    if (isNew || !id) return
+    const col = newsApi.mediaColumn(kind, slot)
+    setUploadingCol(col); setApiError(null)
+    const res = await newsApi.uploadNewsFile(Number(id), kind, slot, file)
+    if (res.success) { await refreshMedia() } else { setApiError(res.message || t('err_upload')) }
+    setUploadingCol(null)
+  }
+  async function removeMedia(kind: newsApi.MediaKind, slot: 1 | 2 | 3) {
+    if (isNew || !id) return
+    const col = newsApi.mediaColumn(kind, slot)
+    setUploadingCol(col); setApiError(null)
+    const res = await newsApi.removeNewsFile(Number(id), kind, slot)
+    if (res.success) { await refreshMedia() } else { setApiError(res.message || t('err_delete')) }
+    setUploadingCol(null)
   }
 
   const isPublished  = form.status === '1'
@@ -622,7 +714,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
               onClick={() => window.open(previewUrl, '_blank')}
             >
               <Eye className="size-3.5" />
-              Preview
+              {t('preview')}
             </Button>
           )}
 
@@ -635,7 +727,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
             )}
           >
             <span className={cn('size-1.5 rounded-full', statusDot)} />
-            {isPublished ? 'Published' : 'Unpublished'}
+            {isPublished ? t('published') : t('unpublished')}
           </button>
 
           {apiError && <span className="text-xs text-destructive">{apiError}</span>}
@@ -643,8 +735,8 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
           {canSave && (
             <Button size="sm" className="h-8 gap-1.5 min-w-[88px] text-xs" onClick={handleSave} disabled={saving}>
               {saving
-                ? <><Loader2 className="size-3.5 animate-spin" />Saving…</>
-                : <><Save className="size-3.5" />Save</>}
+                ? <><Loader2 className="size-3.5 animate-spin" />{t('saving')}</>
+                : <><Save className="size-3.5" />{t('save')}</>}
             </Button>
           )}
         </div>
@@ -686,7 +778,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
             <input
               value={form.title}
               onChange={(e) => set('title', e.target.value)}
-              placeholder="Article title…"
+              placeholder={t('article_title_ph')}
               autoFocus={isNew}
               className={cn(
                 'w-full bg-transparent text-[1.65rem] font-bold tracking-tight leading-tight placeholder:text-muted-foreground/40 focus:outline-none border-b-2 border-transparent transition-colors pb-1',
@@ -700,14 +792,14 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
           <input
             value={form.subtitle}
             onChange={(e) => set('subtitle', e.target.value)}
-            placeholder="Add a subtitle…"
+            placeholder={t('subtitle_ph')}
             className="w-full bg-transparent text-[1.05rem] text-muted-foreground placeholder:text-muted-foreground/40 focus:outline-none border-b border-transparent focus:border-border transition-colors pb-1"
           />
 
           {/* Body */}
           <section className="space-y-4">
             <div className="flex items-center gap-3">
-              <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Body</span>
+              <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{t('body')}</span>
               <div className="h-px flex-1 bg-border" />
               <div className="flex items-center gap-1 rounded-md bg-muted p-0.5">
                 {(['tiptap', 'tinymce'] as RichEditorEngine[]).map((eng) => (
@@ -764,7 +856,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
                 className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border py-3 text-xs font-medium text-muted-foreground hover:border-primary/60 hover:text-primary transition-colors"
               >
                 <Plus className="size-3.5" />
-                Add paragraph
+                {t('add_paragraph')}
               </button>
             )}
           </section>
@@ -772,28 +864,43 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
           {/* Media */}
           <section className="space-y-4">
             <div className="flex items-center gap-3">
-              <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Media</span>
+              <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{t('media')}</span>
               <div className="h-px flex-1 bg-border" />
             </div>
 
-            <div className="space-y-3">
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Images</p>
+            {/* L'upload cible un article existant → invite à enregistrer d'abord si nouveau. */}
+            {isNew && (
+              <p className="rounded-lg border border-dashed border-border bg-muted/20 px-4 py-3 text-xs text-muted-foreground">
+                {t('media_save_first')}
+              </p>
+            )}
+
+            <div className={cn('space-y-3', isNew && 'pointer-events-none opacity-50')}>
+              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">{t('images')}</p>
               <div className="grid grid-cols-3 gap-3">
-                <ImageSlot src={form.image1} label="Image 1" />
-                <ImageSlot src={form.image2} label="Image 2" />
-                <ImageSlot src={form.image3} label="Image 3" />
+                {([1, 2, 3] as const).map((slot) => {
+                  const col = newsApi.mediaColumn('image', slot)
+                  return (
+                    <ImageSlot key={col} label={t('image_n', { n: slot })} src={form[`image${slot}` as 'image1' | 'image2' | 'image3']}
+                      disabled={isNew} uploading={uploadingCol === col}
+                      onPick={(f) => uploadMedia('image', slot, f)} onRemove={() => removeMedia('image', slot)} />
+                  )
+                })}
               </div>
             </div>
 
-            <div className="space-y-3">
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">File attachments</p>
-              <label className="group flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-border px-4 py-3 transition-colors hover:border-primary/50 hover:bg-primary/5">
-                <div className="flex size-8 items-center justify-center rounded-full bg-muted group-hover:bg-primary/10 transition-colors">
-                  <Paperclip className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                </div>
-                <span className="text-xs text-muted-foreground">Click to attach a file</span>
-                <input type="file" className="sr-only" />
-              </label>
+            <div className={cn('space-y-3', isNew && 'pointer-events-none opacity-50')}>
+              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">{t('file_attachments')}</p>
+              <div className="space-y-2">
+                {([1, 2, 3] as const).map((slot) => {
+                  const col = newsApi.mediaColumn('file', slot)
+                  return (
+                    <FileSlot key={col} src={form[`document${slot}` as 'document1' | 'document2' | 'document3']}
+                      disabled={isNew} uploading={uploadingCol === col}
+                      onPick={(f) => uploadMedia('file', slot, f)} onRemove={() => removeMedia('file', slot)} />
+                  )
+                })}
+              </div>
             </div>
           </section>
         </main>
@@ -801,7 +908,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
         {/* Sidebar */}
         <aside className="w-64 shrink-0 self-start sticky top-[57px] border-l border-border bg-muted/10 p-4 space-y-4">
 
-          <SidebarSection title="Status" icon={GitBranch}>
+          <SidebarSection title={t('status')} icon={GitBranch}>
             <div className="flex items-center justify-between gap-2">
               {/* Switch published/unpublished — vert = publié (ON), rouge = non publié (OFF). */}
               <button
@@ -825,22 +932,30 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
                   />
                 </span>
                 <span className="text-xs font-medium text-foreground">
-                  {isPublished ? 'Published' : 'Unpublished'}
+                  {isPublished ? t('published') : t('unpublished')}
                 </span>
               </button>
-              {/* Le workflow de validation est apporté par MelisSmallBusiness — bouton masqué si inactif. */}
+              {/* Le workflow de validation est apporté par MelisSmallBusiness — bouton masqué si inactif.
+                  Désactivé tant que l'article n'est pas enregistré (pas d'id à rattacher au workflow). */}
               {sbActive && (
-                <Button variant="outline" size="sm" className="h-7 gap-1.5 text-xs px-2.5">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1.5 text-xs px-2.5"
+                  onClick={() => setWfOpen(true)}
+                  disabled={isNew}
+                  title={isNew ? t('save_first_short') : undefined}
+                >
                   <GitBranch className="size-3" />
-                  Workflow
+                  {t('workflow')}
                 </Button>
               )}
             </div>
           </SidebarSection>
 
-          <SidebarSection title="Publication" icon={Calendar}>
+          <SidebarSection title={t('publication')} icon={Calendar}>
             <div>
-              <label className="mb-1 block text-[11px] text-muted-foreground">{appLang === 'fr' ? 'Publier le' : 'Publish on'}</label>
+              <label className="mb-1 block text-[11px] text-muted-foreground">{t('publish_on')}</label>
               <DateTimeField
                 value={form.publishDate}
                 onChange={(v) => set('publishDate', v)}
@@ -849,7 +964,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
               {form.publishDate && <p className="mt-1 text-[11px] text-muted-foreground/80">{formatDatePreview(form.publishDate, appLang)}</p>}
             </div>
             <div>
-              <label className="mb-1 block text-[11px] text-muted-foreground">{appLang === 'fr' ? 'Dépublier le' : 'Unpublish on'}</label>
+              <label className="mb-1 block text-[11px] text-muted-foreground">{t('unpublish_on')}</label>
               <DateTimeField
                 value={form.unpublishDate}
                 onChange={(v) => set('unpublishDate', v)}
@@ -859,7 +974,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
             </div>
           </SidebarSection>
 
-          <SidebarSection title="Site" icon={Globe}>
+          <SidebarSection title={t('site')} icon={Globe}>
             <select
               value={form.siteId}
               onChange={(e) => set('siteId', e.target.value)}
@@ -868,7 +983,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
                 errors.siteId && 'border-destructive',
               )}
             >
-              <option value="">Choose a site…</option>
+              <option value="">{t('choose_site')}</option>
               {sites.map((s) => (
                 <option key={s.id} value={String(s.id)}>{s.name}</option>
               ))}
@@ -876,15 +991,15 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
             {errors.siteId && <p className="mt-1 text-xs text-destructive">{errors.siteId}</p>}
           </SidebarSection>
 
-          <SidebarSection title="SEO" icon={Search} collapsible defaultOpen={false}>
+          <SidebarSection title={t('seo')} icon={Search} collapsible defaultOpen={false}>
             {(
               [
-                { key: 'metaTitle',       label: 'Meta title',       type: 'input' },
-                { key: 'metaDescription', label: 'Meta description',  type: 'textarea' },
-                { key: 'url',             label: 'URL',               type: 'input' },
-                { key: 'urlRedirect',     label: 'URL redirect',      type: 'input' },
-                { key: 'url301',          label: 'URL 301',           type: 'input' },
-                { key: 'canonical',       label: 'Canonical URL',     type: 'input' },
+                { key: 'metaTitle',       label: t('meta_title'),       type: 'input' },
+                { key: 'metaDescription', label: t('meta_description'),  type: 'textarea' },
+                { key: 'url',             label: t('url'),               type: 'input' },
+                { key: 'urlRedirect',     label: t('url_redirect'),      type: 'input' },
+                { key: 'url301',          label: t('url_301'),           type: 'input' },
+                { key: 'canonical',       label: t('canonical_url'),     type: 'input' },
               ] as { key: keyof newsApi.NewsSeo; label: string; type: 'input' | 'textarea' }[]
             ).map(({ key, label, type }) => (
               <div key={key}>
@@ -913,14 +1028,14 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
               lit/écrit déjà melis_cms_category2 + la table de liaison melis_cms_news_category. */}
           {categoryActive && (
             <SidebarSection
-              title={appLang === 'fr' ? 'Catégories' : 'Categories'}
+              title={t('categories')}
               icon={FolderTree}
               collapsible
               defaultOpen={false}
             >
               {categories.length === 0 ? (
                 <p className="text-xs text-muted-foreground">
-                  {appLang === 'fr' ? 'Aucune catégorie disponible' : 'No category available'}
+                  {t('no_category')}
                 </p>
               ) : (
                 <div className="max-h-64 space-y-0.5 overflow-auto pr-1">
@@ -933,13 +1048,13 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
           {/* Slider : modulaire — l'outil Slider EST migré, donc on l'affiche SEULEMENT s'il est actif
               (la route /melis/react-api/sliders répond ; sinon la section est masquée). Liste dynamique. */}
           {sliderActive && (
-            <SidebarSection title="Slider" icon={SlidersHorizontal} collapsible defaultOpen={false}>
+            <SidebarSection title={t('slider')} icon={SlidersHorizontal} collapsible defaultOpen={false}>
               <select
                 value={form.sliderId}
                 onChange={(e) => set('sliderId', e.target.value)}
                 className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <option value="">{appLang === 'fr' ? 'Aucun slider' : 'No slider'}</option>
+                <option value="">{t('no_slider')}</option>
                 {sliders.map((s) => (
                   <option key={s.id} value={String(s.id)}>{s.name}</option>
                 ))}
@@ -948,6 +1063,15 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
           )}
         </aside>
       </div>
+
+      {/* Modale Workflow (validation) — apportée par MelisSmallBusiness, cf. bouton du bloc Status. */}
+      {wfOpen && !isNew && (
+        <WorkflowModal
+          ctx={newsWorkflowContext(newsId as number, form.title)}
+          appLang={appLang}
+          onClose={() => setWfOpen(false)}
+        />
+      )}
     </div>
   )
 }

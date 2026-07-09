@@ -25,6 +25,7 @@ import {
   RemoveFormatting,
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
+import { t } from '../../lib/i18n'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -82,59 +83,59 @@ function Toolbar({ editor }: { editor: TiptapEditor }) {
 
   return (
     <div className="flex flex-wrap items-center gap-0.5 border-b border-border bg-muted/30 px-2 py-1.5">
-      <ToolbarBtn active={editor.isActive('heading', { level: 2 })} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} title="Heading 2">
+      <ToolbarBtn active={editor.isActive('heading', { level: 2 })} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} title={t('h2')}>
         <Heading2 className="size-3.5" />
       </ToolbarBtn>
-      <ToolbarBtn active={editor.isActive('heading', { level: 3 })} onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} title="Heading 3">
+      <ToolbarBtn active={editor.isActive('heading', { level: 3 })} onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} title={t('h3')}>
         <Heading3 className="size-3.5" />
       </ToolbarBtn>
 
       <div className="mx-1 h-4 w-px bg-border" />
 
-      <ToolbarBtn active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()} title="Bold">
+      <ToolbarBtn active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()} title={t('bold')}>
         <Bold className="size-3.5" />
       </ToolbarBtn>
-      <ToolbarBtn active={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()} title="Italic">
+      <ToolbarBtn active={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()} title={t('italic')}>
         <Italic className="size-3.5" />
       </ToolbarBtn>
-      <ToolbarBtn active={editor.isActive('underline')} onClick={() => editor.chain().focus().toggleUnderline().run()} title="Underline">
+      <ToolbarBtn active={editor.isActive('underline')} onClick={() => editor.chain().focus().toggleUnderline().run()} title={t('underline')}>
         <UnderlineIcon className="size-3.5" />
       </ToolbarBtn>
-      <ToolbarBtn active={editor.isActive('strike')} onClick={() => editor.chain().focus().toggleStrike().run()} title="Strikethrough">
+      <ToolbarBtn active={editor.isActive('strike')} onClick={() => editor.chain().focus().toggleStrike().run()} title={t('strikethrough')}>
         <Strikethrough className="size-3.5" />
       </ToolbarBtn>
 
       <div className="mx-1 h-4 w-px bg-border" />
 
-      <ToolbarBtn active={editor.isActive({ textAlign: 'left' })} onClick={() => editor.chain().focus().setTextAlign('left').run()} title="Align left">
+      <ToolbarBtn active={editor.isActive({ textAlign: 'left' })} onClick={() => editor.chain().focus().setTextAlign('left').run()} title={t('align_left')}>
         <AlignLeft className="size-3.5" />
       </ToolbarBtn>
-      <ToolbarBtn active={editor.isActive({ textAlign: 'center' })} onClick={() => editor.chain().focus().setTextAlign('center').run()} title="Center">
+      <ToolbarBtn active={editor.isActive({ textAlign: 'center' })} onClick={() => editor.chain().focus().setTextAlign('center').run()} title={t('align_center')}>
         <AlignCenter className="size-3.5" />
       </ToolbarBtn>
-      <ToolbarBtn active={editor.isActive({ textAlign: 'right' })} onClick={() => editor.chain().focus().setTextAlign('right').run()} title="Align right">
+      <ToolbarBtn active={editor.isActive({ textAlign: 'right' })} onClick={() => editor.chain().focus().setTextAlign('right').run()} title={t('align_right')}>
         <AlignRight className="size-3.5" />
       </ToolbarBtn>
-      <ToolbarBtn active={editor.isActive({ textAlign: 'justify' })} onClick={() => editor.chain().focus().setTextAlign('justify').run()} title="Justify">
+      <ToolbarBtn active={editor.isActive({ textAlign: 'justify' })} onClick={() => editor.chain().focus().setTextAlign('justify').run()} title={t('justify')}>
         <AlignJustify className="size-3.5" />
       </ToolbarBtn>
 
       <div className="mx-1 h-4 w-px bg-border" />
 
-      <ToolbarBtn active={editor.isActive('bulletList')} onClick={() => editor.chain().focus().toggleBulletList().run()} title="Bullet list">
+      <ToolbarBtn active={editor.isActive('bulletList')} onClick={() => editor.chain().focus().toggleBulletList().run()} title={t('bullet_list')}>
         <List className="size-3.5" />
       </ToolbarBtn>
-      <ToolbarBtn active={editor.isActive('orderedList')} onClick={() => editor.chain().focus().toggleOrderedList().run()} title="Numbered list">
+      <ToolbarBtn active={editor.isActive('orderedList')} onClick={() => editor.chain().focus().toggleOrderedList().run()} title={t('numbered_list')}>
         <ListOrdered className="size-3.5" />
       </ToolbarBtn>
 
       <div className="mx-1 h-4 w-px bg-border" />
 
-      <ToolbarBtn active={editor.isActive('link')} onClick={setLink} title="Link">
+      <ToolbarBtn active={editor.isActive('link')} onClick={setLink} title={t('link')}>
         <LinkIcon className="size-3.5" />
       </ToolbarBtn>
 
-      <ToolbarBtn active={false} onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()} title="Clear formatting">
+      <ToolbarBtn active={false} onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()} title={t('clear_formatting')}>
         <RemoveFormatting className="size-3.5" />
       </ToolbarBtn>
     </div>
@@ -150,7 +151,7 @@ export function RichEditor({ value, onChange, placeholder, minRows = 6, classNam
       // extension names crash the editor). Configure Link via StarterKit.
       StarterKit.configure({ link: { openOnClick: false } }),
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
-      Placeholder.configure({ placeholder: placeholder ?? 'Write your content here…' }),
+      Placeholder.configure({ placeholder: placeholder ?? t('editor_ph') }),
     ],
     content: value,
     onUpdate: ({ editor }) => onChange(editor.getHTML()),

@@ -1,5 +1,69 @@
 const XHR_HEADER = { 'X-Requested-With': 'XMLHttpRequest' } as const
 
+// ─── Upload / suppression de médias (images + fichiers) ─────────────────────────
+// Réutilise les endpoints legacy ÉPROUVÉS de MelisCmsNews (aucune modif backend) :
+//   POST /melis/MelisCmsNews/MelisCmsNews/saveFileForm     (multipart, upload → colonne)
+//   POST /melis/MelisCmsNews/MelisCmsNews/removeAttachFile (vide la colonne + supprime le fichier)
+// Les fichiers atterrissent dans public/media/news/<newsId>/ ; le chemin est stocké dans
+// cnews_image1..3 (images) ou cnews_documents1..3 (fichiers). L'article doit exister (newsId).
+
+export type MediaKind = 'image' | 'file'
+
+/** Colonne DB cible pour un slot donné (1..3). */
+export function mediaColumn(kind: MediaKind, slot: 1 | 2 | 3): string {
+  return (kind === 'image' ? 'cnews_image' : 'cnews_documents') + slot
+}
+
+export interface UploadResult { success: boolean; message?: string }
+
+/** Uploade un fichier vers un slot précis (remplace le contenu de la colonne). */
+export async function uploadNewsFile(newsId: number, kind: MediaKind, slot: 1 | 2 | 3, file: File): Promise<UploadResult> {
+  try {
+    const fd = new FormData()
+    fd.append('cnews_document', file)
+    fd.append('cnews_id', String(newsId))
+    fd.append('type', kind)
+    fd.append('column', mediaColumn(kind, slot))
+    const res = await fetch('/melis/MelisCmsNews/MelisCmsNews/saveFileForm', {
+      method: 'POST',
+      headers: { ...XHR_HEADER }, // pas de Content-Type : le navigateur pose la boundary multipart
+      credentials: 'include',
+      body: fd,
+    })
+    const data = await res.json()
+    return { success: data?.success === 1 || data?.success === true, message: data?.textMessage }
+  } catch (e) {
+    return { success: false, message: e instanceof Error ? e.message : 'Upload error' }
+  }
+}
+
+/** Supprime le fichier d'un slot (vide la colonne + efface le fichier disque). */
+export async function removeNewsFile(newsId: number, kind: MediaKind, slot: 1 | 2 | 3): Promise<UploadResult> {
+  try {
+    const body = new URLSearchParams({ newsId: String(newsId), type: kind, column: mediaColumn(kind, slot) })
+    const res = await fetch('/melis/MelisCmsNews/MelisCmsNews/removeAttachFile', {
+      method: 'POST',
+      headers: { ...XHR_HEADER, 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+      credentials: 'include',
+      body: body.toString(),
+    })
+    const data = await res.json()
+    return { success: data?.success === 1 || data?.success === true, message: data?.textMessage }
+  } catch (e) {
+    return { success: false, message: e instanceof Error ? e.message : 'Delete error' }
+  }
+}
+
+/** Recharge UNIQUEMENT les champs média d'un article (après upload/suppression) sans écraser
+ *  les autres champs du formulaire (titre, paragraphes non sauvés…). */
+export async function fetchNewsMedia(newsId: number, langId: number): Promise<Pick<NewsDetail, 'image1' | 'image2' | 'image3' | 'document1' | 'document2' | 'document3'>> {
+  const d = await fetchNewsById(newsId, langId)
+  return {
+    image1: d.image1, image2: d.image2, image3: d.image3,
+    document1: d.document1, document2: d.document2, document3: d.document3,
+  }
+}
+
 // ─── Base types ────────────────────────────────────────────────────────────────
 
 export interface Language {

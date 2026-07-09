@@ -9,6 +9,7 @@ import * as XLSX from 'xlsx'
 import { Button } from './components/ui/button'
 import { Input } from './components/ui/input'
 import { cn } from './lib/utils'
+import { t, newsLang } from './lib/i18n'
 import * as newsApi from './lib/news-api'
 import { useCaps } from './shared/useCaps'
 
@@ -69,14 +70,14 @@ const COL_MIN_WIDTHS: Record<string, number> = {
 }
 
 const DEFAULT_COLS: ColDef[] = [
-  { id: 'id',            label: 'ID',          visible: true,  pinned: false },
-  { id: 'title',         label: 'Titre',       visible: true,  pinned: false },
-  { id: 'subtitle',      label: 'Sous-titre',  visible: false, pinned: false },
-  { id: 'site',          label: 'Site',        visible: true,  pinned: false },
-  { id: 'publishDate',   label: 'Publication', visible: true,  pinned: false },
-  { id: 'unpublishDate', label: 'Expiration',  visible: false, pinned: false },
-  { id: 'creationDate',  label: 'Créé le',     visible: false, pinned: false },
-  { id: 'status',        label: 'Statut',      visible: true,  pinned: false },
+  { id: 'id',            label: t('col_id'),          visible: true,  pinned: false },
+  { id: 'title',         label: t('col_title'),       visible: true,  pinned: false },
+  { id: 'subtitle',      label: t('col_subtitle'),    visible: false, pinned: false },
+  { id: 'site',          label: t('col_site'),        visible: true,  pinned: false },
+  { id: 'publishDate',   label: t('col_publication'), visible: true,  pinned: false },
+  { id: 'unpublishDate', label: t('col_expiration'),  visible: false, pinned: false },
+  { id: 'creationDate',  label: t('col_created'),     visible: false, pinned: false },
+  { id: 'status',        label: t('col_status'),      visible: true,  pinned: false },
 ]
 
 const COL_STORAGE_KEY = 'melis-news-cols-v3'
@@ -113,7 +114,7 @@ function saveCols(cols: ColDef[]) {
 function fmtDate(d: string | null): string {
   if (!d) return '—'
   try {
-    return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+    return new Date(d).toLocaleDateString(newsLang() === 'fr' ? 'fr-FR' : 'en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
   } catch { return d }
 }
 
@@ -126,7 +127,7 @@ function getCellText(item: newsApi.NewsItem, colId: string): string {
     case 'publishDate':   return fmtDate(item.publishDate)
     case 'unpublishDate': return fmtDate(item.unpublishDate)
     case 'creationDate':  return fmtDate(item.creationDate)
-    case 'status':        return item.status === 1 ? 'Publié' : 'Brouillon'
+    case 'status':        return item.status === 1 ? t('status_published') : t('status_draft')
     default:              return ''
   }
 }
@@ -155,7 +156,7 @@ function StatusBadge({ status }: { status: 0 | 1 }) {
         ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
         : 'bg-muted text-muted-foreground',
     )}>
-      {status === 1 ? 'Publié' : 'Brouillon'}
+      {status === 1 ? t('status_published') : t('status_draft')}
     </span>
   )
 }
@@ -174,7 +175,7 @@ function KpiCard({ icon, label, value, iconBg }: {
         <div className="text-2xl font-bold leading-none text-foreground">
           {value === null
             ? <Loader2 className="size-4 animate-spin text-muted-foreground" />
-            : value.toLocaleString('fr-FR')}
+            : value.toLocaleString(newsLang() === 'fr' ? 'fr-FR' : 'en-GB')}
         </div>
         <div className="mt-0.5 text-xs text-muted-foreground">{label}</div>
       </div>
@@ -249,7 +250,7 @@ function ColManager({ cols, onChange, onClose }: {
         {panel === 'visible' && (
           <button
             onClick={e => { e.stopPropagation(); onChange(cols.map(c => c.id === col.id ? { ...c, pinned: !c.pinned } : c)) }}
-            title={col.pinned ? 'Désépingler' : 'Épingler'}
+            title={col.pinned ? t('unpin') : t('pin')}
             className={cn(
               'flex size-5 shrink-0 items-center justify-center rounded transition-colors hover:bg-primary/10',
               col.pinned ? 'text-primary' : 'text-muted-foreground/30 hover:text-muted-foreground',
@@ -265,7 +266,7 @@ function ColManager({ cols, onChange, onClose }: {
   return (
     <div className="absolute right-0 top-full z-50 mt-1.5 w-[420px] rounded-xl border border-border bg-card shadow-xl">
       <div className="flex items-center justify-between border-b border-border px-3 py-2.5">
-        <span className="text-sm font-semibold">Colonnes</span>
+        <span className="text-sm font-semibold">{t('columns')}</span>
         <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
           <X className="size-4" />
         </button>
@@ -281,9 +282,9 @@ function ColManager({ cols, onChange, onClose }: {
           }}
           onDrop={e => { e.preventDefault(); handleDrop('hidden') }}
         >
-          <p className="px-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Masquées</p>
+          <p className="px-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t('cols_hidden')}</p>
           {hiddenCols.length === 0
-            ? <div className="flex flex-1 items-center justify-center py-4 text-[11px] text-muted-foreground/40">Glisser ici</div>
+            ? <div className="flex flex-1 items-center justify-center py-4 text-[11px] text-muted-foreground/40">{t('drag_here')}</div>
             : hiddenCols.map(col => renderItem(col, 'hidden'))}
         </div>
 
@@ -296,7 +297,7 @@ function ColManager({ cols, onChange, onClose }: {
           }}
           onDrop={e => { e.preventDefault(); handleDrop('visible') }}
         >
-          <p className="px-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Visibles</p>
+          <p className="px-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t('cols_visible')}</p>
           {visibleCols.map(col => renderItem(col, 'visible'))}
         </div>
       </div>
@@ -306,7 +307,7 @@ function ColManager({ cols, onChange, onClose }: {
           onClick={() => onChange(DEFAULT_COLS)}
           className="w-full rounded-lg px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         >
-          Réinitialiser
+          {t('reset')}
         </button>
       </div>
     </div>
@@ -382,21 +383,21 @@ function ExportModal({ cols, search, status, total, onClose }: {
       if (format === 'xlsx') {
         const ws = XLSX.utils.aoa_to_sheet([included.map(c => c.label), ...rows])
         const wb = XLSX.utils.book_new()
-        XLSX.utils.book_append_sheet(wb, ws, 'Actualités')
-        XLSX.writeFile(wb, `actualites-${date}.xlsx`)
+        XLSX.utils.book_append_sheet(wb, ws, t('export_sheet'))
+        XLSX.writeFile(wb, `${t('export_filename')}-${date}.xlsx`)
       } else {
         const csv = [included.map(c => c.label), ...rows]
           .map(row => row.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','))
           .join('\n')
         const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
         const url  = URL.createObjectURL(blob)
-        const a    = Object.assign(document.createElement('a'), { href: url, download: `actualites-${date}.csv` })
+        const a    = Object.assign(document.createElement('a'), { href: url, download: `${t('export_filename')}-${date}.csv` })
         document.body.appendChild(a); a.click(); document.body.removeChild(a)
         URL.revokeObjectURL(url)
       }
       onClose()
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Erreur lors de l'export")
+      alert(e instanceof Error ? e.message : t('export_error'))
     } finally { setExporting(false) }
   }
 
@@ -408,9 +409,9 @@ function ExportModal({ cols, search, status, total, onClose }: {
       <div className="w-full max-w-lg rounded-2xl border border-border bg-card shadow-2xl">
         <div className="flex items-start justify-between border-b border-border px-5 py-4">
           <div>
-            <h2 className="text-sm font-semibold">Exporter</h2>
+            <h2 className="text-sm font-semibold">{t('export')}</h2>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              {total.toLocaleString('fr-FR')} article{total !== 1 ? 's' : ''} avec les filtres actifs
+              {total.toLocaleString(newsLang() === 'fr' ? 'fr-FR' : 'en-GB')} {total !== 1 ? t('export_rows') : t('export_row')}
             </p>
           </div>
           <button onClick={onClose} className="ml-4 text-muted-foreground hover:text-foreground transition-colors">
@@ -421,7 +422,7 @@ function ExportModal({ cols, search, status, total, onClose }: {
         <div className="p-4 space-y-4">
           {/* Format */}
           <div>
-            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Format</p>
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('format')}</p>
             <div className="flex gap-2">
               {(['xlsx', 'csv'] as const).map(f => (
                 <button key={f} onClick={() => setFormat(f)} className={cn(
@@ -437,7 +438,7 @@ function ExportModal({ cols, search, status, total, onClose }: {
           {/* Colonnes DnD */}
           <div>
             <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Colonnes à exporter <span className="font-normal text-muted-foreground/60">— glisser pour inclure et ordonner</span>
+              {t('cols_to_export')} <span className="font-normal text-muted-foreground/60">{t('drag_include_order')}</span>
             </p>
             <div className="grid grid-cols-2 gap-2">
               <div
@@ -445,9 +446,9 @@ function ExportModal({ cols, search, status, total, onClose }: {
                 onDragOver={e => { e.preventDefault(); if (overTarget?.id !== '__panel__' || overTarget?.panel !== 'excluded') setOverTarget({ id: '__panel__', panel: 'excluded' }) }}
                 onDrop={e => { e.preventDefault(); handleDrop('excluded') }}
               >
-                <p className="px-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Non incluses</p>
+                <p className="px-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t('excluded')}</p>
                 {excluded.length === 0
-                  ? <div className="flex flex-1 items-center justify-center py-3 text-[11px] text-muted-foreground/40">Glisser ici</div>
+                  ? <div className="flex flex-1 items-center justify-center py-3 text-[11px] text-muted-foreground/40">{t('drag_here')}</div>
                   : excluded.map(col => renderItem(col, 'excluded'))}
               </div>
               <div
@@ -455,9 +456,9 @@ function ExportModal({ cols, search, status, total, onClose }: {
                 onDragOver={e => { e.preventDefault(); if (overTarget?.id !== '__panel__' || overTarget?.panel !== 'included') setOverTarget({ id: '__panel__', panel: 'included' }) }}
                 onDrop={e => { e.preventDefault(); handleDrop('included') }}
               >
-                <p className="px-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">À exporter</p>
+                <p className="px-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t('included')}</p>
                 {included.length === 0
-                  ? <div className="flex flex-1 items-center justify-center py-3 text-[11px] text-muted-foreground/40">Glisser ici</div>
+                  ? <div className="flex flex-1 items-center justify-center py-3 text-[11px] text-muted-foreground/40">{t('drag_here')}</div>
                   : included.map(col => renderItem(col, 'included'))}
               </div>
             </div>
@@ -465,10 +466,10 @@ function ExportModal({ cols, search, status, total, onClose }: {
         </div>
 
         <div className="flex justify-end gap-2 border-t border-border px-4 py-3">
-          <Button variant="outline" size="sm" onClick={onClose} disabled={exporting}>Annuler</Button>
+          <Button variant="outline" size="sm" onClick={onClose} disabled={exporting}>{t('cancel')}</Button>
           <Button size="sm" onClick={doExport} disabled={exporting || included.length === 0} className="gap-1.5">
             {exporting ? <Loader2 className="size-3.5 animate-spin" /> : <FileDown className="size-3.5" />}
-            {exporting ? 'Export…' : `Télécharger ${format.toUpperCase()}`}
+            {exporting ? t('exporting') : t('download', { fmt: format.toUpperCase() })}
           </Button>
         </div>
       </div>
@@ -584,7 +585,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
       const vb = getSortValue(b, sortCol)
       const cmp = typeof va === 'number' && typeof vb === 'number'
         ? va - vb
-        : String(va).localeCompare(String(vb), 'fr', { sensitivity: 'base' })
+        : String(va).localeCompare(String(vb), newsLang() === 'fr' ? 'fr' : 'en', { sensitivity: 'base' })
       return sortDir === 'asc' ? cmp : -cmp
     })
   }, [items, sortCol, sortDir])
@@ -620,7 +621,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
     setPage(1); setHasMore(true); setLoading(true); setError(null)
     newsApi.fetchNewsList({ page: 1, limit: LIMIT, search: search || undefined, status: status || undefined })
       .then(res => { setItems(res.items); setTotal(res.total); setHasMore(res.items.length === LIMIT) })
-      .catch(e => setError(e instanceof Error ? e.message : 'Erreur'))
+      .catch(e => setError(e instanceof Error ? e.message : t('error')))
       .finally(() => setLoading(false))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, status, capsLoaded, canList])
@@ -668,7 +669,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
 
   // ── Delete ─────────────────────────────────────────────────────────────────
   async function handleDelete(id: number, title: string) {
-    if (!confirm(`Supprimer « ${title} » ?`)) return
+    if (!confirm(t('confirm_delete', { title }))) return
     setDeleting(id)
     try {
       await newsApi.deleteNews(id)
@@ -676,7 +677,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
       setTotal(t => t - 1)
       loadKpis()
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'Erreur')
+      alert(e instanceof Error ? e.message : t('error'))
     } finally {
       setDeleting(null)
     }
@@ -727,7 +728,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
             onClick={() => onOpen(item.id, item.title)}
             className="w-full truncate text-left font-medium text-foreground hover:text-primary transition-colors"
           >
-            {item.title || <span className="italic text-muted-foreground">Sans titre</span>}
+            {item.title || <span className="italic text-muted-foreground">{t('untitled')}</span>}
           </button>
         )
       case 'subtitle':
@@ -756,19 +757,19 @@ export default function NewsListPage({ active, onOpen, onNew }: {
         <div className="flex flex-wrap gap-3">
           <KpiCard
             icon={<Newspaper    className="size-5 text-blue-500"    />}
-            label="Total articles"
+            label={t('total_articles')}
             value={kpiStats?.total    ?? null}
             iconBg="bg-blue-500/10"
           />
           <KpiCard
             icon={<CheckCircle2 className="size-5 text-emerald-500" />}
-            label="Publiés"
+            label={t('count_published')}
             value={kpiStats?.published ?? null}
             iconBg="bg-emerald-500/10"
           />
           <KpiCard
             icon={<FileText     className="size-5 text-orange-500"  />}
-            label="Brouillons"
+            label={t('count_drafts')}
             value={kpiStats?.draft     ?? null}
             iconBg="bg-orange-500/10"
           />
@@ -778,8 +779,8 @@ export default function NewsListPage({ active, onOpen, onNew }: {
       {/* Header */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">Actualités</h1>
-          <p className="text-sm text-muted-foreground">Gestion des articles de news</p>
+          <h1 className="text-xl font-semibold tracking-tight">{t('news_title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('news_subtitle')}</p>
         </div>
         <div className="flex items-center gap-2">
           {/* Mode toggle */}
@@ -795,7 +796,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
               )}
             >
               <Code2 className="size-3.5" />
-              New
+              {t('view_new')}
             </button>
             <button
               type="button"
@@ -808,13 +809,13 @@ export default function NewsListPage({ active, onOpen, onNew }: {
               )}
             >
               <Layout className="size-3.5" />
-              Old
+              {t('view_old')}
             </button>
           </div>
           {can('create') && (
             <Button onClick={onNew} size="sm" className="gap-1.5">
               <Plus className="size-4" />
-              Nouvel article
+              {t('new_article')}
             </Button>
           )}
         </div>
@@ -827,7 +828,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
             src="/melis/react-tool-page?key=meliscmsnews_left_menu"
             className="h-full w-full border-0"
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
-            title="News — Vue Melis"
+            title={t('melis_view')}
           />
         </div>
       )}
@@ -838,7 +839,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
       {/* Liste refusée (capacité `list`) → seule la zone liste (filtres + tableau) est remplacée. */}
       {!canList ? (
         <p className="text-sm text-muted-foreground">
-          Vous n'avez pas les droits pour consulter la liste des articles.
+          {t('no_list_rights')}
         </p>
       ) : (<>
 
@@ -847,7 +848,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
         <div className="relative min-w-[200px] flex-1 max-w-sm">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Rechercher…"
+            placeholder={t('search_ph')}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="pl-9 h-9"
@@ -855,9 +856,9 @@ export default function NewsListPage({ active, onOpen, onNew }: {
         </div>
         <div className="flex h-9 items-center rounded-lg border border-border bg-muted/40 p-0.5 gap-0.5">
           {([
-            { value: '',  label: 'Tous',    dot: null              },
-            { value: '1', label: 'Actif',   dot: 'bg-emerald-500' },
-            { value: '0', label: 'Inactif', dot: 'bg-red-500'     },
+            { value: '',  label: t('filter_all'),      dot: null              },
+            { value: '1', label: t('filter_active'),   dot: 'bg-emerald-500' },
+            { value: '0', label: t('filter_inactive'), dot: 'bg-red-500'     },
           ] as const).map(opt => (
             <button
               key={opt.value}
@@ -880,7 +881,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
           <div ref={colMgrRef} className="relative">
             <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setShowColMgr(v => !v)}>
               <Columns3 className="size-3.5" />
-              Colonnes
+              {t('columns')}
             </Button>
             {showColMgr && (
               <ColManager cols={cols} onChange={updateCols} onClose={() => setShowColMgr(false)} />
@@ -889,7 +890,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
           {can('export') && (
             <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setShowExport(true)}>
               <Download className="size-3.5" />
-              Exporter
+              {t('export')}
             </Button>
           )}
         </div>
@@ -935,7 +936,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
                     </th>
                   ))}
                   <th className="px-4 py-3 text-right font-medium text-muted-foreground whitespace-nowrap">
-                    Actions
+                    {t('col_actions')}
                   </th>
                 </tr>
               </thead>
@@ -957,7 +958,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
               <Loader2 className="size-5 animate-spin text-muted-foreground" />
             </div>
           ) : sortedItems.length === 0 ? (
-            <div className="py-20 text-center text-sm text-muted-foreground">Aucun article trouvé</div>
+            <div className="py-20 text-center text-sm text-muted-foreground">{t('no_articles')}</div>
           ) : (
             <table
               className="w-full text-sm"
@@ -981,7 +982,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
                         {can('edit') && (
                           <Button
                             variant="ghost" size="icon" className="size-8"
-                            onClick={(e) => { e.stopPropagation(); onOpen(item.id, item.title) }} title="Modifier"
+                            onClick={(e) => { e.stopPropagation(); onOpen(item.id, item.title) }} title={t('edit')}
                           >
                             <Edit2 className="size-3.5" />
                           </Button>
@@ -991,7 +992,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
                             variant="ghost" size="icon"
                             className="size-8 text-destructive hover:text-destructive"
                             onClick={(e) => { e.stopPropagation(); handleDelete(item.id, item.title) }}
-                            disabled={deleting === item.id} title="Supprimer"
+                            disabled={deleting === item.id} title={t('delete')}
                           >
                             {deleting === item.id
                               ? <Loader2 className="size-3.5 animate-spin" />
@@ -1011,12 +1012,12 @@ export default function NewsListPage({ active, onOpen, onNew }: {
           {loadingMore && (
             <div className="flex items-center justify-center gap-2 py-4 text-xs text-muted-foreground">
               <Loader2 className="size-3.5 animate-spin" />
-              Chargement…
+              {t('loading')}
             </div>
           )}
           {!hasMore && items.length > 0 && (
             <div className="py-4 text-center text-xs text-muted-foreground">
-              {total.toLocaleString('fr-FR')} article{total > 1 ? 's' : ''} — fin de la liste
+              {total.toLocaleString(newsLang() === 'fr' ? 'fr-FR' : 'en-GB')} {total > 1 ? t('export_rows') : t('export_row')} — {t('end_of_list')}
             </div>
           )}
         </div>
