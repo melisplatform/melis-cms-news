@@ -7,7 +7,11 @@ import {
 
 import { Button } from './components/ui/button'
 import { Input } from './components/ui/input'
-import { RichEditor, type RichEditorEngine } from './components/ui/rich-editor'
+// Choix d'éditeur TipTap/TinyMCE désactivé : on ne garde QUE TinyMCE (config 'tool' de melis-core,
+// idem « Emails management »). L'import TipTap est conservé en commentaire au cas où.
+// import { RichEditor, type RichEditorEngine } from './components/ui/rich-editor'
+import { MelisToolEditor } from './components/ui/melis-tool-editor'
+import { CalendarPopup } from './components/ui/date-time-picker'
 import WorkflowModal from './components/WorkflowModal'
 import { cn } from './lib/utils'
 import { t } from './lib/i18n'
@@ -139,24 +143,28 @@ function DateTimeField({ value, onChange, locale }: {
 }) {
   const dayFirst = useMemo(() => localeDayFirst(locale), [locale])
   const [text, setText] = useState(() => dtToDisplay(value, dayFirst))
-  const nativeRef = useRef<HTMLInputElement>(null)
+  const [open, setOpen] = useState(false)
+  const wrapRef = useRef<HTMLDivElement>(null)
 
   // Resynchronise l'affichage quand la valeur change de l'extérieur (chargement, changement de langue).
   useEffect(() => { setText(dtToDisplay(value, dayFirst)) }, [value, dayFirst])
+
+  // Ferme le calendrier au clic en dehors.
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e: MouseEvent) => { if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false) }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
+  }, [open])
 
   const commit = () => {
     const iso = dtFromDisplay(text, dayFirst)
     if (iso === null) { setText(dtToDisplay(value, dayFirst)); return } // saisie invalide → on revient à la valeur
     onChange(iso)
   }
-  const openPicker = () => {
-    const el = nativeRef.current as (HTMLInputElement & { showPicker?: () => void }) | null
-    if (el?.showPicker) el.showPicker()
-    else el?.focus()
-  }
 
   return (
-    <div className="relative">
+    <div className="relative" ref={wrapRef}>
       <Input
         value={text}
         onChange={(e) => setText(e.target.value)}
@@ -168,23 +176,15 @@ function DateTimeField({ value, onChange, locale }: {
       />
       <button
         type="button"
-        onClick={openPicker}
+        onClick={() => setOpen((o) => !o)}
         tabIndex={-1}
         aria-label={t('calendar')}
         className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
       >
         <Calendar className="size-3.5" />
       </button>
-      {/* Input natif caché : fournit le calendrier via showPicker(), valeur au format datetime-local. */}
-      <input
-        ref={nativeRef}
-        type="datetime-local"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        tabIndex={-1}
-        aria-hidden="true"
-        className="pointer-events-none absolute size-0 opacity-0"
-      />
+      {/* Calendrier custom localisé (langue du BO) — remplace le picker natif (anglais forcé). */}
+      {open && <CalendarPopup value={value} onChange={onChange} locale={locale} onClose={() => setOpen(false)} />}
     </div>
   )
 }
@@ -280,11 +280,11 @@ function CategoryTree({ categories, selected, onToggle }: {
 // ─── Paragraph editor ─────────────────────────────────────────────────────────
 
 function ParagraphEditor({
-  index, value, onChange, onRemove, canRemove, engine, extraActions,
+  index, value, onChange, onRemove, canRemove, extraActions,
   canReorder, isDragging, onDragStart, onDrop, onDragEnd,
 }: {
   index: number; value: string; onChange: (v: string) => void
-  onRemove: () => void; canRemove: boolean; engine: RichEditorEngine
+  onRemove: () => void; canRemove: boolean
   extraActions?: React.ReactNode
   canReorder: boolean
   isDragging: boolean
@@ -332,12 +332,10 @@ function ParagraphEditor({
           )}
         </div>
       </div>
-      <RichEditor
-        engine={engine}
+      <MelisToolEditor
         value={value}
         onChange={onChange}
-        placeholder={t('editor_ph')}
-        minRows={6}
+        minHeight={220}
       />
     </div>
   )
@@ -469,7 +467,8 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
   const [tagsActive, setTagsActive]     = useState(false)     // vrai ssi MelisCmsTags est actif (→ section Tags)
   const [dragIndex, setDragIndex]       = useState<number | null>(null)  // paragraphe en cours de glisser
   const [previewUrl, setPreviewUrl]     = useState<string | null>(null)
-  const [editorEngine, setEditorEngine] = useState<RichEditorEngine>('tiptap')
+  // Choix d'éditeur retiré — TinyMCE ('tool') forcé.
+  // const [editorEngine, setEditorEngine] = useState<RichEditorEngine>('tiptap')
 
   // Langue de l'app (chrome hôte) → format de date fr/en.
   const appLang = (document.documentElement.lang || 'en').slice(0, 2)
@@ -741,17 +740,17 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
             </Button>
           )}
 
-          <button
-            type="button"
-            onClick={() => set('status', isPublished ? '0' : '1')}
+          {/* Indicateur de statut — affichage seul (le changement de statut se fait via le
+              toggle de la section STATUS, ci-dessous). Pas de onClick ici. */}
+          <span
             className={cn(
-              'inline-flex cursor-pointer items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors select-none',
+              'inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium select-none',
               statusClass,
             )}
           >
             <span className={cn('size-1.5 rounded-full', statusDot)} />
             {isPublished ? t('published') : t('unpublished')}
-          </button>
+          </span>
 
           {apiError && <span className="text-xs text-destructive">{apiError}</span>}
 
@@ -824,6 +823,8 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
             <div className="flex items-center gap-3">
               <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{t('body')}</span>
               <div className="h-px flex-1 bg-border" />
+              {/* Choix d'éditeur TipTap/TinyMCE retiré — on force TinyMCE (config 'tool'). Conservé
+                  en commentaire au cas où on voudrait re-proposer le switch.
               <div className="flex items-center gap-1 rounded-md bg-muted p-0.5">
                 {(['tiptap', 'tinymce'] as RichEditorEngine[]).map((eng) => (
                   <button
@@ -841,6 +842,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
                   </button>
                 ))}
               </div>
+              */}
               <span className="text-[11px] text-muted-foreground/60">{form.paragraphs.length}/{MAX_PARAGRAPHS}</span>
             </div>
 
@@ -857,7 +859,6 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
                 onDragStart={() => setDragIndex(i)}
                 onDrop={() => { if (dragIndex !== null) moveParagraph(dragIndex, i); setDragIndex(null) }}
                 onDragEnd={() => setDragIndex(null)}
-                engine={editorEngine}
                 extraActions={window.__melisNewsExtensions?.renderParagraphActions?.(
                   i,
                   (text) => updateParagraph(i, text),
@@ -879,7 +880,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
                 className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border py-3 text-xs font-medium text-muted-foreground hover:border-primary/60 hover:text-primary transition-colors"
               >
                 <Plus className="size-3.5" />
-                {t('add_paragraph')}
+                {t('add_paragraph')} <span className="text-muted-foreground/60">(max. {MAX_PARAGRAPHS})</span>
               </button>
             )}
           </section>
@@ -899,7 +900,9 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
             )}
 
             <div className={cn('space-y-3', isNew && 'pointer-events-none opacity-50')}>
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">{t('images')}</p>
+              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                {t('images')} <span className="normal-case text-muted-foreground/70">({t('media_max')})</span>
+              </p>
               <div className="grid grid-cols-3 gap-3">
                 {([1, 2, 3] as const).map((slot) => {
                   const col = newsApi.mediaColumn('image', slot)
@@ -913,7 +916,9 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
             </div>
 
             <div className={cn('space-y-3', isNew && 'pointer-events-none opacity-50')}>
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">{t('file_attachments')}</p>
+              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                {t('file_attachments')} <span className="normal-case text-muted-foreground/70">({t('media_max')})</span>
+              </p>
               <div className="space-y-2">
                 {([1, 2, 3] as const).map((slot) => {
                   const col = newsApi.mediaColumn('file', slot)
