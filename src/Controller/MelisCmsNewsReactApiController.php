@@ -465,16 +465,18 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
         try {
             $db   = $this->getServiceManager()->get('Laminas\Db\Adapter\AdapterInterface');
             $rows = $db->query(
-                'SELECT site_id, site_name FROM melis_cms_site ORDER BY site_name',
+                'SELECT site_id, site_name, site_label FROM melis_cms_site ORDER BY site_label, site_name',
                 []
             );
 
+            // Le « nom du site » affiché = son LIBELLÉ (site_label), pas le nom de module (site_name).
             $sites = [];
             foreach ($rows as $row) {
                 $r       = (array) $row;
+                $label   = trim((string) ($r['site_label'] ?? ''));
                 $sites[] = [
-                    'id'   => (int)    ($r['site_id']   ?? 0),
-                    'name' => (string) ($r['site_name'] ?? ''),
+                    'id'   => (int)    ($r['site_id'] ?? 0),
+                    'name' => $label !== '' ? $label : (string) ($r['site_name'] ?? ''),
                 ];
             }
 
@@ -494,7 +496,8 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
             'subtitle'      => (string) ($row['cnews_subtitle']      ?? ''),
             'status'        => (int)    ($row['cnews_status']        ?? 0),
             'siteId'        => (int)    ($row['cnews_site_id']       ?? 0),
-            'siteName'      => (string) ($row['site_name']           ?? ''),
+            // Nom du site = LIBELLÉ (site_label) ; repli sur le nom de module si vide.
+            'siteName'      => (string) (($row['site_label'] ?? '') !== '' ? $row['site_label'] : ($row['site_name'] ?? '')),
             'creationDate'  => (string) ($row['cnews_creation_date'] ?? ''),
             'publishDate'   => $row['cnews_publish_date']   ?: null,
             'unpublishDate' => $row['cnews_unpublish_date'] ?: null,
