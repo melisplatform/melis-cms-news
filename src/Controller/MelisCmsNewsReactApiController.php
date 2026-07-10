@@ -377,18 +377,21 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
                 : $this->getCurrentLangId();
 
             $db   = $this->getServiceManager()->get('Laminas\Db\Adapter\AdapterInterface');
-            // Titre dans la langue demandée, avec repli sur le premier titre disponible
-            // (un tag peut n'être traduit que dans une seule langue).
+            // Titre dans la langue demandée, avec repli sur le premier titre NON VIDE disponible
+            // (un tag peut n'être traduit que dans une seule langue, ou avoir une traduction vide
+            // pour la langue courante). NULLIF/<>'' traitent la chaîne vide comme absente — sinon
+            // COALESCE conserverait un titre vide et le tag s'afficherait blanc au changement de langue.
             $rows = $db->query(
-                'SELECT t.tag_id,
-                        COALESCE(tx.tag_title,
+                "SELECT t.tag_id,
+                        COALESCE(NULLIF(tx.tag_title, ''),
                             (SELECT tx2.tag_title FROM melis_cms_tag_texts tx2
-                              WHERE tx2.tag_id = t.tag_id AND tx2.tag_title IS NOT NULL
+                              WHERE tx2.tag_id = t.tag_id
+                                AND tx2.tag_title IS NOT NULL AND tx2.tag_title <> ''
                               ORDER BY tx2.tag_lang_id LIMIT 1)) AS tag_title
                  FROM melis_cms_tag t
                  LEFT JOIN melis_cms_tag_texts tx
                         ON tx.tag_id = t.tag_id AND tx.tag_lang_id = ?
-                 ORDER BY tag_title',
+                 ORDER BY tag_title",
                 [$langId]
             );
 

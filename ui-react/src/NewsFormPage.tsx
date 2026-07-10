@@ -1101,7 +1101,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
                         onChange={() => toggleTag(tg.id)}
                         className="size-3.5 shrink-0 rounded border-input accent-primary"
                       />
-                      <span className="truncate">{tg.name}</span>
+                      <span className="truncate">{tg.name || `#${tg.id}`}</span>
                     </label>
                   ))}
                 </div>
