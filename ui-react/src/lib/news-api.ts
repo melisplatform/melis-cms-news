@@ -78,6 +78,11 @@ export interface NewsCategory {
   name: string
 }
 
+export interface NewsTag {
+  id: number
+  name: string
+}
+
 export interface NewsSeo {
   url: string
   urlRedirect: string
@@ -109,6 +114,7 @@ export interface NewsDetail extends NewsItem {
   document3: string | null
   sliderId: number | null
   categoryIds: number[]
+  tagIds: number[]
   seo: NewsSeo
 }
 
@@ -139,6 +145,7 @@ export interface NewsSavePayload {
   unpublishDate?: string | null
   sliderId?: number | null
   categoryIds?: number[]
+  tagIds?: number[]
   seo?: Partial<NewsSeo>
 }
 
@@ -223,6 +230,16 @@ export async function fetchNewsPreviewUrl(id: number): Promise<string | null> {
 export async function fetchCategories(langId?: number): Promise<NewsCategory[]> {
   const qs = langId ? `?langId=${langId}` : ''
   return apiFetch<NewsCategory[]>(`/melis/react-api/news/categories${qs}`)
+}
+
+// ─── Tags (modular — only present when MelisCmsTags is active) ───────────────────
+// Comme les catégories, la liste des tags disponibles est fournie par le back-office
+// news (/melis/react-api/news/tags) qui lit melis_cms_tag ; la section n'est affichée
+// que si le module MelisCmsTags est actif (détecté via /react-modules).
+
+export async function fetchTags(langId?: number): Promise<NewsTag[]> {
+  const qs = langId ? `?langId=${langId}` : ''
+  return apiFetch<NewsTag[]>(`/melis/react-api/news/tags${qs}`)
 }
 
 // ─── Sites ─────────────────────────────────────────────────────────────────────

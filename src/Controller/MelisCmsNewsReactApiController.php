@@ -167,9 +167,12 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
             // Categories assigned to this news item
             $categories = $this->getNewsCategoryIds($id);
 
+            // Tags assigned to this news item (module optionnel MelisCmsTags)
+            $tagIds = $this->getNewsTagIds($id);
+
             return $this->jsonResponse([
                 'success' => true,
-                'data'    => $this->formatNewsDetail($row, $seoRow, $categories),
+                'data'    => $this->formatNewsDetail($row, $seoRow, $categories, $tagIds),
             ]);
         } catch (\Throwable $e) {
             return $this->errorResponse($e);
@@ -246,6 +249,12 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
             // Sync categories
             if (array_key_exists('categoryIds', $body)) {
                 $this->syncNewsCategories((int) $newsId, (array) $body['categoryIds']);
+            }
+
+            // Sync tags (module optionnel MelisCmsTags) — table de liaison partagée
+            // melis_cms_tag_entity, entity_type = 'NEWS'.
+            if (array_key_exists('tagIds', $body)) {
+                $this->syncNewsTags((int) $newsId, (array) $body['tagIds']);
             }
 
             return $this->jsonResponse([
@@ -346,6 +355,53 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
             }
 
             return $this->jsonResponse(['success' => true, 'data' => $categories]);
+        } catch (\Throwable $e) {
+            return $this->errorResponse($e);
+        }
+    }
+
+    // ─── GET /news/tags ─────────────────────────────────────────────────────
+    // Liste des tags disponibles (module optionnel MelisCmsTags). Comme les catégories,
+    // c'est le back-office news qui lit directement les tables du module tiers
+    // (melis_cms_tag + melis_cms_tag_texts) et écrit la table de liaison partagée
+    // melis_cms_tag_entity (entity_type = 'NEWS'). La section n'apparaît côté React que
+    // si MelisCmsTags est actif (détecté via /react-modules).
+    public function tagsAction(): HttpResponse
+    {
+        if ($deny = $this->denyUnlessAccess()) { return $deny; }
+
+        try {
+            $rawLang = $this->params()->fromQuery('langId', '');
+            $langId  = ($rawLang !== '' && $rawLang !== null)
+                ? (int) $rawLang
+                : $this->getCurrentLangId();
+
+            $db   = $this->getServiceManager()->get('Laminas\Db\Adapter\AdapterInterface');
+            // Titre dans la langue demandée, avec repli sur le premier titre disponible
+            // (un tag peut n'être traduit que dans une seule langue).
+            $rows = $db->query(
+                'SELECT t.tag_id,
+                        COALESCE(tx.tag_title,
+                            (SELECT tx2.tag_title FROM melis_cms_tag_texts tx2
+                              WHERE tx2.tag_id = t.tag_id AND tx2.tag_title IS NOT NULL
+                              ORDER BY tx2.tag_lang_id LIMIT 1)) AS tag_title
+                 FROM melis_cms_tag t
+                 LEFT JOIN melis_cms_tag_texts tx
+                        ON tx.tag_id = t.tag_id AND tx.tag_lang_id = ?
+                 ORDER BY tag_title',
+                [$langId]
+            );
+
+            $tags = [];
+            foreach ($rows as $row) {
+                $r      = (array) $row;
+                $tags[] = [
+                    'id'   => (int)    ($r['tag_id']    ?? 0),
+                    'name' => (string) ($r['tag_title'] ?? ''),
+                ];
+            }
+
+            return $this->jsonResponse(['success' => true, 'data' => $tags]);
         } catch (\Throwable $e) {
             return $this->errorResponse($e);
         }
@@ -476,7 +532,7 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
         return $paragraphs;
     }
 
-    private function formatNewsDetail(array $row, array $seoRow, array $categoryIds): array
+    private function formatNewsDetail(array $row, array $seoRow, array $categoryIds, array $tagIds = []): array
     {
         return array_merge($this->formatNewsItem($row), [
             // Paragraphes (colonnes BDD paragraph1-10) renvoyés DANS L'ORDRE d'affichage.
@@ -496,6 +552,8 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
                 : null,
             // Catégories (IDs assignés)
             'categoryIds' => $categoryIds,
+            // Tags (IDs assignés — module optionnel MelisCmsTags)
+            'tagIds'      => $tagIds,
             // SEO
             'seo'         => [
                 'url'             => (string) ($seoRow['cnews_seo_url']              ?? ''),
@@ -540,6 +598,28 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
             foreach ($rows as $row) {
                 $r     = (array) $row;
                 $ids[] = (int) $r['cnc_cat2_id'];
+            }
+
+            return $ids;
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
+    /** Retourne les IDs de tags assignés à une news (module optionnel MelisCmsTags). */
+    private function getNewsTagIds(int $newsId): array
+    {
+        try {
+            $db   = $this->getServiceManager()->get('Laminas\Db\Adapter\AdapterInterface');
+            $rows = $db->query(
+                'SELECT tag_id FROM melis_cms_tag_entity WHERE entity_id = ? AND entity_type = ?',
+                [$newsId, 'NEWS']
+            );
+
+            $ids = [];
+            foreach ($rows as $row) {
+                $r     = (array) $row;
+                $ids[] = (int) $r['tag_id'];
             }
 
             return $ids;
@@ -652,6 +732,21 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
                 [$newsId, $catId, $order]
             );
         }
+    }
+
+    /**
+     * Synchronise les tags d'une news dans la table de liaison partagée melis_cms_tag_entity
+     * (entity_type = 'NEWS'). Réutilise MelisCmsNewsTagsTable::syncNewsTags() (diff insert/delete
+     * transactionnel), la table dédiée du module news qui porte déjà cette logique côté legacy.
+     */
+    private function syncNewsTags(int $newsId, array $tagIds): void
+    {
+        $tagIds = array_values(array_unique(array_filter(
+            array_map('intval', $tagIds),
+            static fn (int $id): bool => $id > 0
+        )));
+
+        $this->getServiceManager()->get('MelisCmsNewsTagsTable')->syncNewsTags($newsId, $tagIds);
     }
 
     // ─── Common helpers ──────────────────────────────────────────────────────

@@ -57,6 +57,8 @@ const DICT: Record<string, { en: string; fr: string }> = {
   canonical_url:      { en: 'Canonical URL',      fr: 'URL canonique' },
   categories:         { en: 'Categories',         fr: 'Catégories' },
   no_category:        { en: 'No category available', fr: 'Aucune catégorie disponible' },
+  tags:               { en: 'Tags',               fr: 'Tags' },
+  no_tag:             { en: 'No tag available',   fr: 'Aucun tag disponible' },
   slider:             { en: 'Slider',             fr: 'Slider' },
   no_slider:          { en: 'No slider',          fr: 'Aucun slider' },
   calendar:           { en: 'Calendar',           fr: 'Calendrier' },

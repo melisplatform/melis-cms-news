@@ -73,6 +73,13 @@ return array(
                                     'defaults' => array('__NAMESPACE__' => 'MelisCmsNews\Controller', 'controller' => 'MelisCmsNewsReactApi', 'action' => 'categories'),
                                 ),
                             ),
+                            'meliscmsnews-news-tags' => array(
+                                'type' => 'Segment',
+                                'options' => array(
+                                    'route'    => '/news/tags[/]',
+                                    'defaults' => array('__NAMESPACE__' => 'MelisCmsNews\Controller', 'controller' => 'MelisCmsNewsReactApi', 'action' => 'tags'),
+                                ),
+                            ),
                             'meliscmsnews-news-save' => array(
                                 'type' => 'Segment',
                                 'options' => array(

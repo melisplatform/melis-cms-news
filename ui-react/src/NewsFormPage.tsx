@@ -47,6 +47,7 @@ interface FormState {
   unpublishDate: string
   sliderId: string
   categoryIds: number[]
+  tagIds: number[]
   seo: newsApi.NewsSeo
   image1: string | null
   image2: string | null
@@ -63,7 +64,7 @@ const EMPTY_SEO: newsApi.NewsSeo = {
 const EMPTY: FormState = {
   title: '', subtitle: '', paragraphs: [''],
   status: '0', siteId: '', publishDate: '', unpublishDate: '',
-  sliderId: '', categoryIds: [], seo: EMPTY_SEO,
+  sliderId: '', categoryIds: [], tagIds: [], seo: EMPTY_SEO,
   image1: null, image2: null, image3: null,
   document1: null, document2: null, document3: null,
 }
@@ -464,6 +465,8 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
   const [uploadingCol, setUploadingCol] = useState<string | null>(null) // colonne média en cours d'upload/suppression
   const [categories, setCategories]     = useState<newsApi.NewsCategory[]>([])
   const [categoryActive, setCategoryActive] = useState(false) // vrai ssi MelisCmsCategory2 est actif (→ section Catégories)
+  const [tags, setTags]                 = useState<newsApi.NewsTag[]>([])
+  const [tagsActive, setTagsActive]     = useState(false)     // vrai ssi MelisCmsTags est actif (→ section Tags)
   const [dragIndex, setDragIndex]       = useState<number | null>(null)  // paragraphe en cours de glisser
   const [previewUrl, setPreviewUrl]     = useState<string | null>(null)
   const [editorEngine, setEditorEngine] = useState<RichEditorEngine>('tiptap')
@@ -491,6 +494,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
         unpublishDate: toInputDate(d.unpublishDate),
         sliderId:      d.sliderId ? String(d.sliderId) : '',
         categoryIds:   d.categoryIds ?? [],
+        tagIds:        d.tagIds ?? [],
         seo:           d.seo ?? EMPTY_SEO,
         image1:        d.image1 ?? null,
         image2:        d.image2 ?? null,
@@ -524,6 +528,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
       newsApi.fetchActiveModules().then((mods) => {
         setSbActive(mods.includes('MelisSmallBusiness'))
         setCategoryActive(mods.includes('MelisCmsCategory2'))
+        setTagsActive(mods.includes('MelisCmsTags'))
       }).catch(() => {}),
     ]
 
@@ -563,6 +568,14 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
     if (!categoryActive) return
     newsApi.fetchCategories(langId).then(setCategories).catch(() => {})
   }, [langId, categoryActive])
+
+  // Tags (module optionnel MelisCmsTags) : mêmes règles que les catégories — chargés ssi
+  // le module est actif et re-fetchés à chaque changement de langue (titres traduits) ;
+  // la SÉLECTION `tagIds` reste indépendante de la langue.
+  useEffect(() => {
+    if (!tagsActive) return
+    newsApi.fetchTags(langId).then(setTags).catch(() => {})
+  }, [langId, tagsActive])
 
   useEffect(() => {
     // Met à jour le libellé du sous-onglet quand le titre change (article existant).
@@ -620,6 +633,15 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
     })
   }
 
+  function toggleTag(tagId: number) {
+    setForm((prev) => {
+      const ids = prev.tagIds.includes(tagId)
+        ? prev.tagIds.filter((tg) => tg !== tagId)
+        : [...prev.tagIds, tagId]
+      return { ...prev, tagIds: ids }
+    })
+  }
+
   function validate() {
     const errs: Partial<Record<string, string>> = {}
     if (!form.title.trim()) errs.title  = t('title_required')
@@ -644,6 +666,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
         unpublishDate: toDbDate(form.unpublishDate),
         sliderId:    form.sliderId ? Number(form.sliderId) : null,
         categoryIds: form.categoryIds,
+        tagIds:      form.tagIds,
         seo:         form.seo,
       }
       const res = await newsApi.saveNews(payload)
@@ -1040,6 +1063,42 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
               ) : (
                 <div className="max-h-64 space-y-0.5 overflow-auto pr-1">
                   <CategoryTree categories={categories} selected={form.categoryIds} onToggle={toggleCategory} />
+                </div>
+              )}
+            </SidebarSection>
+          )}
+
+          {/* Tags : partie MODULAIRE apportée par l'outil « Tags » (melis-cms-tags). Même mécanisme
+              que les Catégories — la section n'apparaît QUE si MelisCmsTags est actif (détecté via
+              /react-modules). Le back-office news lit melis_cms_tag et écrit la table de liaison
+              partagée melis_cms_tag_entity (entity_type = 'NEWS'). */}
+          {tagsActive && (
+            <SidebarSection
+              title={t('tags')}
+              icon={Tag}
+              collapsible
+              defaultOpen={false}
+            >
+              {tags.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  {t('no_tag')}
+                </p>
+              ) : (
+                <div className="max-h-64 space-y-0.5 overflow-auto pr-1">
+                  {tags.map((tg) => (
+                    <label
+                      key={tg.id}
+                      className="flex items-center gap-2 py-0.5 text-xs text-foreground cursor-pointer hover:text-primary"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={form.tagIds.includes(tg.id)}
+                        onChange={() => toggleTag(tg.id)}
+                        className="size-3.5 shrink-0 rounded border-input accent-primary"
+                      />
+                      <span className="truncate">{tg.name}</span>
+                    </label>
+                  ))}
                 </div>
               )}
             </SidebarSection>
