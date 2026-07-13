@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowDown, ArrowUp, ArrowUpDown, CheckCircle2, Code2, Columns3,
   Download, Edit2, FileDown, FileSpreadsheet, FileText, GripVertical,
-  Layout, Loader2, Newspaper, Pin, Plus, Search, Trash2, X,
+  Layout, Loader2, Newspaper, Pin, Plus, RotateCcw, Search, Trash2, X,
 } from 'lucide-react'
 import * as XLSX from 'xlsx'
 
@@ -568,6 +568,9 @@ export default function NewsListPage({ active, onOpen, onNew }: {
   const [search,      setSearch]      = useState(_cache?.search ?? '')
   const [status,      setStatus]      = useState<'' | '0' | '1'>(_cache?.status ?? '')
   const [deleting,    setDeleting]    = useState<number | null>(null)
+  // Bumped par « Réinitialiser les filtres » : force le refetch même quand les filtres
+  // sont déjà à leur valeur par défaut (sinon l'effet de chargement ne se redéclenche pas).
+  const [refreshKey,  setRefreshKey]  = useState(0)
 
   // ── Sort ───────────────────────────────────────────────────────────────────
   const [sortCol, setSortCol] = useState<string | null>(_cache?.sortCol ?? null)
@@ -624,7 +627,22 @@ export default function NewsListPage({ active, onOpen, onNew }: {
       .catch(e => setError(e instanceof Error ? e.message : t('error')))
       .finally(() => setLoading(false))
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, status, capsLoaded, canList])
+  }, [search, status, capsLoaded, canList, refreshKey])
+
+  // Réinitialiser : recherche + statut + tri par défaut (aucun tri), puis refetch.
+  // On vide `items` pour repasser par l'état « Chargement » (sinon les anciennes lignes
+  // restent et le clic semble sans effet quand aucun filtre n'était posé).
+  function resetFilters() {
+    setSearch('')
+    setStatus('')
+    setSortCol(null)
+    setSortDir('asc')
+    setItems([])
+    setTotal(0)
+    setPage(1)
+    setHasMore(true)
+    setRefreshKey(k => k + 1)
+  }
 
   function loadMore() {
     if (loadingMore || !hasMore || loading) return
@@ -878,6 +896,10 @@ export default function NewsListPage({ active, onOpen, onNew }: {
         </div>
 
         <div className="ml-auto flex items-center gap-2">
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={resetFilters}>
+            <RotateCcw className="size-3.5" />
+            {t('reset_filters')}
+          </Button>
           <div ref={colMgrRef} className="relative">
             <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setShowColMgr(v => !v)}>
               <Columns3 className="size-3.5" />

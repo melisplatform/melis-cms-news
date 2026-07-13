@@ -109,6 +109,7 @@ const DICT: Record<string, { en: string; fr: string }> = {
   delete:             { en: 'Delete',             fr: 'Supprimer' },
   loading:            { en: 'Loading…',           fr: 'Chargement…' },
   end_of_list:        { en: 'end of list',        fr: 'fin de la liste' },
+  reset_filters:      { en: 'Reset filters',      fr: 'Réinitialiser les filtres' },
 
   // ── List: columns manager + export modal ──
   columns:            { en: 'Columns',            fr: 'Colonnes' },
