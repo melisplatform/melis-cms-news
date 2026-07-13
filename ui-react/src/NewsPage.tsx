@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import NewsListPage from './NewsListPage'
 import NewsFormPage from './NewsFormPage'
 import { t } from './lib/i18n'
@@ -19,7 +19,7 @@ interface OpenTab { id: EditId; name: string }
 /**
  * Reflète le sous-onglet actif dans l'URL : /[section]/[tool]/:id (ou /new), comme Utilisateurs.
  * COSMÉTIQUE (history.replaceState) — PAS de navigation React Router (pattern sous-onglets in-tool,
- * état local). Le host (ToolTabBar) ne réécrit pas l'URL de cet outil (SELF_MANAGED_SUBTABS).
+ * état local). Le host (ToolTabBar) ne réécrit pas l'URL de cet outil (SELF_MANAGED_URL).
  */
 function reflectSubTabUrl(seg: string | number | null) {
   const base = window.location.pathname.replace(/\/(?:new|\d+)$/, '')
@@ -103,42 +103,12 @@ export default function NewsPage() {
     setView({ kind: 'edit', id: savedId })
   }
 
-  // ── Vue « Old » (iframe legacy) : router l'édition vers l'ÉDITEUR REACT ─────────
-  // La liste legacy en iframe (NewsListPage mode Old) ouvre l'édition d'un article dans SA propre
-  // pile d'onglets (postée à l'hôte via __melisToolTabs). Plutôt que de laisser l'hôte afficher une
-  // 2ᵉ barre (ToolTabBar) empilée sur notre SubTabBar, on intercepte le message : on ouvre le
-  // NewsFormPage React (même sous-onglet) et on referme l'onglet dans l'iframe (retour à sa liste).
-  // Même pattern que Sites/Slider ; on poste la fermeture à e.source (le titre de l'iframe est
-  // traduit → pas de sélecteur DOM par titre).
-  const seenEditTabs = useRef<Set<string>>(new Set())
-  useEffect(() => {
-    function onMsg(e: MessageEvent) {
-      const d = e.data as { __melisToolTabs?: boolean; melisKey?: string; tabs?: { id: string; label: string; active: boolean; primary?: boolean }[] } | null
-      if (!d || !d.__melisToolTabs || d.melisKey !== 'meliscmsnews_left_menu') return
-      const tabs = Array.isArray(d.tabs) ? d.tabs : []
-      const primary = tabs.find((t) => t.primary)
-      const present = new Set<string>()
-      for (const tab of tabs) {
-        if (tab.primary) continue
-        present.add(tab.id)
-        if (seenEditTabs.current.has(tab.id)) continue
-        seenEditTabs.current.add(tab.id)
-        // id des onglets d'édition : "<newsId>_id_meliscmsnews_page" (cf. news.tool.js tabOpen).
-        const m = tab.id.match(/^(\d+)_id_meliscmsnews_page$/)
-        if (!m) continue
-        const newsId = Number(m[1])
-        openEditor(newsId, tab.label || `#${newsId}`)
-        // Referme l'onglet dans l'iframe legacy (postée à sa fenêtre) → elle repasse sur sa liste.
-        try { (e.source as Window | null)?.postMessage({ __melisToolTabCmd: true, melisKey: 'meliscmsnews_left_menu', cmd: 'close', id: tab.id, next: primary?.id ?? null }, '*') } catch { /* ignore */ }
-      }
-      // Purge les ids d'onglets fermés (pour re-router une prochaine édition du même article).
-      for (const id of Array.from(seenEditTabs.current)) if (!present.has(id)) seenEditTabs.current.delete(id)
-    }
-    window.addEventListener('message', onMsg)
-    return () => window.removeEventListener('message', onMsg)
-    // openEditor n'utilise que des setters stables → capture initiale suffisante.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  // ── Vue « Old » (iframe legacy) ──────────────────────────────────────────────────
+  // Elle reste 100% LEGACY : ouvrir un article depuis la liste legacy ouvre le formulaire legacy
+  // DANS l'iframe (tabOpen), et la barre d'onglets de l'hôte (ToolTabBar, alimentée par le pont
+  // __melisToolTabs) permet de revenir à la liste — comme pour tout autre outil de la plateforme.
+  // On ne détourne PLUS ces onglets vers NewsFormPage : c'était le but du toggle de pouvoir
+  // comparer les deux interfaces, et le détournement rendait la vue Old inutilisable.
 
   const activeId = view.kind === 'edit' ? view.id : null
 
