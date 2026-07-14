@@ -13,7 +13,6 @@ use Laminas\EventManager\EventManagerInterface;
 use Laminas\EventManager\ListenerAggregateInterface;
 use Laminas\Mvc\MvcEvent;
 use Laminas\Session\Container;
-use Laminas\Stdlib\Parameters;
 
 /**
  * This listener will set newsId in the request parameter if and only if news id is not in the uri query param
@@ -58,13 +57,12 @@ class MelisCmsNewsRenderPageListener implements ListenerAggregateInterface
                     $newsId = $request->getQuery('newsId');
 
                     //if news
-                    if (!$newsId) {                        
+                    if (!$newsId) {
                         if ($routeMatch->getParam('newsId')) {
-                            $postParam = new Parameters();
-                            $postParam->set('newsId', $routeMatch->getParam('newsId'));                
-                            $request->setQuery($postParam);                                
-                        }                                         
-                    }                     
+                            // Only add newsId, the other query params (search, dates, pagination...) must be kept
+                            $request->getQuery()->set('newsId', $routeMatch->getParam('newsId'));
+                        }
+                    }
                 }
             },
             1
