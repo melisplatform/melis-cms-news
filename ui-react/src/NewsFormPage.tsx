@@ -12,11 +12,9 @@ import { Input } from './components/ui/input'
 // import { RichEditor, type RichEditorEngine } from './components/ui/rich-editor'
 import { MelisToolEditor } from './components/ui/melis-tool-editor'
 import { CalendarPopup } from './components/ui/date-time-picker'
-import WorkflowModal from './components/WorkflowModal'
 import { cn } from './lib/utils'
 import { t } from './lib/i18n'
 import * as newsApi from './lib/news-api'
-import { newsWorkflowContext } from './lib/workflow-api'
 import { useCaps } from './shared/useCaps'
 
 // melisKey de l'outil Actualités — clé des capacités (cf. config/react.capabilities.php)
@@ -1128,14 +1126,20 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
         </aside>
       </div>
 
-      {/* Modale Workflow (validation) — apportée par MelisSmallBusiness, cf. bouton du bloc Status. */}
-      {wfOpen && !isNew && (
-        <WorkflowModal
-          ctx={newsWorkflowContext(newsId as number, form.title)}
-          appLang={appLang}
-          onClose={() => setWfOpen(false)}
-        />
-      )}
+      {/* Modale Workflow (validation) — MUTUALISÉE : composant fourni par MelisSmallBusiness via
+          window.__melisWorkflowModal (même modale que l'éditeur de page CMS). Contexte type NEWS. */}
+      {wfOpen && !isNew && (() => {
+        const WF = (window as unknown as { __melisWorkflowModal?: React.ComponentType<{ ctx: { wfType: string; wfId: number | string; wfDetails: string; wfOpeningJs: string }; appLang: string; onClose: () => void }> }).__melisWorkflowModal
+        if (!WF) return null
+        const title = (form.title || `#${newsId}`).replace(/'/g, '')
+        return (
+          <WF
+            ctx={{ wfType: 'NEWS', wfId: newsId as number, wfDetails: `${title} (${newsId})`, wfOpeningJs: `melisHelper.tabOpen('${title}', 'fa fa-rss fa-2x', '${newsId}_id_meliscmsnews_page', 'meliscmsnews_page', { newsId: ${newsId} });` }}
+            appLang={appLang}
+            onClose={() => setWfOpen(false)}
+          />
+        )
+      })()}
     </div>
   )
 }
