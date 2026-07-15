@@ -274,7 +274,7 @@ function ColManager({ cols, onChange, onClose }: {
 
       <div className="grid grid-cols-2 gap-2 p-3">
         <div
-          className="flex flex-col gap-0.5 min-h-[140px] rounded-lg border border-dashed border-border p-1.5"
+          className="flex flex-col gap-0.5 min-h-[140px] max-h-[min(48vh,320px)] overflow-y-auto min-w-0 rounded-lg border border-dashed border-border p-1.5"
           onDragOver={e => {
             e.preventDefault()
             if (overTarget?.id !== '__panel__' || overTarget?.panel !== 'hidden')
@@ -289,7 +289,7 @@ function ColManager({ cols, onChange, onClose }: {
         </div>
 
         <div
-          className="flex flex-col gap-0.5 min-h-[140px] rounded-lg border border-dashed border-border p-1.5"
+          className="flex flex-col gap-0.5 min-h-[140px] max-h-[min(48vh,320px)] overflow-y-auto min-w-0 rounded-lg border border-dashed border-border p-1.5"
           onDragOver={e => {
             e.preventDefault()
             if (overTarget?.id !== '__panel__' || overTarget?.panel !== 'visible')
@@ -442,7 +442,7 @@ function ExportModal({ cols, search, status, total, onClose }: {
             </p>
             <div className="grid grid-cols-2 gap-2">
               <div
-                className="flex flex-col gap-0.5 min-h-[100px] rounded-lg border border-dashed border-border p-1.5"
+                className="flex flex-col gap-0.5 min-h-[100px] max-h-[min(48vh,320px)] overflow-y-auto min-w-0 rounded-lg border border-dashed border-border p-1.5"
                 onDragOver={e => { e.preventDefault(); if (overTarget?.id !== '__panel__' || overTarget?.panel !== 'excluded') setOverTarget({ id: '__panel__', panel: 'excluded' }) }}
                 onDrop={e => { e.preventDefault(); handleDrop('excluded') }}
               >
@@ -452,7 +452,7 @@ function ExportModal({ cols, search, status, total, onClose }: {
                   : excluded.map(col => renderItem(col, 'excluded'))}
               </div>
               <div
-                className="flex flex-col gap-0.5 min-h-[100px] rounded-lg border border-dashed border-border p-1.5"
+                className="flex flex-col gap-0.5 min-h-[100px] max-h-[min(48vh,320px)] overflow-y-auto min-w-0 rounded-lg border border-dashed border-border p-1.5"
                 onDragOver={e => { e.preventDefault(); if (overTarget?.id !== '__panel__' || overTarget?.panel !== 'included') setOverTarget({ id: '__panel__', panel: 'included' }) }}
                 onDrop={e => { e.preventDefault(); handleDrop('included') }}
               >
