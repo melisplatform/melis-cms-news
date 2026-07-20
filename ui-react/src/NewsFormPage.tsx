@@ -17,8 +17,10 @@ import { t } from './lib/i18n'
 import * as newsApi from './lib/news-api'
 import { useCaps } from './shared/useCaps'
 
-// melisKey de l'outil Actualités — clé des capacités (cf. config/react.capabilities.php)
-const NEWS_MELIS_KEY = 'meliscmsnews_left_menu'
+// News tool capability key — must match config/react.capabilities.php, i.e. the melisKey of the
+// rights-bearing menu node. NOT `meliscmsnews_left_menu`: that is the type-link target and stays
+// the renderable zone key.
+const NEWS_CAPS_KEY = 'meliscmsnews_tools_section'
 
 // Host API (exposed by MelisCore at runtime). Optional — guarded at call sites.
 declare global {
@@ -449,7 +451,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
   const id = isNew ? undefined : String(newsId)
 
   // Capacités : droit d'enregistrer = create (nouvel article) ou edit (existant).
-  const { can } = useCaps(NEWS_MELIS_KEY)
+  const { can } = useCaps(NEWS_CAPS_KEY)
   const canSave = isNew ? can('create') : can('edit')
 
   const [languages, setLanguages]       = useState<newsApi.Language[]>([])

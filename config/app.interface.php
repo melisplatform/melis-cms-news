@@ -18,8 +18,35 @@ return [
                                         'melisKey' => 'meliscms_news_tool_section'
                                     ],
                                     'interface' => [
-                                        'meliscmsnews_left' => [
+                                        // Rights-bearing node of the News menu entry, shaped like its
+                                        // MelisCmsSlider counterpart (`meliscms_slider_tools_section`).
+                                        //
+                                        // It used to carry ONLY the `conf.type` link, so the key it
+                                        // resolved to (`meliscmsnews_left_menu`) was declared on the target
+                                        // node, over in the `meliscmsnews` plugin root. Rights propagate
+                                        // UPWARD ONLY: isAccessible grants a node when it is a path SEGMENT
+                                        // of a granted tool's melisKey path (configIsParentOf). The target's
+                                        // path (/meliscmsnews/interface/meliscmsnews_list/...) never runs
+                                        // through `meliscms_news_tool_section`, so the wrapper was never
+                                        // granted and TreeToolsController:73 hid the whole News entry from
+                                        // the legacy menu for non-admins — while React, which gates only on
+                                        // the leaf, showed it. Admin bypass masks this.
+                                        //
+                                        // Declaring the melisKey HERE puts the rights key back on the
+                                        // left-menu path, which does run through the wrapper. The array key
+                                        // matches the melisKey, so it stays stable if RIGHTS_MODAL_USE_MELISKEY
+                                        // is ever rolled back. The `conf.type` link still pulls in the
+                                        // target's forward, so rendering is unchanged.
+                                        //
+                                        // Deliberately NOT named `meliscms_news_tools_section`: one letter
+                                        // away from the wrapper `meliscms_news_tool_section` is a trap.
+                                        'meliscmsnews_tools_section' => [
                                             'conf' => [
+                                                'id' => 'id_meliscmsnews_tools_section',
+                                                'name' => 'tr_meliscmsnews_list_header_title',
+                                                'icon' => 'fa-newspaper-o',
+                                                'rights_checkbox_disable' => false,
+                                                'melisKey' => 'meliscmsnews_tools_section',
                                                 'type' => '/meliscmsnews/interface/meliscmsnews_list/interface/meliscmsnews_left_menu',
                                             ],
                                         ],

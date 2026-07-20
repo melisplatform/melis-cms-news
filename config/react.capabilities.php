@@ -16,8 +16,12 @@
 
 return [
     'melisReactToolCapabilities' => [
-        // Outil Actualités (CMS News) — melisKey de la garde `canAccess` du contrôleur react-api
-        // et du nœud de menu (cf. app.interface.php → meliscmsnews_left_menu).
-        'meliscmsnews_left_menu' => ['list', 'create', 'edit', 'delete', 'export'],
+        // News tool (CMS News) — melisKey of the RIGHTS-BEARING menu node, i.e. the one with
+        // rights_checkbox_disable=false (app.interface.php → meliscmsnews_tools_section). That is
+        // the `nodeKey = melisKey||key` RightsTreeView hangs capabilities on, and the key the
+        // legacy rights modal now stores too. NOT `meliscmsnews_left_menu`: that is the type-link
+        // TARGET, which stays the renderable ZONE key (iframe react-tool-page?key=, ToolTabBar).
+        // Same 3-key split as MelisCmsSlider.
+        'meliscmsnews_tools_section' => ['list', 'create', 'edit', 'delete', 'export'],
     ],
 ];

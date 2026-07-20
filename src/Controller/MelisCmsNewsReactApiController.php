@@ -25,8 +25,14 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
 {
     use CapabilityGuardTrait;
 
-    // Outil Actualités — clé des capacités (cf. config/react.capabilities.php + denyUnlessCan()).
-    private const MELIS_KEY = 'meliscmsnews_left_menu';
+    // News tool — capability key, and the key guarding access to the tool. MUST stay in sync with
+    // config/react.capabilities.php: denyUnlessCan() resolves capabilities through this constant, so
+    // a mismatch makes every server-side capability check silently default-allow.
+    // This is the rights-bearing menu node (app.interface.php → meliscmsnews_tools_section), which is
+    // the key React grants and the one the rights XML now stores. NOT the type-link target
+    // `meliscmsnews_left_menu`, which remains the renderable ZONE key (iframe / ToolTabBar) and is
+    // NOT granted on its own — guarding on it would 403 every request.
+    private const MELIS_KEY = 'meliscmsnews_tools_section';
 
     // ─── GET /languages ─────────────────────────────────────────────────────
 
@@ -791,10 +797,9 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
     }
 
     /**
-     * Rights guard for the News tool: every endpoint requires ACCESS to the tool
-     * (`meliscmsnews_left_menu`), not merely an authenticated session — a user without the tool in
-     * their rights can't read/write news via the API (mirrors the Users tool guard). Returns the
-     * deny response or null.
+     * Rights guard for the News tool: every endpoint requires ACCESS to the tool (self::MELIS_KEY),
+     * not merely an authenticated session — a user without the tool in their rights can't read/write
+     * news via the API (mirrors the Users tool guard). Returns the deny response or null.
      */
     private function denyUnlessAccess(): ?HttpResponse
     {
@@ -802,7 +807,7 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
             return $this->jsonResponse(['success' => false, 'error' => 'Unauthenticated'], 401);
         }
         try {
-            if (!$this->getServiceManager()->get('MelisCoreRights')->canAccess('meliscmsnews_left_menu')) {
+            if (!$this->getServiceManager()->get('MelisCoreRights')->canAccess(self::MELIS_KEY)) {
                 return $this->jsonResponse(['success' => false, 'error' => 'Forbidden'], 403);
             }
         } catch (\Throwable) {}

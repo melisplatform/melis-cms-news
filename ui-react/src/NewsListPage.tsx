@@ -13,8 +13,10 @@ import { t, newsLang } from './lib/i18n'
 import * as newsApi from './lib/news-api'
 import { useCaps } from './shared/useCaps'
 
-// melisKey de l'outil Actualités — clé des capacités (cf. config/react.capabilities.php)
-const NEWS_MELIS_KEY = 'meliscmsnews_left_menu'
+// News tool capability key — must match config/react.capabilities.php, i.e. the melisKey of the
+// rights-bearing menu node. NOT `meliscmsnews_left_menu`: that is the type-link target and stays
+// the renderable zone key used by the iframe below.
+const NEWS_CAPS_KEY = 'meliscmsnews_tools_section'
 
 // ─── Module-level cache — survit au démontage du composant (navigation) ────────
 
@@ -491,7 +493,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
   onNew: () => void
 }) {
   // ── Capacités (droits avancés list/create/edit/delete/export) ────────────────
-  const { can, loaded: capsLoaded } = useCaps(NEWS_MELIS_KEY)
+  const { can, loaded: capsLoaded } = useCaps(NEWS_CAPS_KEY)
   const canList = can('list')
 
   // ── View mode toggle ─────────────────────────────────────────────────────────
