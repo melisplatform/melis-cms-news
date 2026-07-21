@@ -84,11 +84,18 @@ return [
             ],
             'ressources' => [
                 'js' => [
+                    // Ticket 0010499 — jstree (arbre des catégories, window.initNewsCategoryList) est
+                    // chargé GLOBALEMENT par MelisCms/MelisCmsCategory2 en /melis, mais la react-tool-page
+                    // (vue « Old ») n'injecte QUE les ressources du News → « target.jstree is not a
+                    // function » à l'ouverture de la modale Catégories + liste vide. On déclare donc jstree
+                    // ici (chemin MelisCms, toujours installé). En /melis c'est un doublon inoffensif.
+                    '/MelisCms/assets/jstree/dist/jstree.min.js',
                     '/MelisCmsNews/js/tools/news.tool.js',
                     '/MelisCmsNews/assets/switch/bootstrap-switch.js',
                 ],
 
                 'css' => [
+                    '/MelisCms/assets/jstree/dist/themes/default/style.min.css',
                     '/MelisCmsNews/css/news.css',
                 ],
                 /**
