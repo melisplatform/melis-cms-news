@@ -93,7 +93,8 @@ class MelisCmsNewsListNewsPlugin extends MelisTemplatingPlugin
         $dateMax = empty($data['date_max']) ? null : $data['date_max'];
         $search = empty($data['search']) ? null : $data['search'];
 
-        // convert date formats 
+        // convert date formats (form sends mm/dd/yyyy, SQL needs Y-m-d H:i:s)
+        $dateMin = is_null($dateMin) ? null : date('Y-m-d H:i:s', strtotime($dateMin));
         $dateMax = is_null($dateMax) ? date('Y-m-d H:i:s') : date('Y-m-d H:i:s', strtotime($dateMax . ' 23:59:59'));
 
         $now = date('Y-m-d H:i:s'); 
