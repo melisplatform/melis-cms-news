@@ -34,7 +34,7 @@ export default defineConfig({
       fileName: () => 'brick.js',
     },
     rollupOptions: {
-      external: ['react', 'react-dom', 'react/jsx-runtime', 'react-router-dom'],
+      external: ['react', 'react-dom', 'react/jsx-runtime', 'react-router-dom', 'xlsx'],
       output: {
         // Some bundled CJS deps keep runtime `require(...)` calls: TipTap's use-sync-external-store
         // shim does `require('react')`, others do `require('fs'|'crypto'|…)` guarded for Node. In a
@@ -55,6 +55,9 @@ export default defineConfig({
           'react-dom': 'MelisReactDOM',
           'react/jsx-runtime': 'MelisReactJsxRuntime',
           'react-router-dom': 'MelisReactRouterDOM',
+          // Réutilise l'instance XLSX (SheetJS) exposée par l'hôte (main.tsx : window.MelisXLSX)
+          // au lieu d'embarquer une copie de ~400 Ko dans le bundle de la brique.
+          xlsx: 'MelisXLSX',
         },
       },
     },
