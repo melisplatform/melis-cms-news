@@ -76,7 +76,6 @@ export interface NewsCategory {
   id: number
   fatherCatId: number
   name: string
-  status: number // 1 = active, 0 = inactive (affiché avec un point vert/rouge, comme le legacy)
 }
 
 export interface NewsTag {

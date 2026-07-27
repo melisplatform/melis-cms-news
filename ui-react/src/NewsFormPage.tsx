@@ -268,12 +268,11 @@ function CategoryTree({ categories, selected, onToggle }: {
             onChange={() => onToggle(c.id)}
             className="size-3.5 shrink-0 rounded border-input accent-primary"
           />
-          {/* Point actif/inactif (vert/rouge), comme la vue legacy des catégories. */}
-          <span
-            className={cn('size-1.5 shrink-0 rounded-full', c.status === 1 ? 'bg-emerald-500' : 'bg-red-500')}
-            title={c.status === 1 ? t('filter_active') : t('filter_inactive')}
-          />
-          <span className={cn('truncate', c.status !== 1 && 'text-muted-foreground')}>{c.name}</span>
+          {/* Pastille verte pour chaque catégorie — mimique la vue legacy (jstree), dont l'icône
+              de nœud est un `fa fa-circle text-success` fixe : elle NE reflète PAS le statut
+              actif/inactif (toutes les catégories sont vertes, actives comme inactives). */}
+          <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
+          <span className="truncate">{c.name}</span>
         </label>
         {render(c.id, depth + 1)}
       </div>
