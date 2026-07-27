@@ -109,7 +109,12 @@ class MelisCmsNewsSEORouteListener
                             $newsSeo = $melisNewsSeoTable->getEntryByField('cnews_seo_url', $seoUrl)->current();
                         }                                               
 
-                        if (!empty($newsSeo) && !empty($idPage)) { 
+                        // Guard against an EMPTY seo url: a plain page URL like /team/id/4 has no news
+                        // seo segment ($seoUrl == ''), which would otherwise match a news whose
+                        // cnews_seo_url is empty and wrongly bind its newsId to the page route — making
+                        // every /id/N page inherit that news' <title>/meta. Only bind when we actually
+                        // resolved a non-empty news seo url.
+                        if (!empty($newsSeo) && !empty($idPage) && !empty($seoUrl)) {
                             //set the url param
                             $urlParams = '?newsId='.$newsSeo->cnews_id;
 
