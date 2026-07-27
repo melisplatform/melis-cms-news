@@ -605,12 +605,25 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
                 return $this->jsonResponse(['success' => false, 'error' => 'Comments module not available'], 404);
             }
 
-            // validated = 0 → falsy côté service → PAS de filtre statut : on récupère
-            // pending (0) + approved (1) + refused (2) pour la modération.
-            $rows = $svc->getCommentsByPostId($postId, 'NEWS', 'mccom_date_creation', 'DESC', 0);
+            // ⚠️ On ne PEUT PAS utiliser getCommentsByPostId(..., 0) pour « tous les statuts » :
+            // le service passe ses args par makeArrayFromParameters(), qui teste empty() sur
+            // chaque argument et REMPLACE toute valeur falsy (0) par le défaut de la signature
+            // (validated = 1) → on ne récupérerait que les commentaires approuvés (le bug qu'on
+            // voyait : la modération n'affichait jamais les « pending »). getComments($where) reçoit
+            // le tableau entier (non vide → préservé) et met validated=null quand la clé est absente
+            // → getData n'applique aucun filtre de statut. limit par défaut = 10 → on le monte.
+            $rows = $svc->getComments([
+                'postId'   => $postId,
+                'postType' => 'NEWS',
+                'orderBy'  => 'mccom_date_creation',
+                'orderDir' => 'DESC',
+                'limit'    => 100000,
+                // pas de clé 'validated' → pending (0) + approved (1) + refused (2)
+            ]);
+            $rows = is_object($rows) && method_exists($rows, 'toArray') ? $rows->toArray() : (array) $rows;
 
             $items = [];
-            foreach ((array) $rows as $row) {
+            foreach ($rows as $row) {
                 $items[] = $this->formatComment(is_object($row) ? (array) $row : $row);
             }
 

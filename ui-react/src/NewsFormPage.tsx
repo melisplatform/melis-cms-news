@@ -3,7 +3,7 @@ import {
   Save, Loader2, ChevronDown, ChevronUp,
   Plus, X, Eye, Calendar, Globe, Tag, Search, SlidersHorizontal,
   GitBranch, Image, Paperclip, GripVertical, FolderTree, User,
-  MessageSquare, Check, Ban, Trash2,
+  MessageSquare, Check, Ban, Trash2, ChevronLeft, ChevronRight, AlertTriangle,
 } from 'lucide-react'
 
 import { Button } from './components/ui/button'
@@ -234,6 +234,92 @@ function SidebarSection({
           : <ChevronDown className="size-3.5" />)}
       </button>
       {open && <div className="mt-2.5 space-y-2.5">{children}</div>}
+    </div>
+  )
+}
+
+// ─── Confirm dialog (léger, sans dépendance Radix) ──────────────────────────────
+// Modale de confirmation générique : overlay + backdrop, fermeture Échap ou clic extérieur,
+// focus auto sur le bouton de confirmation. Utilisée pour la suppression d'un commentaire
+// (remplace window.confirm()). Le brick n'embarque pas Radix → composant maison minimal.
+function ConfirmDialog({ open, title, description, confirmLabel, cancelLabel, busy, onConfirm, onCancel }: {
+  open: boolean
+  title: string
+  description?: string
+  confirmLabel: string
+  cancelLabel: string
+  busy?: boolean
+  onConfirm: () => void
+  onCancel: () => void
+}) {
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onCancel() }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [open, onCancel])
+
+  if (!open) return null
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4"
+      role="dialog" aria-modal="true"
+      onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel() }}
+    >
+      <div className="w-full max-w-sm rounded-xl border border-border bg-background p-5 shadow-xl">
+        <div className="flex items-start gap-3">
+          <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-red-500/10 text-red-600">
+            <AlertTriangle className="size-5" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+            {description && <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{description}</p>}
+          </div>
+        </div>
+        <div className="mt-5 flex justify-end gap-2">
+          <Button variant="outline" size="sm" onClick={onCancel} disabled={busy}>{cancelLabel}</Button>
+          <Button variant="destructive" size="sm" autoFocus onClick={onConfirm} disabled={busy} className="gap-1.5">
+            {busy && <Loader2 className="size-3.5 animate-spin" />}
+            {confirmLabel}
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Nombre de commentaires affichés par page dans le panneau de modération.
+const COMMENTS_PER_PAGE = 8
+
+// ─── Pager (pagination générique, client-side) ──────────────────────────────────
+// Contrôle compact « Précédent · Page x sur y · Suivant ». Masqué s'il n'y a qu'une page.
+function Pager({ page, totalPages, onChange }: {
+  page: number
+  totalPages: number
+  onChange: (p: number) => void
+}) {
+  if (totalPages <= 1) return null
+  return (
+    <div className="flex items-center justify-between gap-2 pt-1">
+      <Button
+        variant="outline" size="sm" className="gap-1"
+        disabled={page <= 1}
+        onClick={() => onChange(page - 1)}
+      >
+        <ChevronLeft className="size-3.5" />
+        {t('pager_prev')}
+      </Button>
+      <span className="text-[11px] font-medium text-muted-foreground">
+        {t('pager_page_of', { page, total: totalPages })}
+      </span>
+      <Button
+        variant="outline" size="sm" className="gap-1"
+        disabled={page >= totalPages}
+        onClick={() => onChange(page + 1)}
+      >
+        {t('pager_next')}
+        <ChevronRight className="size-3.5" />
+      </Button>
     </div>
   )
 }
@@ -538,6 +624,8 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
   const [commentsActive, setCommentsActive] = useState(false)
   const [newComment, setNewComment]     = useState({ name: '', text: '' })
   const [commentBusy, setCommentBusy]   = useState(false)
+  const [pendingDelete, setPendingDelete] = useState<newsApi.NewsComment | null>(null)  // commentaire en attente de confirmation de suppression
+  const [commentsPage, setCommentsPage] = useState(1)                                    // pagination (client-side) de la liste
   const [dragIndex, setDragIndex]       = useState<number | null>(null)  // paragraphe en cours de glisser
   const [previewUrl, setPreviewUrl]     = useState<string | null>(null)
   // Choix d'éditeur retiré — TinyMCE ('tool') forcé.
@@ -774,8 +862,16 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
     if (!isNew && newsId) loadComments(newsId)
   }, [isNew, newsId, loadComments])
 
-  async function moderateComment(action: 'approve' | 'refuse' | 'delete', commentId: number) {
-    if (action === 'delete' && !window.confirm(t('comment_delete_confirm'))) return
+  // Pagination (client-side) : la liste complète est déjà chargée, on la découpe par page.
+  const commentTotalPages = Math.max(1, Math.ceil(comments.length / COMMENTS_PER_PAGE))
+  const pagedComments = comments.slice((commentsPage - 1) * COMMENTS_PER_PAGE, commentsPage * COMMENTS_PER_PAGE)
+  // Recadre la page courante si la liste rétrécit (ex. après une suppression sur la dernière page).
+  useEffect(() => {
+    if (commentsPage > commentTotalPages) setCommentsPage(commentTotalPages)
+  }, [commentsPage, commentTotalPages])
+
+  // Exécute réellement l'action de modération (appel API + rechargement).
+  async function runModeration(action: 'approve' | 'refuse' | 'delete', commentId: number) {
     setCommentBusy(true); setApiError(null)
     try {
       if (action === 'approve') await newsApi.approveNewsComment(commentId)
@@ -787,6 +883,22 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
     } finally {
       setCommentBusy(false)
     }
+  }
+
+  // Handler du CommentRow : valider/refuser s'exécutent directement ; supprimer ouvre la
+  // modale de confirmation (ConfirmDialog) au lieu du window.confirm() natif.
+  function moderateComment(action: 'approve' | 'refuse' | 'delete', commentId: number) {
+    if (action === 'delete') {
+      setPendingDelete(comments.find((c) => c.id === commentId) ?? null)
+      return
+    }
+    void runModeration(action, commentId)
+  }
+
+  async function confirmDelete() {
+    if (!pendingDelete) return
+    await runModeration('delete', pendingDelete.id)
+    setPendingDelete(null)
   }
 
   async function addComment() {
@@ -1104,11 +1216,14 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
                       {t('no_comments')}
                     </p>
                   ) : (
-                    <ul className="space-y-2">
-                      {comments.map((c) => (
-                        <CommentRow key={c.id} c={c} busy={commentBusy} onModerate={moderateComment} appLang={appLang} />
-                      ))}
-                    </ul>
+                    <>
+                      <ul className="space-y-2">
+                        {pagedComments.map((c) => (
+                          <CommentRow key={c.id} c={c} busy={commentBusy} onModerate={moderateComment} appLang={appLang} />
+                        ))}
+                      </ul>
+                      <Pager page={commentsPage} totalPages={commentTotalPages} onChange={setCommentsPage} />
+                    </>
                   )}
                 </>
               )}
@@ -1377,6 +1492,21 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
           />
         )
       })()}
+
+      {/* Confirmation de suppression d'un commentaire (remplace window.confirm). */}
+      <ConfirmDialog
+        open={!!pendingDelete}
+        title={t('comment_delete_confirm')}
+        description={
+          (pendingDelete?.name ? `${t('comment_delete_by', { name: pendingDelete.name })} — ` : '') +
+          t('comment_delete_desc')
+        }
+        confirmLabel={t('delete')}
+        cancelLabel={t('cancel')}
+        busy={commentBusy}
+        onConfirm={confirmDelete}
+        onCancel={() => setPendingDelete(null)}
+      />
     </div>
   )
 }
