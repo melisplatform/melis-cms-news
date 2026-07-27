@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import {
   Save, Loader2, ChevronDown, ChevronUp,
   Plus, X, Eye, Calendar, Globe, Tag, Search, SlidersHorizontal,
-  GitBranch, Image, Paperclip, GripVertical, FolderTree,
+  GitBranch, Image, Paperclip, GripVertical, FolderTree, User,
+  MessageSquare, Check, Ban, Trash2,
 } from 'lucide-react'
 
 import { Button } from './components/ui/button'
@@ -12,6 +13,7 @@ import { Input } from './components/ui/input'
 // import { RichEditor, type RichEditorEngine } from './components/ui/rich-editor'
 import { MelisToolEditor } from './components/ui/melis-tool-editor'
 import { CalendarPopup } from './components/ui/date-time-picker'
+import { PreviewTab } from './components/PreviewTab'
 import { cn } from './lib/utils'
 import { t } from './lib/i18n'
 import * as newsApi from './lib/news-api'
@@ -50,6 +52,8 @@ interface FormState {
   publishDate: string
   unpublishDate: string
   sliderId: string
+  authorId: string
+  validateComments: boolean
   categoryIds: number[]
   tagIds: number[]
   seo: newsApi.NewsSeo
@@ -68,7 +72,7 @@ const EMPTY_SEO: newsApi.NewsSeo = {
 const EMPTY: FormState = {
   title: '', subtitle: '', paragraphs: [''],
   status: '0', siteId: '', publishDate: '', unpublishDate: '',
-  sliderId: '', categoryIds: [], tagIds: [], seo: EMPTY_SEO,
+  sliderId: '', authorId: '', validateComments: false, categoryIds: [], tagIds: [], seo: EMPTY_SEO,
   image1: null, image2: null, image3: null,
   document1: null, document2: null, document3: null,
 }
@@ -231,6 +235,60 @@ function SidebarSection({
       </button>
       {open && <div className="mt-2.5 space-y-2.5">{children}</div>}
     </div>
+  )
+}
+
+// ─── Comment row (modération — module MelisCmsComments) ──────────────────────────
+// Pastille de statut (bleu = en attente, vert = validé/affiché, rouge = refusé/masqué),
+// auteur, texte, date relative, et actions selon le statut (valider / refuser / supprimer).
+
+function CommentRow({ c, busy, onModerate, appLang }: {
+  c: newsApi.NewsComment
+  busy: boolean
+  onModerate: (action: 'approve' | 'refuse' | 'delete', id: number) => void
+  appLang: string
+}) {
+  const dot   = c.validated === 1 ? 'bg-emerald-500' : c.validated === 2 ? 'bg-red-500' : 'bg-sky-500'
+  const label = c.validated === 1 ? t('comment_approved') : c.validated === 2 ? t('comment_refused') : t('comment_pending')
+  const when  = c.date ? new Date(c.date.replace(' ', 'T')).toLocaleString(appLang, { dateStyle: 'medium', timeStyle: 'short' }) : ''
+
+  return (
+    <li className="flex items-start gap-3 rounded-lg border border-border bg-background p-3">
+      <span className={cn('mt-1.5 size-2 shrink-0 rounded-full', dot)} title={label} />
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+          <span className="text-sm font-medium text-foreground">{c.name}</span>
+          <span className="text-[11px] text-muted-foreground">{label}</span>
+          {when && <span className="text-[11px] text-muted-foreground/70">· {when}</span>}
+        </div>
+        {/* Le texte est déjà purifié (HTMLPurifier) côté serveur avant sauvegarde. */}
+        <div
+          className="mt-1 break-words text-sm text-muted-foreground [&_a]:text-primary [&_a]:underline"
+          dangerouslySetInnerHTML={{ __html: c.text }}
+        />
+      </div>
+      <div className="flex shrink-0 items-center gap-1">
+        {c.validated !== 1 && (
+          <button type="button" title={t('comment_approve')} disabled={busy}
+            onClick={() => onModerate('approve', c.id)}
+            className="rounded-md p-1.5 text-emerald-600 hover:bg-emerald-500/10 disabled:opacity-40">
+            <Check className="size-4" />
+          </button>
+        )}
+        {c.validated !== 2 && (
+          <button type="button" title={t('comment_refuse')} disabled={busy}
+            onClick={() => onModerate('refuse', c.id)}
+            className="rounded-md p-1.5 text-amber-600 hover:bg-amber-500/10 disabled:opacity-40">
+            <Ban className="size-4" />
+          </button>
+        )}
+        <button type="button" title={t('delete')} disabled={busy}
+          onClick={() => onModerate('delete', c.id)}
+          className="rounded-md p-1.5 text-red-600 hover:bg-red-500/10 disabled:opacity-40">
+          <Trash2 className="size-4" />
+        </button>
+      </div>
+    </li>
   )
 }
 
@@ -463,8 +521,10 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
 
   const [languages, setLanguages]       = useState<newsApi.Language[]>([])
   const [sites, setSites]               = useState<newsApi.Site[]>([])
+  const [users, setUsers]               = useState<newsApi.User[]>([])
   const [sliders, setSliders]           = useState<newsApi.Slider[]>([])
   const [sliderActive, setSliderActive] = useState(false)   // vrai ssi le module Slider est actif
+  const [userAccountActive, setUserAccountActive] = useState(false)   // vrai ssi MelisCmsUserAccount est actif (→ section Auteur)
   const [sbActive, setSbActive]         = useState(false)   // vrai ssi MelisSmallBusiness est actif (→ bouton Workflow)
   const [wfOpen, setWfOpen]             = useState(false)   // modale Workflow (validation) ouverte
   const [uploadingCol, setUploadingCol] = useState<string | null>(null) // colonne média en cours d'upload/suppression
@@ -472,6 +532,12 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
   const [categoryActive, setCategoryActive] = useState(false) // vrai ssi MelisCmsCategory2 est actif (→ section Catégories)
   const [tags, setTags]                 = useState<newsApi.NewsTag[]>([])
   const [tagsActive, setTagsActive]     = useState(false)     // vrai ssi MelisCmsTags est actif (→ section Tags)
+  // Commentaires (module optionnel MelisCmsComments) — chargés pour un article existant ;
+  // commentsActive vrai ssi la route /news/:id/comments répond (module actif).
+  const [comments, setComments]         = useState<newsApi.NewsComment[]>([])
+  const [commentsActive, setCommentsActive] = useState(false)
+  const [newComment, setNewComment]     = useState({ name: '', text: '' })
+  const [commentBusy, setCommentBusy]   = useState(false)
   const [dragIndex, setDragIndex]       = useState<number | null>(null)  // paragraphe en cours de glisser
   const [previewUrl, setPreviewUrl]     = useState<string | null>(null)
   // Choix d'éditeur retiré — TinyMCE ('tool') forcé.
@@ -499,6 +565,8 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
         publishDate:   toInputDate(d.publishDate),
         unpublishDate: toInputDate(d.unpublishDate),
         sliderId:      d.sliderId ? String(d.sliderId) : '',
+        authorId:      d.authorId ? String(d.authorId) : '',
+        validateComments: !!d.validateComments,
         categoryIds:   d.categoryIds ?? [],
         tagIds:        d.tagIds ?? [],
         seo:           d.seo ?? EMPTY_SEO,
@@ -526,6 +594,8 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
         : newsApi.fetchSites().then(s => { _siteCache = s; setSites(s) }).catch(() => {}),
       // Slider : modulaire — n'apparaît que si l'outil Slider (migré) est actif (route 404 sinon).
       newsApi.fetchSliders().then((s) => { setSliders(s); setSliderActive(true) }).catch(() => setSliderActive(false)),
+      // Users : modulaire (MelisCmsUserAccount) — charge les utilisateurs disponibles comme auteurs.
+      newsApi.fetchUsers().then((u) => { setUsers(u); setUserAccountActive(true) }).catch(() => setUserAccountActive(false)),
       // Modules optionnels détectés via /react-modules (listé ssi actif) :
       //  - MelisSmallBusiness → bouton « Workflow » de la barre latérale.
       //  - MelisCmsCategory2  → section « Catégories » du formulaire (l'outil categorie-v2 est
@@ -546,7 +616,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
       } else {
         tasks.push(loadNews(Number(id), langId))
       }
-      tasks.push(newsApi.fetchNewsPreviewUrl(Number(id)).then(setPreviewUrl).catch(() => {}))
+      tasks.push(newsApi.fetchNewsPreview(Number(id)).then((preview) => setPreviewUrl(preview.previewUrl)).catch(() => {}))
     }
 
     Promise.all(tasks).finally(() => setLoading(false))
@@ -671,11 +741,14 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
         siteId:        Number(form.siteId),
         publishDate:   toDbDate(form.publishDate),
         unpublishDate: toDbDate(form.unpublishDate),
-        sliderId:    form.sliderId ? Number(form.sliderId) : null,
-        categoryIds: form.categoryIds,
-        tagIds:      form.tagIds,
-        seo:         form.seo,
+        sliderId:      form.sliderId ? Number(form.sliderId) : null,
+        authorId:      form.authorId ? Number(form.authorId) : null,
+        categoryIds:   form.categoryIds,
+        tagIds:        form.tagIds,
+        seo:           form.seo,
       }
+      // N'envoyer le flag de modération que si le module Comments est actif (colonne présente).
+      if (commentsActive) payload.validateComments = form.validateComments
       const res = await newsApi.saveNews(payload)
       window.postMessage({ __melisNotif: true, kind: 'ok', title: 'News', message: t('saved_ok') }, '*')
       // Le conteneur (NewsPage) convertit l'onglet « new » en onglet de l'article créé,
@@ -685,6 +758,48 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
       setApiError(e instanceof Error ? e.message : t('err_save'))
     } finally {
       setSaving(false)
+    }
+  }
+
+  // ─── Commentaires (module optionnel MelisCmsComments) ─────────────────────────
+  // Charge les commentaires d'un article existant. La réponse distingue « module inactif »
+  // (route 404 → commentsActive=false → section masquée) de « aucun commentaire » (liste vide).
+  const loadComments = useCallback(async (newsId: number) => {
+    const res = await newsApi.fetchNewsComments(newsId)
+    setCommentsActive(res.active)
+    setComments(res.items)
+  }, [])
+
+  useEffect(() => {
+    if (!isNew && newsId) loadComments(newsId)
+  }, [isNew, newsId, loadComments])
+
+  async function moderateComment(action: 'approve' | 'refuse' | 'delete', commentId: number) {
+    if (action === 'delete' && !window.confirm(t('comment_delete_confirm'))) return
+    setCommentBusy(true); setApiError(null)
+    try {
+      if (action === 'approve') await newsApi.approveNewsComment(commentId)
+      else if (action === 'refuse') await newsApi.refuseNewsComment(commentId)
+      else await newsApi.deleteNewsComment(commentId)
+      if (newsId) await loadComments(newsId)
+    } catch (e) {
+      setApiError(e instanceof Error ? e.message : t('error'))
+    } finally {
+      setCommentBusy(false)
+    }
+  }
+
+  async function addComment() {
+    if (isNew || !newsId || !newComment.text.trim()) return
+    setCommentBusy(true); setApiError(null)
+    try {
+      await newsApi.saveNewsComment({ postId: newsId, text: newComment.text.trim(), name: newComment.name.trim() })
+      setNewComment({ name: '', text: '' })
+      await loadComments(newsId)
+    } catch (e) {
+      setApiError(e instanceof Error ? e.message : t('err_save'))
+    } finally {
+      setCommentBusy(false)
     }
   }
 
@@ -939,6 +1054,69 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
               </div>
             </div>
           </section>
+
+          {/* Comments — modération native (module optionnel MelisCmsComments). Affiché ssi le
+              module est actif ; pour un nouvel article (pas d'id) on invite à enregistrer d'abord. */}
+          {(commentsActive || isNew) && (
+            <section className="space-y-4">
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{t('comments')}</span>
+                <div className="h-px flex-1 bg-border" />
+                {commentsActive && comments.length > 0 && (
+                  <span className="text-[11px] font-medium text-muted-foreground">{comments.length}</span>
+                )}
+              </div>
+
+              {isNew ? (
+                <p className="rounded-lg border border-dashed border-border bg-muted/20 px-4 py-3 text-xs text-muted-foreground">
+                  {t('comment_save_first')}
+                </p>
+              ) : (
+                <>
+                  {/* Add a comment (back-office → validé d'office) */}
+                  <div className="flex flex-col gap-2 rounded-lg border border-border bg-muted/10 p-3 sm:flex-row sm:items-start">
+                    <Input
+                      value={newComment.name}
+                      onChange={(e) => setNewComment((c) => ({ ...c, name: e.target.value }))}
+                      placeholder={t('comment_name_ph')}
+                      className="h-9 sm:w-40"
+                    />
+                    <textarea
+                      value={newComment.text}
+                      onChange={(e) => setNewComment((c) => ({ ...c, text: e.target.value }))}
+                      placeholder={t('comment_text_ph')}
+                      rows={1}
+                      className="min-h-9 flex-1 resize-y rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                    <Button
+                      size="sm"
+                      className="h-9 gap-1.5 self-end sm:self-start"
+                      onClick={addComment}
+                      disabled={commentBusy || !newComment.text.trim()}
+                    >
+                      <Plus className="size-3.5" />
+                      {t('comment_add')}
+                    </Button>
+                  </div>
+
+                  {comments.length === 0 ? (
+                    <p className="rounded-lg border border-dashed border-border bg-muted/20 px-4 py-6 text-center text-xs text-muted-foreground">
+                      {t('no_comments')}
+                    </p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {comments.map((c) => (
+                        <CommentRow key={c.id} c={c} busy={commentBusy} onModerate={moderateComment} appLang={appLang} />
+                      ))}
+                    </ul>
+                  )}
+                </>
+              )}
+            </section>
+          )}
+
+          {/* Preview */}
+          <PreviewTab newsId={newsId} isNew={isNew} />
         </main>
 
         {/* Sidebar */}
@@ -1026,6 +1204,55 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
             </select>
             {errors.siteId && <p className="mt-1 text-xs text-destructive">{errors.siteId}</p>}
           </SidebarSection>
+
+          {/* Auteur : modulaire — n'apparaît que si le module MelisCmsUserAccount est actif
+              (la route /melis/react-api/news/users répond ; sinon la section est masquée). */}
+          {userAccountActive && (
+            <SidebarSection title={t('author')} icon={User}>
+              <select
+                value={form.authorId}
+                onChange={(e) => set('authorId', e.target.value)}
+                className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="">{t('choose')}</option>
+                {users.map((u) => (
+                  <option key={u.id} value={String(u.id)}>{u.name}</option>
+                ))}
+              </select>
+            </SidebarSection>
+          )}
+
+          {/* Validation des commentaires (module optionnel MelisCmsComments) — persiste
+              cnews_validate_comments. Affiché ssi le module est actif (route /comments répond). */}
+          {commentsActive && (
+            <SidebarSection title={t('comments_validation')} icon={MessageSquare}>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={form.validateComments}
+                onClick={() => set('validateComments', !form.validateComments)}
+                className="inline-flex cursor-pointer items-center gap-2 select-none"
+              >
+                <span
+                  className={cn(
+                    'relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors',
+                    form.validateComments ? 'bg-emerald-500' : 'bg-muted-foreground/40',
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'inline-block size-4 rounded-full bg-white shadow transition-transform',
+                      form.validateComments ? 'translate-x-[18px]' : 'translate-x-0.5',
+                    )}
+                  />
+                </span>
+                <span className="text-xs font-medium text-foreground">
+                  {form.validateComments ? t('filter_active') : t('filter_inactive')}
+                </span>
+              </button>
+              <p className="mt-1.5 text-[11px] leading-snug text-muted-foreground">{t('comments_validation_hint')}</p>
+            </SidebarSection>
+          )}
 
           <SidebarSection title={t('seo')} icon={Search} collapsible defaultOpen={false}>
             {(

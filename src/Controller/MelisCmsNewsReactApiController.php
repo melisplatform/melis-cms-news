@@ -18,6 +18,8 @@ use MelisReactApi\Controller\CapabilityGuardTrait;
  *   DELETE /melis/react-api/news/delete/:id     → supprimer
  *   GET    /melis/react-api/news/stats          → statistiques
  *   GET    /melis/react-api/news/categories     → catégories disponibles
+ *   GET    /melis/react-api/news/tags           → tags disponibles
+ *   GET    /melis/react-api/news/users          → utilisateurs disponibles comme auteurs
  *   GET    /melis/react-api/news/preview/:id    → URL de prévisualisation
  *   GET    /melis/react-api/sites               → liste des sites
  */
@@ -219,7 +221,17 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
                 'cnews_slider_id'      => isset($body['sliderId']) && $body['sliderId']
                     ? (int) $body['sliderId']
                     : null,
+                'cnews_author_account' => isset($body['authorId']) && $body['authorId']
+                    ? (int) $body['authorId']
+                    : null,
             ];
+
+            // Flag de modération des commentaires (colonne cnews_validate_comments ajoutée par
+            // MelisCmsComments au bootstrap). On ne l'écrit QUE si le module est actif (sinon la
+            // colonne n'existe pas et saveNews planterait) ET si le front l'a envoyé.
+            if (array_key_exists('validateComments', $body) && $this->getCommentsService()) {
+                $newsData['cnews_validate_comments'] = !empty($body['validateComments']) ? 1 : 0;
+            }
 
             $newsId = $service->saveNews($newsData, $id);
 
@@ -460,24 +472,39 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
             $siteId = $result ? (int) ((array) $result)['cnews_site_id'] : null;
 
             $previewUrl = null;
+            $pages      = [];
 
             if ($siteId) {
                 $service = $this->getServiceManager()->get('MelisCmsNewsService');
-                $pages   = $service->getNewsDetailsPagesBySite($siteId);
+                $pageRows = $service->getNewsDetailsPagesBySite($siteId);
 
-                if (!empty($pages)) {
-                    $page   = is_object(current($pages)) ? (array) current($pages) : current($pages);
-                    $pageId = $page['tree_page_id'] ?? null;
-
-                    if ($pageId) {
-                        $previewUrl = '/id/' . (int) $pageId . '?newsId=' . $id;
+                // Formate la liste des pages pour le sélecteur dropdown du Preview.
+                // Mêmes clés + même URL que le legacy (previewTabContentAction) :
+                //   label = "<page_id> - <page_name>"
+                //   url   = /id/<pageId>/preview?melisSite=<namespace>&newsId=<id>&renderMode=previewtab
+                foreach ((array) $pageRows as $row) {
+                    $page      = is_object($row) ? (array) $row : $row;
+                    $pageId    = $page['page_id'] ?? null;
+                    $namespace = $page['tpl_zf2_website_folder'] ?? '';
+                    if ($pageId && $namespace) {
+                        $url = '/id/' . (int) $pageId . '/preview?melisSite=' . rawurlencode($namespace)
+                             . '&newsId=' . $id . '&renderMode=previewtab';
+                        $pages[] = [
+                            'id'    => (int) $pageId,
+                            'url'   => $url,
+                            'label' => (int) $pageId . ' - ' . (string) ($page['page_name'] ?? ''),
+                        ];
+                        if (!$previewUrl) { $previewUrl = $url; }
                     }
                 }
             }
 
             return $this->jsonResponse([
                 'success' => true,
-                'data'    => ['previewUrl' => $previewUrl],
+                'data'    => [
+                    'previewUrl' => $previewUrl,
+                    'pages'      => $pages,
+                ],
             ]);
         } catch (\Throwable $e) {
             return $this->errorResponse($e);
@@ -512,6 +539,213 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
         } catch (\Throwable $e) {
             return $this->errorResponse($e);
         }
+    }
+
+    // ─── GET /news/users ────────────────────────────────────────────────────
+
+    public function usersAction(): HttpResponse
+    {
+        if ($deny = $this->denyUnlessAccess()) { return $deny; }
+
+        try {
+            // Fetch users from MelisCmsUserAccount front-office module.
+            // If the module is not installed, graceful degradation: returns empty array.
+            $users = [];
+            try {
+                $service = $this->getServiceManager()->get('FrontUserAccountService');
+                $userRows = $service->getAllUsers();
+
+                foreach ((array) $userRows as $row) {
+                    $r      = is_object($row) ? (array) $row : $row;
+                    $userId = (int) ($r['uac_id'] ?? $r['id'] ?? 0);
+                    // Display label: "Firstname Lastname" (melis_cms_user_account has no uac_name
+                    // column). Fall back to login/email, then any legacy `name`, so the option is
+                    // never blank.
+                    $name = trim(($r['uac_firstname'] ?? '') . ' ' . ($r['uac_lastname'] ?? ''));
+                    if ($name === '') {
+                        $name = (string) ($r['uac_login'] ?? $r['uac_email'] ?? $r['name'] ?? '');
+                    }
+                    if ($userId > 0) {
+                        $users[] = [
+                            'id'   => $userId,
+                            'name' => $name,
+                        ];
+                    }
+                }
+            } catch (\Throwable) {
+                // MelisCmsUserAccount not installed or service unavailable — return empty
+                $users = [];
+            }
+
+            return $this->jsonResponse(['success' => true, 'data' => $users]);
+        } catch (\Throwable $e) {
+            return $this->errorResponse($e);
+        }
+    }
+
+    // ─── Comments (module optionnel MelisCmsComments) ────────────────────────
+    // Le back-office News affiche un panneau de modération natif React. La logique
+    // métier vit dans MelisCmsCommentsService (getCommentsByPostId / approveComment /
+    // refuseComment / saveComment / deleteCommentById) : on ne fait que l'exposer en JSON.
+    // Toutes les actions renvoient 404 si le module n'est pas actif → le panneau se masque.
+
+    /** GET /news/:id/comments — tous les commentaires (tous statuts) d'un article. */
+    public function commentsAction(): HttpResponse
+    {
+        if ($deny = $this->denyUnlessAccess()) { return $deny; }
+
+        try {
+            $postId = (int) $this->params('id');
+            if (!$postId) {
+                return $this->jsonResponse(['success' => false, 'error' => 'Missing id'], 400);
+            }
+
+            $svc = $this->getCommentsService();
+            if (!$svc) {
+                return $this->jsonResponse(['success' => false, 'error' => 'Comments module not available'], 404);
+            }
+
+            // validated = 0 → falsy côté service → PAS de filtre statut : on récupère
+            // pending (0) + approved (1) + refused (2) pour la modération.
+            $rows = $svc->getCommentsByPostId($postId, 'NEWS', 'mccom_date_creation', 'DESC', 0);
+
+            $items = [];
+            foreach ((array) $rows as $row) {
+                $items[] = $this->formatComment(is_object($row) ? (array) $row : $row);
+            }
+
+            return $this->jsonResponse(['success' => true, 'data' => $items]);
+        } catch (\Throwable $e) {
+            return $this->errorResponse($e);
+        }
+    }
+
+    /** POST /news/comments/save — créer/éditer un commentaire (BO → approuvé d'office). */
+    public function commentSaveAction(): HttpResponse
+    {
+        if ($deny = $this->denyUnlessAccess()) { return $deny; }
+        if ($deny = $this->denyUnlessCan('edit')) { return $deny; }
+
+        try {
+            $svc = $this->getCommentsService();
+            if (!$svc) {
+                return $this->jsonResponse(['success' => false, 'error' => 'Comments module not available'], 404);
+            }
+
+            $body   = json_decode($this->getRequest()->getContent(), true) ?? [];
+            $text   = trim((string) ($body['text'] ?? ''));
+            $postId = isset($body['postId']) ? (int) $body['postId'] : 0;
+            $cid    = isset($body['id']) && $body['id'] ? (int) $body['id'] : null;
+            $name   = trim((string) ($body['name'] ?? ''));
+
+            if ($text === '' || (!$cid && !$postId)) {
+                return $this->jsonResponse(['success' => false, 'error' => 'Missing text or postId'], 422);
+            }
+
+            // XSS : purifier le HTML comme le fait l'onglet legacy avant sauvegarde.
+            $text = $this->purifyCommentHtml($text);
+
+            // renderMode 'BACK' → le commentaire ajouté depuis le BO est validé immédiatement.
+            $savedId = $svc->saveComment($text, $postId ?: null, $cid, 'NEWS', $name, null, 'BACK');
+
+            return $this->jsonResponse(['success' => true, 'data' => ['id' => (int) $savedId]]);
+        } catch (\Throwable $e) {
+            return $this->errorResponse($e);
+        }
+    }
+
+    /** POST /news/comments/approve/:cid — valider (mccom_validated=1, status=1). */
+    public function commentApproveAction(): HttpResponse
+    {
+        return $this->commentModerate('approve');
+    }
+
+    /** POST /news/comments/refuse/:cid — refuser (mccom_validated=2, status=0). */
+    public function commentRefuseAction(): HttpResponse
+    {
+        return $this->commentModerate('refuse');
+    }
+
+    /** DELETE /news/comments/delete/:cid — suppression définitive. */
+    public function commentDeleteAction(): HttpResponse
+    {
+        return $this->commentModerate('delete');
+    }
+
+    /** Facteur commun approve/refuse/delete (même garde + résolution service). */
+    private function commentModerate(string $op): HttpResponse
+    {
+        if ($deny = $this->denyUnlessAccess()) { return $deny; }
+        if ($deny = $this->denyUnlessCan($op === 'delete' ? 'delete' : 'edit')) { return $deny; }
+
+        try {
+            $svc = $this->getCommentsService();
+            if (!$svc) {
+                return $this->jsonResponse(['success' => false, 'error' => 'Comments module not available'], 404);
+            }
+
+            $cid = (int) $this->params('cid');
+            if (!$cid) {
+                return $this->jsonResponse(['success' => false, 'error' => 'Missing id'], 400);
+            }
+
+            switch ($op) {
+                case 'approve': $svc->approveComment($cid);    break;
+                case 'refuse':  $svc->refuseComment($cid);     break;
+                case 'delete':  $svc->deleteCommentById($cid); break;
+            }
+
+            return $this->jsonResponse(['success' => true]);
+        } catch (\Throwable $e) {
+            return $this->errorResponse($e);
+        }
+    }
+
+    /** Service de commentaires si le module MelisCmsComments est actif, sinon null. */
+    private function getCommentsService()
+    {
+        try {
+            $sm = $this->getServiceManager();
+            return $sm->has('MelisCmsCommentsService') ? $sm->get('MelisCmsCommentsService') : null;
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /** Normalise une ligne melis_cms_comments pour le front. */
+    private function formatComment(array $r): array
+    {
+        $name = (string) ($r['mccom_name'] ?? '');
+        if ($name === '') {
+            $name = (string) ($r['mccom_default_name'] ?? 'Anonymous');
+        }
+        return [
+            'id'        => (int)    ($r['mccom_id']            ?? 0),
+            'text'      => (string) ($r['mccom_comment_text']  ?? ''),
+            'name'      => $name,
+            // 0 = pending (bleu), 1 = approved (vert), 2 = refused (rouge)
+            'validated' => (int)    ($r['mccom_validated']     ?? 0),
+            'status'    => (int)    ($r['mccom_status']        ?? 0),
+            'date'      => (string) ($r['mccom_date_creation'] ?? ''),
+        ];
+    }
+
+    /** Sanitize le HTML d'un commentaire (HTMLPurifier fourni par MelisCmsComments). */
+    private function purifyCommentHtml(string $text): string
+    {
+        try {
+            // Le module MelisCmsComments est un sibling sous vendor/melisplatform/. Chemin
+            // 100% statique (aucune entrée externe) — pas d'inclusion dynamique.
+            if (is_file(__DIR__ . '/../../../melis-cms-comments/library/htmlpurifier-4.12.0/library/HTMLPurifier.auto.php')) {
+                require_once __DIR__ . '/../../../melis-cms-comments/library/htmlpurifier-4.12.0/library/HTMLPurifier.auto.php';
+                $config = \HTMLPurifier_Config::createDefault();
+                $config->set('Cache.DefinitionImpl', null);
+                return (new \HTMLPurifier($config))->purify($text);
+            }
+        } catch (\Throwable) {
+            // Repli conservateur si la lib est indisponible.
+        }
+        return strip_tags($text, '<p><br><b><strong><i><em><u><a><ul><ol><li>');
     }
 
     // ─── Format helpers ──────────────────────────────────────────────────────
@@ -584,6 +818,13 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
             'sliderId'    => isset($row['cnews_slider_id']) && $row['cnews_slider_id']
                 ? (int) $row['cnews_slider_id']
                 : null,
+            // Auteur (module optionnel MelisCmsUserAccount)
+            'authorId'    => isset($row['cnews_author_account']) && $row['cnews_author_account']
+                ? (int) $row['cnews_author_account']
+                : null,
+            // Modération des commentaires (module optionnel MelisCmsComments) — vrai = les
+            // commentaires front arrivent « pending » jusqu'à validation. Colonne absente si off.
+            'validateComments' => !empty($row['cnews_validate_comments']),
             // Catégories (IDs assignés)
             'categoryIds' => $categoryIds,
             // Tags (IDs assignés — module optionnel MelisCmsTags)

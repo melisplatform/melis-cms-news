@@ -80,11 +80,59 @@ return array(
                                     'defaults' => array('__NAMESPACE__' => 'MelisCmsNews\Controller', 'controller' => 'MelisCmsNewsReactApi', 'action' => 'tags'),
                                 ),
                             ),
+                            'meliscmsnews-news-users' => array(
+                                'type' => 'Segment',
+                                'options' => array(
+                                    'route'    => '/news/users[/]',
+                                    'defaults' => array('__NAMESPACE__' => 'MelisCmsNews\Controller', 'controller' => 'MelisCmsNewsReactApi', 'action' => 'users'),
+                                ),
+                            ),
                             'meliscmsnews-news-save' => array(
                                 'type' => 'Segment',
                                 'options' => array(
                                     'route'    => '/news/save[/]',
                                     'defaults' => array('__NAMESPACE__' => 'MelisCmsNews\Controller', 'controller' => 'MelisCmsNewsReactApi', 'action' => 'save'),
+                                ),
+                            ),
+                            // Comments moderation (module optionnel MelisCmsComments). Chemins
+                            // littéraux AVANT /news/:id (comments ≠ digits → pas de collision).
+                            'meliscmsnews-comment-save' => array(
+                                'type' => 'Segment',
+                                'options' => array(
+                                    'route'    => '/news/comments/save[/]',
+                                    'defaults' => array('__NAMESPACE__' => 'MelisCmsNews\Controller', 'controller' => 'MelisCmsNewsReactApi', 'action' => 'commentSave'),
+                                ),
+                            ),
+                            'meliscmsnews-comment-approve' => array(
+                                'type' => 'Segment',
+                                'options' => array(
+                                    'route'       => '/news/comments/approve/:cid',
+                                    'constraints' => array('cid' => '[0-9]+'),
+                                    'defaults'    => array('__NAMESPACE__' => 'MelisCmsNews\Controller', 'controller' => 'MelisCmsNewsReactApi', 'action' => 'commentApprove'),
+                                ),
+                            ),
+                            'meliscmsnews-comment-refuse' => array(
+                                'type' => 'Segment',
+                                'options' => array(
+                                    'route'       => '/news/comments/refuse/:cid',
+                                    'constraints' => array('cid' => '[0-9]+'),
+                                    'defaults'    => array('__NAMESPACE__' => 'MelisCmsNews\Controller', 'controller' => 'MelisCmsNewsReactApi', 'action' => 'commentRefuse'),
+                                ),
+                            ),
+                            'meliscmsnews-comment-delete' => array(
+                                'type' => 'Segment',
+                                'options' => array(
+                                    'route'       => '/news/comments/delete/:cid',
+                                    'constraints' => array('cid' => '[0-9]+'),
+                                    'defaults'    => array('__NAMESPACE__' => 'MelisCmsNews\Controller', 'controller' => 'MelisCmsNewsReactApi', 'action' => 'commentDelete'),
+                                ),
+                            ),
+                            'meliscmsnews-news-comments' => array(
+                                'type' => 'Segment',
+                                'options' => array(
+                                    'route'       => '/news/:id/comments[/]',
+                                    'constraints' => array('id' => '[0-9]+'),
+                                    'defaults'    => array('__NAMESPACE__' => 'MelisCmsNews\Controller', 'controller' => 'MelisCmsNewsReactApi', 'action' => 'comments'),
                                 ),
                             ),
                             'meliscmsnews-news-delete' => array(

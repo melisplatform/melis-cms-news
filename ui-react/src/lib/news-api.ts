@@ -114,6 +114,8 @@ export interface NewsDetail extends NewsItem {
   document2: string | null
   document3: string | null
   sliderId: number | null
+  authorId: number | null
+  validateComments?: boolean  // module optionnel MelisCmsComments
   categoryIds: number[]
   tagIds: number[]
   seo: NewsSeo
@@ -134,6 +136,11 @@ export interface NewsListParams {
   siteId?: number
 }
 
+export interface User {
+  id: number
+  name: string
+}
+
 export interface NewsSavePayload {
   id?: number | null
   langId?: number
@@ -145,6 +152,8 @@ export interface NewsSavePayload {
   publishDate?: string | null
   unpublishDate?: string | null
   sliderId?: number | null
+  authorId?: number | null
+  validateComments?: boolean
   categoryIds?: number[]
   tagIds?: number[]
   seo?: Partial<NewsSeo>
@@ -221,9 +230,19 @@ export async function fetchNewsStats(): Promise<NewsStats> {
   return apiFetch<NewsStats>('/melis/react-api/news/stats')
 }
 
-export async function fetchNewsPreviewUrl(id: number): Promise<string | null> {
-  const data = await apiFetch<{ previewUrl: string | null }>(`/melis/react-api/news/preview/${id}`)
-  return data.previewUrl
+export interface PreviewPage {
+  id: number
+  url: string
+  label: string
+}
+
+export interface NewsPreview {
+  previewUrl: string | null
+  pages: PreviewPage[]
+}
+
+export async function fetchNewsPreview(id: number): Promise<NewsPreview> {
+  return apiFetch<NewsPreview>(`/melis/react-api/news/preview/${id}`)
 }
 
 // ─── Categories ────────────────────────────────────────────────────────────────
@@ -265,6 +284,69 @@ export interface Slider {
 export async function fetchSliders(): Promise<Slider[]> {
   const data = await apiFetch<{ items: Slider[]; total: number }>('/melis/react-api/sliders')
   return data.items ?? []
+}
+
+// ─── Users (module optionnel MelisCmsUserAccount) ──────────────────────────────
+// Fetch la liste des utilisateurs du site (front-office) disponibles comme auteurs.
+// Cette fonction n'échoue que si le module MelisCmsUserAccount n'est pas actif
+// ou si l'endpoint n'existe pas (route 404) → graceful dégradation.
+
+export async function fetchUsers(): Promise<User[]> {
+  try {
+    return await apiFetch<User[]>('/melis/react-api/news/users')
+  } catch {
+    return []
+  }
+}
+
+// ─── Comments (module optionnel MelisCmsComments) ───────────────────────────────
+// Modération native des commentaires d'un article. Toutes les routes renvoient 404
+// si le module MelisCmsComments n'est pas actif → le panneau se masque (voir
+// fetchNewsComments qui distingue « inactif » de « liste vide »).
+
+export interface NewsComment {
+  id: number
+  text: string
+  name: string
+  validated: 0 | 1 | 2  // 0 = en attente, 1 = validé (affiché), 2 = refusé (masqué)
+  status: number
+  date: string
+}
+
+/** Résultat de chargement : `active=false` = module inactif (route 404) → masquer la section. */
+export interface NewsCommentsResult {
+  active: boolean
+  items: NewsComment[]
+}
+
+export async function fetchNewsComments(newsId: number): Promise<NewsCommentsResult> {
+  try {
+    const items = await apiFetch<NewsComment[]>(`/melis/react-api/news/${newsId}/comments`)
+    return { active: true, items }
+  } catch {
+    // 404 (module inactif) ou autre erreur → section masquée.
+    return { active: false, items: [] }
+  }
+}
+
+export async function saveNewsComment(payload: { id?: number | null; postId: number; text: string; name?: string }): Promise<{ id: number }> {
+  return apiFetch<{ id: number }>('/melis/react-api/news/comments/save', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function approveNewsComment(id: number): Promise<void> {
+  await apiFetch<null>(`/melis/react-api/news/comments/approve/${id}`, { method: 'POST' })
+}
+
+export async function refuseNewsComment(id: number): Promise<void> {
+  await apiFetch<null>(`/melis/react-api/news/comments/refuse/${id}`, { method: 'POST' })
+}
+
+export async function deleteNewsComment(id: number): Promise<void> {
+  await apiFetch<null>(`/melis/react-api/news/comments/delete/${id}`, { method: 'DELETE' })
 }
 
 // ─── Modules actifs (gating d'UI modulaire) ─────────────────────────────────────
