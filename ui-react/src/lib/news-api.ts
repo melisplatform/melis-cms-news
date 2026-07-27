@@ -76,6 +76,7 @@ export interface NewsCategory {
   id: number
   fatherCatId: number
   name: string
+  status: number // cat2_status : 1 = actif (pastille verte), 0 = inactif (pastille rouge)
 }
 
 export interface NewsTag {

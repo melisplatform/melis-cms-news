@@ -344,11 +344,12 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
             // On réutilise le service partagé MelisCmsCategory2 (même source que le BO legacy,
             // cf. MelisCmsNewsController::getCategoryTreeViewAction) au lieu d'une requête SQL
             // maison → parité garantie entre la vue React et la vue historique.
-            //  - onlyValid par défaut = false : les catégories INACTIVES sont aussi renvoyées,
-            //    exactement comme le legacy (le picker jstree affiche tout, sans distinction de
-            //    statut — son icône verte est fixe et ne reflète PAS cat2_status).
+            //  - onlyValid par défaut = false : les catégories INACTIVES sont aussi renvoyées
+            //    (comme le legacy). Contrairement au picker jstree — dont l'icône verte est fixe
+            //    et ne reflète PAS le statut — on renvoie cat2_status pour afficher côté React une
+            //    pastille verte (actif) / rouge (inactif).
             //  - le service renvoie un arbre ; on le filtre au site puis on l'aplatit en liste
-            //    plate id/fatherCatId/name que le client reconstruit via fatherCatId.
+            //    plate id/fatherCatId/name/status que le client reconstruit via fatherCatId.
             $tree = $this->getServiceManager()->get('MelisCmsCategory2Service')
                 ->getCategoryTreeview(langId: $langId, siteId: $siteId);
 
@@ -372,6 +373,7 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
                         // text est HTML-échappé par le service ; on le décode car React
                         // (JSX) ré-échappe le texte à l'affichage — sinon double encodage.
                         'name'        => html_entity_decode((string) ($node['text'] ?? ''), ENT_QUOTES, 'UTF-8'),
+                        'status'      => (int) ($node['cat2_status'] ?? 0),
                     ];
                     if (!empty($node['children'])) {
                         $flatten($node['children']);
