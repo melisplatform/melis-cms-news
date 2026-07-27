@@ -993,6 +993,14 @@ window.initNewsCategoryList = function(newsId, langLocale) {
                     "default" : {
                         "icon" : "fa fa-circle text-success",
                     },
+                    // Statut reel de la categorie (cat2_status), fourni par node.type cote serveur :
+                    // vert = actif, rouge = inactif.
+                    "active" : {
+                        "icon" : "fa fa-circle text-success",
+                    },
+                    "inactive" : {
+                        "icon" : "fa fa-circle text-danger",
+                    },
                     "selected": {
                         "select_node": false
                     }

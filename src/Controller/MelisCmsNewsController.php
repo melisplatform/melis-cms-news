@@ -551,6 +551,10 @@ class MelisCmsNewsController extends MelisAbstractActionController
         {
             foreach($tree AS $key => $catTree) {
                 $tree[$key]['id'] = $catTree['cat2_id'];
+                // Type jstree refletant le statut reel : 'active' (pastille verte) / 'inactive'
+                // (pastille rouge). Les types sont definis cote news.tool.js.
+                $tree[$key]['type'] = (isset($catTree['cat2_status']) && (int)$catTree['cat2_status'] === 1)
+                    ? 'active' : 'inactive';
                 if(isset($catTree['children']) && !empty($catTree['children'])) {
                     recursiveSetId($tree[$key]['children']);
                 }
