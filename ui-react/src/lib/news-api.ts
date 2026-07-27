@@ -76,6 +76,7 @@ export interface NewsCategory {
   id: number
   fatherCatId: number
   name: string
+  status: number // 1 = active, 0 = inactive (affiché avec un point vert/rouge, comme le legacy)
 }
 
 export interface NewsTag {
@@ -227,9 +228,13 @@ export async function fetchNewsPreviewUrl(id: number): Promise<string | null> {
 
 // ─── Categories ────────────────────────────────────────────────────────────────
 
-export async function fetchCategories(langId?: number): Promise<NewsCategory[]> {
-  const qs = langId ? `?langId=${langId}` : ''
-  return apiFetch<NewsCategory[]>(`/melis/react-api/news/categories${qs}`)
+// siteId : restreint aux catégories liées au site de l'article (comme le legacy). Omis → tous sites.
+export async function fetchCategories(langId?: number, siteId?: number | string): Promise<NewsCategory[]> {
+  const qs = new URLSearchParams()
+  if (langId) qs.set('langId', String(langId))
+  if (siteId) qs.set('siteId', String(siteId))
+  const suffix = qs.toString() ? `?${qs.toString()}` : ''
+  return apiFetch<NewsCategory[]>(`/melis/react-api/news/categories${suffix}`)
 }
 
 // ─── Tags (modular — only present when MelisCmsTags is active) ───────────────────

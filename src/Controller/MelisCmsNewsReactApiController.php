@@ -338,27 +338,47 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
                 ? (int) $rawLang
                 : $this->getCurrentLangId();
 
-            $db   = $this->getServiceManager()->get('Laminas\Db\Adapter\AdapterInterface');
-            $rows = $db->query(
-                'SELECT c.cat2_id, c.cat2_father_cat_id, t.catt2_name
-                 FROM melis_cms_category2 c
-                 LEFT JOIN melis_cms_category2_trans t
-                        ON t.catt2_category_id = c.cat2_id
-                       AND t.catt2_lang_id = ?
-                 WHERE c.cat2_status = 1
-                 ORDER BY c.cat2_order',
-                [$langId]
-            );
+            $rawSite = $this->params()->fromQuery('siteId', '');
+            $siteId  = ($rawSite !== '' && $rawSite !== null) ? (int) $rawSite : null;
+
+            // On réutilise le service partagé MelisCmsCategory2 (même source que le BO legacy,
+            // cf. MelisCmsNewsController::getCategoryTreeViewAction) au lieu d'une requête SQL
+            // maison → parité garantie entre la vue React et la vue historique.
+            //  - onlyValid par défaut = false : les catégories INACTIVES sont aussi renvoyées
+            //    (le front affiche un indicateur actif/inactif via le champ status).
+            //  - le service renvoie un arbre ; on le filtre au site puis on l'aplatit en liste
+            //    plate id/fatherCatId/name/status que le client reconstruit via fatherCatId.
+            $tree = $this->getServiceManager()->get('MelisCmsCategory2Service')
+                ->getCategoryTreeview(langId: $langId, siteId: $siteId);
+
+            // Restriction au site de l'article (identique au legacy) : on ne garde que les
+            // catégories de 1er niveau liées au site ; leurs descendants sont conservés tels quels.
+            if (!empty($siteId) && is_array($tree)) {
+                foreach ($tree as $key => $node) {
+                    if (empty($node['sites']) || !in_array($siteId, $node['sites'])) {
+                        unset($tree[$key]);
+                    }
+                }
+            }
 
             $categories = [];
-            foreach ($rows as $row) {
-                $r            = (array) $row;
-                $categories[] = [
-                    'id'          => (int)    ($r['cat2_id']            ?? 0),
-                    'fatherCatId' => (int)    ($r['cat2_father_cat_id'] ?? -1),
-                    'name'        => (string) ($r['catt2_name']         ?? ''),
-                ];
-            }
+            $flatten = function ($nodes) use (&$flatten, &$categories) {
+                foreach ((array) $nodes as $node) {
+                    if (!is_array($node)) { continue; }
+                    $categories[] = [
+                        'id'          => (int) ($node['cat2_id']            ?? 0),
+                        'fatherCatId' => (int) ($node['cat2_father_cat_id'] ?? -1),
+                        // text est HTML-échappé par le service ; on le décode car React
+                        // (JSX) ré-échappe le texte à l'affichage — sinon double encodage.
+                        'name'        => html_entity_decode((string) ($node['text'] ?? ''), ENT_QUOTES, 'UTF-8'),
+                        'status'      => (int) ($node['cat2_status'] ?? 0),
+                    ];
+                    if (!empty($node['children'])) {
+                        $flatten($node['children']);
+                    }
+                }
+            };
+            $flatten($tree);
 
             return $this->jsonResponse(['success' => true, 'data' => $categories]);
         } catch (\Throwable $e) {

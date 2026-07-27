@@ -268,7 +268,12 @@ function CategoryTree({ categories, selected, onToggle }: {
             onChange={() => onToggle(c.id)}
             className="size-3.5 shrink-0 rounded border-input accent-primary"
           />
-          <span className="truncate">{c.name}</span>
+          {/* Point actif/inactif (vert/rouge), comme la vue legacy des catégories. */}
+          <span
+            className={cn('size-1.5 shrink-0 rounded-full', c.status === 1 ? 'bg-emerald-500' : 'bg-red-500')}
+            title={c.status === 1 ? t('filter_active') : t('filter_inactive')}
+          />
+          <span className={cn('truncate', c.status !== 1 && 'text-muted-foreground')}>{c.name}</span>
         </label>
         {render(c.id, depth + 1)}
       </div>
@@ -561,12 +566,13 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
   }, [langId])
 
   // Catégories (module optionnel MelisCmsCategory2) : chargées ssi le module est actif, et
-  // re-fetchées quand la langue du BO change (les noms de catégories sont traduits par langue ;
-  // la SÉLECTION `categoryIds`, elle, est indépendante de la langue → conservée).
+  // re-fetchées quand la langue du BO change (noms traduits par langue) OU quand le site de
+  // l'article change (les catégories sont restreintes au site, comme le legacy). La SÉLECTION
+  // `categoryIds`, elle, est indépendante de la langue et du site → conservée.
   useEffect(() => {
     if (!categoryActive) return
-    newsApi.fetchCategories(langId).then(setCategories).catch(() => {})
-  }, [langId, categoryActive])
+    newsApi.fetchCategories(langId, form.siteId || undefined).then(setCategories).catch(() => {})
+  }, [langId, categoryActive, form.siteId])
 
   // Tags (module optionnel MelisCmsTags) : mêmes règles que les catégories — chargés ssi
   // le module est actif et re-fetchés à chaque changement de langue (titres traduits) ;
