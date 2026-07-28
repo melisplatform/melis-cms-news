@@ -432,14 +432,17 @@ function CategoryTree({ categories, selected, onToggle }: {
 
 function ParagraphEditor({
   index, value, onChange, onRemove, canRemove, extraActions,
-  canReorder, isDragging, onDragStart, onDrop, onDragEnd,
+  canReorder, isDragging, dragActive, isDropTarget, onDragStart, onDragOverCard, onDrop, onDragEnd,
 }: {
   index: number; value: string; onChange: (v: string) => void
   onRemove: () => void; canRemove: boolean
   extraActions?: React.ReactNode
   canReorder: boolean
   isDragging: boolean
+  dragActive: boolean       // un glisser de paragraphe est en cours (n'importe lequel)
+  isDropTarget: boolean     // cette carte est la cible : le paragraphe glissé prendra CETTE position
   onDragStart: () => void
+  onDragOverCard: () => void
   onDrop: () => void
   onDragEnd: () => void
 }) {
@@ -450,11 +453,31 @@ function ParagraphEditor({
     <div
       draggable={armed}
       onDragStart={(e) => { e.dataTransfer.effectAllowed = 'move'; onDragStart() }}
-      onDragOver={(e) => { if (canReorder) e.preventDefault() }}
+      onDragOver={(e) => { if (canReorder) { e.preventDefault(); onDragOverCard() } }}
       onDrop={(e) => { e.preventDefault(); setArmed(false); onDrop() }}
       onDragEnd={() => { setArmed(false); onDragEnd() }}
-      className={cn('rounded-lg transition-opacity', isDragging && 'opacity-40')}
+      className={cn(
+        'relative rounded-lg transition-all',
+        isDragging && 'opacity-40',
+        // La carte cible : le paragraphe glissé prendra exactement cette position.
+        isDropTarget && 'ring-2 ring-primary ring-offset-2 ring-offset-background bg-primary/5',
+      )}
     >
+      {/* Couche transparente capturant le survol/dépôt SUR toute la carte pendant un glisser.
+          Indispensable car l'éditeur TinyMCE est un <iframe> : sans overlay, les événements
+          drag au-dessus du texte sont absorbés par l'iframe et ne remontent jamais à la carte
+          → impossible de déposer « dans » le texte.
+          ⚠️ L'overlay est TOUJOURS monté et on ne fait que basculer `pointer-events` par classe :
+          insérer/retirer un nœud DOM pendant `dragstart` annule le glisser sous Chrome. En dehors
+          d'un glisser il est `pointer-events:none` → l'édition normale n'est jamais gênée. */}
+      <div
+        className={cn(
+          'absolute inset-0 z-20',
+          dragActive && !isDragging ? 'pointer-events-auto' : 'pointer-events-none',
+        )}
+        onDragOver={(e) => { if (canReorder) { e.preventDefault(); onDragOverCard() } }}
+        onDrop={(e) => { e.preventDefault(); setArmed(false); onDrop() }}
+      />
       <div className="mb-1.5 flex items-center justify-between">
         <span className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground tracking-wide">
           {canReorder && (
@@ -627,6 +650,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
   const [pendingDelete, setPendingDelete] = useState<newsApi.NewsComment | null>(null)  // commentaire en attente de confirmation de suppression
   const [commentsPage, setCommentsPage] = useState(1)                                    // pagination (client-side) de la liste
   const [dragIndex, setDragIndex]       = useState<number | null>(null)  // paragraphe en cours de glisser
+  const [overIndex, setOverIndex]       = useState<number | null>(null)  // paragraphe actuellement survolé (cible de dépôt)
   const [previewUrl, setPreviewUrl]     = useState<string | null>(null)
   // Choix d'éditeur retiré — TinyMCE ('tool') forcé.
   // const [editorEngine, setEditorEngine] = useState<RichEditorEngine>('tiptap')
@@ -1091,9 +1115,20 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
                 canRemove={form.paragraphs.length > 1}
                 canReorder={form.paragraphs.length > 1}
                 isDragging={dragIndex === i}
+                dragActive={dragIndex !== null}
+                isDropTarget={dragIndex !== null && overIndex === i && dragIndex !== i}
                 onDragStart={() => setDragIndex(i)}
-                onDrop={() => { if (dragIndex !== null) moveParagraph(dragIndex, i); setDragIndex(null) }}
-                onDragEnd={() => setDragIndex(null)}
+                onDragOverCard={() => { if (overIndex !== i) setOverIndex(i) }}
+                // Le déplacement N'EST PAS déclenché par l'événement `drop` : au-dessus de l'éditeur
+                // TinyMCE (une <iframe>) le `drop` est absorbé/incohérent. On le fait dans `dragend`,
+                // qui se déclenche TOUJOURS sur la carte glissée, en visant `overIndex` — la carte
+                // surlignée. Réordonnancement type Jira : moveParagraph décale toutes les cartes
+                // entre l'ancienne et la nouvelle position. Garantit « surligné = nouvelle position ».
+                onDrop={() => { /* voir onDragEnd */ }}
+                onDragEnd={() => {
+                  if (dragIndex !== null && overIndex !== null) moveParagraph(dragIndex, overIndex)
+                  setDragIndex(null); setOverIndex(null)
+                }}
                 extraActions={window.__melisNewsExtensions?.renderParagraphActions?.(
                   i,
                   (text) => updateParagraph(i, text),
