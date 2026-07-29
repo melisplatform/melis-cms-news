@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import NewsListPage from './NewsListPage'
 import NewsFormPage from './NewsFormPage'
 import { t } from './lib/i18n'
@@ -73,7 +74,11 @@ export default function NewsPage() {
 
   function openEditor(id: number, name: string) {
     const label = name || `#${id}`
-    setOpen((prev) => (prev.some((o) => o.id === id) ? prev.map((o) => (o.id === id ? { ...o, name: label } : o)) : [...prev, { id, name: label }]))
+    // Onglet déjà ouvert : on ne renomme QUE si l'appelant fournit un nom — une réouverture
+    // externe sans libellé (cf. effet URL plus bas) ne doit pas écraser le titre par « #8 ».
+    setOpen((prev) => (prev.some((o) => o.id === id)
+      ? (name ? prev.map((o) => (o.id === id ? { ...o, name: label } : o)) : prev)
+      : [...prev, { id, name: label }]))
     setView({ kind: 'edit', id })
   }
   function openNew() {
@@ -111,6 +116,23 @@ export default function NewsPage() {
   // comparer les deux interfaces, et le détournement rendait la vue Old inutilisable.
 
   const activeId = view.kind === 'edit' ? view.id : null
+
+  // ── Ouverture depuis l'EXTÉRIEUR de l'outil : /melis-cms/news/:id ────────────────
+  // L'œil du plugin Workflow (et tout autre appelant du pont `__melisOpenTool`) navigue vers
+  // /melis-cms/news/<id>. La brique étant PERSISTANTE, elle n'est pas remontée à chaque appel :
+  // on lit donc la location scopée (Shell isole le routage de chaque brique) à CHAQUE navigation
+  // — `key` change même quand on redemande l'article déjà affiché dans l'URL, ce qui rejoue
+  // l'ouverture. Le libellé arrive via l'état de navigation (`melisTabLabel`, posé par App.tsx)
+  // → le sous-onglet porte le vrai titre dès le 1er rendu, sans « #8 » transitoire.
+  const loc = useLocation()
+  useEffect(() => {
+    const m = loc.pathname.match(/\/(\d+)$/)
+    if (!m) return
+    const id = Number(m[1])
+    const label = (loc.state as { melisTabLabel?: string } | null)?.melisTabLabel || ''
+    openEditor(id, label)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loc.key, loc.pathname])
 
   // URL = /[section]/[tool]/:id (ou /new), reflétée à chaque changement de sous-onglet actif.
   useEffect(() => { reflectSubTabUrl(activeId) }, [activeId])

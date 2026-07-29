@@ -1,1 +1,1 @@
-{ "id": "news", "route": "/melis-cms/news", "label": "Actualités", "forwardKey": "MelisCmsNews/MelisCmsNewsList", "melisKey": "meliscmsnews_left_menu", "entry": "brick.js", "persistent": true }
+{ "id": "news", "route": "/melis-cms/news", "label": "Actualités", "forwardKey": "MelisCmsNews/MelisCmsNewsList", "melisKey": "meliscmsnews_left_menu", "entry": "brick.js", "persistent": true, "subTabs": true }
