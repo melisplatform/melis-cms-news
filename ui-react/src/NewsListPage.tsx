@@ -12,6 +12,7 @@ import { cn } from './lib/utils'
 import { t, newsLang } from './lib/i18n'
 import * as newsApi from './lib/news-api'
 import { useCaps } from './shared/useCaps'
+import { useKeysetList } from './use-keyset-list'
 
 // News tool capability key — must match config/react.capabilities.php, i.e. the melisKey of the
 // rights-bearing menu node. NOT `meliscmsnews_left_menu`: that is the type-link target and stays
@@ -25,13 +26,13 @@ type ViewMode = 'react' | 'iframe'
 interface ListCache {
   items: newsApi.NewsItem[]
   total: number
-  page: number
+  cursor: string | null
+  hasMore: boolean
+  sortCol: string
+  sortDir: 'asc' | 'desc'
   search: string
   status: '' | '0' | '1'
-  sortCol: string | null
-  sortDir: 'asc' | 'desc'
   kpiStats: newsApi.NewsStats | null
-  hasMore: boolean
   mode: ViewMode
   iframeLoaded: boolean
 }
@@ -130,20 +131,6 @@ function getCellText(item: newsApi.NewsItem, colId: string): string {
     case 'unpublishDate': return fmtDate(item.unpublishDate)
     case 'creationDate':  return fmtDate(item.creationDate)
     case 'status':        return item.status === 1 ? t('status_published') : t('status_draft')
-    default:              return ''
-  }
-}
-
-function getSortValue(item: newsApi.NewsItem, colId: string): string | number {
-  switch (colId) {
-    case 'id':            return item.id
-    case 'title':         return item.title || ''
-    case 'subtitle':      return item.subtitle || ''
-    case 'site':          return item.siteName || ''
-    case 'publishDate':   return item.publishDate || ''
-    case 'unpublishDate': return item.unpublishDate || ''
-    case 'creationDate':  return item.creationDate || ''
-    case 'status':        return item.status
     default:              return ''
   }
 }
@@ -379,8 +366,17 @@ function ExportModal({ cols, search, status, total, onClose }: {
     if (included.length === 0) return
     setExporting(true)
     try {
-      const result = await newsApi.fetchNewsList({ page: 1, limit: 9999, search: search || undefined, status: status || undefined })
-      const rows = result.items.map(item => included.map(c => getCellText(item, c.id)))
+      // Récupère TOUT le jeu filtré en bouclant sur le curseur keyset (100/lot).
+      const all: newsApi.NewsItem[] = []
+      let cursor: string | null | undefined
+      do {
+        const res = await newsApi.fetchNewsList({
+          limit: 100, search: search || undefined, status: status || undefined, after: cursor || undefined,
+        })
+        all.push(...res.items)
+        cursor = res.nextCursor
+      } while (cursor)
+      const rows = all.map(item => included.map(c => getCellText(item, c.id)))
       const date = new Date().toISOString().slice(0, 10)
       if (format === 'xlsx') {
         const ws = XLSX.utils.aoa_to_sheet([included.map(c => c.label), ...rows])
@@ -556,44 +552,44 @@ export default function NewsListPage({ active, onOpen, onNew }: {
   // ── Scroll sync: body horizontal ↔ header ─────────────────────────────────
   const headerScrollRef = useRef<HTMLDivElement>(null)
   const bodyScrollRef   = useRef<HTMLDivElement>(null)
-  const sentinelRef     = useRef<HTMLDivElement>(null)
-  const loadMoreRef     = useRef<() => void>(() => {})
 
-  // ── List state ─────────────────────────────────────────────────────────────
-  const [items,       setItems]       = useState<newsApi.NewsItem[]>(_cache?.items ?? [])
-  const [total,       setTotal]       = useState(_cache?.total ?? 0)
-  const [loading,     setLoading]     = useState(false)
-  const [loadingMore, setLoadingMore] = useState(false)
-  const [hasMore,     setHasMore]     = useState(_cache?.hasMore ?? true)
-  const [error,       setError]       = useState<string | null>(null)
-  const [page,        setPage]        = useState(_cache?.page ?? 1)
-  const [search,      setSearch]      = useState(_cache?.search ?? '')
-  const [status,      setStatus]      = useState<'' | '0' | '1'>(_cache?.status ?? '')
-  const [deleting,    setDeleting]    = useState<number | null>(null)
-  // Bumped par « Réinitialiser les filtres » : force le refetch même quand les filtres
-  // sont déjà à leur valeur par défaut (sinon l'effet de chargement ne se redéclenche pas).
-  const [refreshKey,  setRefreshKey]  = useState(0)
+  // ── Filtres ──────────────────────────────────────────────────────────────
+  const [search,   setSearch]   = useState(_cache?.search ?? '')
+  const [status,   setStatus]   = useState<'' | '0' | '1'>(_cache?.status ?? '')
+  const [deleting, setDeleting] = useState<number | null>(null)
 
-  // ── Sort ───────────────────────────────────────────────────────────────────
-  const [sortCol, setSortCol] = useState<string | null>(_cache?.sortCol ?? null)
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>(_cache?.sortDir ?? 'asc')
+  // ── Liste : scroll infini + tri server-side + keyset (hook mutualisé) ──────
+  // Le fetcher capture les filtres courants ; `deps` relance un chargement frais à
+  // chaque changement de filtre. On gate sur capsLoaded/canList : tant que les caps
+  // ne sont pas résolues (ou liste refusée) le fetcher renvoie un jeu vide sans
+  // appeler l'API (évite un flash « Forbidden » / un 403). Le re-fetch se déclenche
+  // automatiquement dès que `capsLoaded`/`canList` changent (présents dans `deps`).
+  const {
+    items, total, loading, hasMore, sentinelRef,
+    sortCol, sortDir, toggleSort, reload, removeLocal, snapshot,
+  } = useKeysetList<newsApi.NewsItem>({
+    fetcher: (a) => {
+      if (!capsLoaded || !canList) return Promise.resolve({ items: [], total: 0, nextCursor: null })
+      return newsApi.fetchNewsList({
+        ...a,
+        search: search || undefined,
+        status: status || undefined,
+      })
+    },
+    deps: [search, status, capsLoaded, canList],
+    limit: LIMIT,
+    defaultSort: 'id',
+    defaultDir: 'desc',
+    initial: _cache
+      ? {
+          items: _cache.items, total: _cache.total, cursor: _cache.cursor,
+          hasMore: _cache.hasMore, sortCol: _cache.sortCol, sortDir: _cache.sortDir,
+        }
+      : undefined,
+    skipInitial: !!(_cache && _cache.items.length),
+  })
 
-  function handleSort(colId: string) {
-    if (sortCol === colId) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
-    else { setSortCol(colId); setSortDir('asc') }
-  }
-
-  const sortedItems = useMemo(() => {
-    if (!sortCol) return items
-    return [...items].sort((a, b) => {
-      const va = getSortValue(a, sortCol)
-      const vb = getSortValue(b, sortCol)
-      const cmp = typeof va === 'number' && typeof vb === 'number'
-        ? va - vb
-        : String(va).localeCompare(String(vb), newsLang() === 'fr' ? 'fr' : 'en', { sensitivity: 'base' })
-      return sortDir === 'asc' ? cmp : -cmp
-    })
-  }, [items, sortCol, sortDir])
+  function handleSort(colId: string) { toggleSort(colId) }
 
   // ── KPIs (from dedicated stats endpoint) ──────────────────────────────────
   const [kpiStats, setKpiStats] = useState<newsApi.NewsStats | null>(_cache?.kpiStats ?? null)
@@ -608,69 +604,23 @@ export default function NewsListPage({ active, onOpen, onNew }: {
   useEffect(() => { if (active) loadKpis() }, [active])
 
   // ── Cache: track current state + save on unmount ───────────────────────────
-  const cacheRef = useRef({ items, total, page, search, status, sortCol, sortDir, kpiStats, hasMore, mode, iframeLoaded })
-  useEffect(() => { cacheRef.current = { items, total, page, search, status, sortCol, sortDir, kpiStats, hasMore, mode, iframeLoaded } })
+  const cacheRef = useRef<ListCache>({
+    ...snapshot(), search, status, kpiStats, mode, iframeLoaded,
+  })
+  useEffect(() => {
+    cacheRef.current = { ...snapshot(), search, status, kpiStats, mode, iframeLoaded }
+  })
   useEffect(() => () => { _cache = cacheRef.current }, [])
 
-  // ── List loading ───────────────────────────────────────────────────────────
-  useEffect(() => {
-    // Attendre la résolution des capacités avant tout appel (évite un flash « Forbidden »).
-    if (!capsLoaded) return
-    // Liste refusée → on n'appelle pas l'API (la vue « pas de droits » sera rendue à la place).
-    if (!canList) { setItems([]); setTotal(0); setHasMore(false); setLoading(false); setError(null); return }
-    // Restore from cache on re-mount (navigate back): items already in state, skip API call
-    if (_cache?.items?.length) {
-      _cache = null  // consume → next filter change will reload normally
-      return
-    }
-    setPage(1); setHasMore(true); setLoading(true); setError(null)
-    newsApi.fetchNewsList({ page: 1, limit: LIMIT, search: search || undefined, status: status || undefined })
-      .then(res => { setItems(res.items); setTotal(res.total); setHasMore(res.items.length === LIMIT) })
-      .catch(e => setError(e instanceof Error ? e.message : t('error')))
-      .finally(() => setLoading(false))
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, status, capsLoaded, canList, refreshKey])
-
-  // Réinitialiser : recherche + statut + tri par défaut (aucun tri), puis refetch.
-  // On vide `items` pour repasser par l'état « Chargement » (sinon les anciennes lignes
-  // restent et le clic semble sans effet quand aucun filtre n'était posé).
+  // Réinitialiser : recherche + statut par défaut, puis rechargement frais.
+  // `_cache=null` pour ne pas restaurer un ancien état ; le changement de `search`/`status`
+  // (deps du hook) relance le fetch, et `reload()` couvre le cas où ils étaient déjà vides.
   function resetFilters() {
+    _cache = null
     setSearch('')
     setStatus('')
-    setSortCol(null)
-    setSortDir('asc')
-    setItems([])
-    setTotal(0)
-    setPage(1)
-    setHasMore(true)
-    setRefreshKey(k => k + 1)
+    reload()
   }
-
-  function loadMore() {
-    if (loadingMore || !hasMore || loading) return
-    const next = page + 1
-    setPage(next)
-    setLoadingMore(true)
-    newsApi.fetchNewsList({ page: next, limit: LIMIT, search: search || undefined, status: status || undefined })
-      .then(res => { setItems(prev => [...prev, ...res.items]); setHasMore(res.items.length === LIMIT) })
-      .catch(() => {})
-      .finally(() => setLoadingMore(false))
-  }
-
-  useLayoutEffect(() => { loadMoreRef.current = loadMore })
-
-  // Infinite scroll sentinel
-  useEffect(() => {
-    const el = sentinelRef.current
-    if (!el) return
-    const obs = new IntersectionObserver(
-      entries => { if (entries[0].isIntersecting) loadMoreRef.current() },
-      { threshold: 0.1 },
-    )
-    obs.observe(el)
-    return () => obs.disconnect()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   // ── UI panels ──────────────────────────────────────────────────────────────
   const [showColMgr, setShowColMgr] = useState(false)
@@ -693,8 +643,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
     setDeleting(id)
     try {
       await newsApi.deleteNews(id)
-      setItems(prev => prev.filter(n => n.id !== id))
-      setTotal(t => t - 1)
+      removeLocal(n => n.id === id)
       loadKpis()
     } catch (e) {
       alert(e instanceof Error ? e.message : t('error'))
@@ -920,12 +869,6 @@ export default function NewsListPage({ active, onOpen, onNew }: {
         </div>
       </div>
 
-      {error && (
-        <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-          {error}
-        </div>
-      )}
-
       {/* Table: sticky header + scrollable body */}
       <div className="rounded-xl border border-border bg-card" style={{ overflow: 'clip' }}>
 
@@ -955,7 +898,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
                           ? sortDir === 'asc'
                             ? <ArrowUp className="size-3 text-primary" />
                             : <ArrowDown className="size-3 text-primary" />
-                          : <ArrowUpDown className="size-3 opacity-0 group-hover/th:opacity-40 transition-opacity" />}
+                          : <ArrowUpDown className="size-3 opacity-30" />}
                       </div>
                     </th>
                   ))}
@@ -977,11 +920,11 @@ export default function NewsListPage({ active, onOpen, onNew }: {
               headerScrollRef.current.scrollLeft = e.currentTarget.scrollLeft
           }}
         >
-          {(!capsLoaded || loading) && sortedItems.length === 0 ? (
+          {(!capsLoaded || loading) && items.length === 0 ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="size-5 animate-spin text-muted-foreground" />
             </div>
-          ) : sortedItems.length === 0 ? (
+          ) : items.length === 0 ? (
             <div className="py-20 text-center text-sm text-muted-foreground">{t('no_articles')}</div>
           ) : (
             <table
@@ -990,7 +933,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
             >
               <Colgroup />
               <tbody>
-                {sortedItems.map(item => (
+                {items.map(item => (
                   <tr
                     key={item.id}
                     className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors cursor-pointer"
@@ -1033,7 +976,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
 
           {/* Infinite scroll sentinel */}
           <div ref={sentinelRef} className="h-1" />
-          {loadingMore && (
+          {loading && items.length > 0 && (
             <div className="flex items-center justify-center gap-2 py-4 text-xs text-muted-foreground">
               <Loader2 className="size-3.5 animate-spin" />
               {t('loading')}
