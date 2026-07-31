@@ -1,5 +1,6 @@
 <?php
 return [
+    'tr_meliscmsnews_ws_desc_news' => 'CMS news: list and detail of an article.',
     'tr_meliscms_meliscms' => 'MelisCms',
     'tr_meliscmsnews_list_header_title' => 'News',
     'tr_meliscmsnews_list_header_title edit' => 'Edit news',

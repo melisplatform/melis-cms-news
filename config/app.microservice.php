@@ -11,6 +11,7 @@ return [
 				 * MelisCmsNewsService.php
 				 */
 				'MelisCmsNewsService' => [
+				    '_description' => 'tr_meliscmsnews_ws_desc_news',
 
 					'getNewsList' => [
 						'attributes' => [
