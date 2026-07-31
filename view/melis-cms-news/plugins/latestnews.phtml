@@ -13,7 +13,7 @@
                             <?php }?>
                             <div class="caption">
                                 <a href="<?= $news['newsLink'] ?>">
-                                    <h3><?= $news['cnews_title'] ?></h3>
+                                    <h3><?= htmlspecialchars($news['cnews_title'], ENT_QUOTES) ?></h3>
                                 </a>
                                 <p><?= $firstParagraph ?></p>
                             </div>

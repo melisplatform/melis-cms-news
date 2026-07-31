@@ -38,7 +38,7 @@
                             <?php endif; ?>
                             <div class="caption">
                                 <a href="<?= $val['newsLink']; ?>">
-                                    <h3><?= $val['cnews_title']; ?></h3>
+                                    <h3><?= htmlspecialchars($val['cnews_title'], ENT_QUOTES); ?></h3>
                                 </a>
                                 <p><?= $firstParagraph; ?></p>
                             </div>
