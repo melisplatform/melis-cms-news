@@ -18,6 +18,7 @@ import { cn } from './lib/utils'
 import { t } from './lib/i18n'
 import * as newsApi from './lib/news-api'
 import { useCaps } from './shared/useCaps'
+import { useIsNarrow } from './shared/useIsNarrow'
 
 // News tool capability key — must match config/react.capabilities.php, i.e. the melisKey of the
 // rights-bearing menu node. NOT `meliscmsnews_left_menu`: that is the type-link target and stays
@@ -623,6 +624,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
   const isNew = newsId === 'new'
   // On garde `id` en string|undefined (comme l'ancien useParams) pour ne rien changer au reste.
   const id = isNew ? undefined : String(newsId)
+  const narrow = useIsNarrow()
 
   // Capacités : droit d'enregistrer = create (nouvel article) ou edit (existant).
   const { can } = useCaps(NEWS_CAPS_KEY)
@@ -985,17 +987,18 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
 
       {/* Sticky header — le titre/retour vit dans la barre de sous-onglets (NewsPage) ;
           ici on ne garde que les actions (Preview / statut / Save). */}
-      <header className="sticky top-0 z-10 flex items-center justify-end border-b border-border bg-background/95 px-3 sm:px-5 py-2.5 backdrop-blur-sm">
-        <div className="flex flex-wrap items-center justify-end gap-2">
+      <header className="sticky top-0 z-10 flex items-center justify-end border-b border-border bg-background/95 px-5 py-2.5 backdrop-blur-sm">
+        <div className={cn('flex items-center gap-2', narrow && 'flex-wrap justify-end')}>
           {previewUrl && (
             <Button
               variant="ghost"
               size="sm"
               className="h-8 gap-1.5 text-muted-foreground text-xs"
+              title={t('preview')}
               onClick={() => window.open(previewUrl, '_blank')}
             >
               <Eye className="size-3.5" />
-              {t('preview')}
+              {!narrow && t('preview')}
             </Button>
           )}
 
@@ -1011,7 +1014,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
             {isPublished ? t('published') : t('unpublished')}
           </span>
 
-          {apiError && <span className="text-xs text-destructive">{apiError}</span>}
+          {apiError && <span className={cn('text-xs text-destructive', narrow ? 'w-full truncate' : 'truncate max-w-xs')}>{apiError}</span>}
 
           {canSave && (
             <Button size="sm" className="h-8 gap-1.5 min-w-[88px] text-xs" onClick={handleSave} disabled={saving}>
@@ -1023,15 +1026,15 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
         </div>
       </header>
 
-      {/* Two-column body — stacks to a single column below `sm` (fixed 256px sidebar has no
-          room to sit beside content on a phone width; see react-mobile-responsive-pattern). */}
-      <div className="flex flex-col items-stretch sm:flex-row sm:items-start">
+      {/* Two-column body — stacked on narrow (fixed-width aside would otherwise squeeze main
+          content down to near-zero width, which is what caused the mangled mobile layout). */}
+      <div className={narrow ? 'flex flex-col' : 'flex items-start'}>
 
         {/* Main content */}
-        <main className="flex-1 min-w-0 px-4 sm:px-8 py-6 space-y-6">
+        <main className={cn('flex-1 min-w-0 space-y-6', narrow ? 'px-4 py-4' : 'px-8 py-6')}>
 
           {/* Language switcher */}
-          <div className="flex flex-wrap items-center gap-1 rounded-lg bg-muted p-1 w-fit">
+          <div className={cn('flex items-center gap-1 rounded-lg bg-muted p-1 w-fit', narrow && 'flex-wrap')}>
             {languages.length > 0
               ? languages.map((lang) => (
                   <button
@@ -1174,7 +1177,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
               <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
                 {t('images')} <span className="normal-case text-muted-foreground/70">({t('media_max')})</span>
               </p>
-              <div className="grid grid-cols-3 gap-3">
+              <div className={cn('grid gap-3', narrow ? 'grid-cols-1' : 'grid-cols-3')}>
                 {([1, 2, 3] as const).map((slot) => {
                   const col = newsApi.mediaColumn('image', slot)
                   return (
@@ -1270,8 +1273,11 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
           <PreviewTab newsId={newsId} isNew={isNew} />
         </main>
 
-        {/* Sidebar */}
-        <aside className="w-full sm:w-64 shrink-0 self-stretch sm:self-start sm:sticky sm:top-[57px] border-t sm:border-t-0 sm:border-l border-border bg-muted/10 p-4 space-y-4">
+        {/* Sidebar — full width, stacked below main, no sticky positioning on narrow (sticky top
+            makes no sense once this is no longer a side column). */}
+        <aside className={narrow
+          ? 'w-full border-t border-border bg-muted/10 p-4 space-y-4'
+          : 'w-64 shrink-0 self-start sticky top-[57px] border-l border-border bg-muted/10 p-4 space-y-4'}>
 
           <SidebarSection title={t('status')} icon={GitBranch}>
             <div className="flex items-center justify-between gap-2">

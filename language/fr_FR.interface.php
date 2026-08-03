@@ -1,6 +1,7 @@
 <?php
 return [
     'tr_meliscmsnews_ws_desc_news' => 'Actualités du CMS : liste et détail d\'une actualité.',
+    'tr_meliscmsnews_ws_desc_newsseo' => 'SEO des actualités : URL de la page d\'une actualité.',
     'tr_meliscms_meliscms' => 'MelisCms',
     'tr_meliscmsnews_list_header_title' => 'Actualités',
     'tr_meliscmsnews_list_header_title edit' => 'Editer actualités',

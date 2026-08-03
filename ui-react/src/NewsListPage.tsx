@@ -74,18 +74,6 @@ const COL_MIN_WIDTHS: Record<string, number> = {
   _actions:       80,
 }
 
-// On narrow viewports, only these columns stay in the header (regardless of the ColManager
-// preference); the rest are reachable per-row via the "+" toggle — see shared/ExpandableRow.tsx.
-const ESSENTIAL_COLS = new Set(['title', 'status'])
-
-// Column min-widths used only on narrow, once the table is down to ESSENTIAL_COLS — much
-// smaller than COL_MIN_WIDTHS below (which assumes every desktop column is present).
-const COL_MIN_WIDTHS_NARROW: Record<string, number> = {
-  title:  120,
-  status:  64,
-}
-const NARROW_TOGGLE_COL_WIDTH = 32
-
 const DEFAULT_COLS: ColDef[] = [
   { id: 'id',            label: t('col_id'),          visible: true,  pinned: false },
   { id: 'title',         label: t('col_title'),       visible: true,  pinned: false },
@@ -170,7 +158,7 @@ function KpiCard({ icon, label, value, iconBg, className }: {
   icon: React.ReactNode; label: string; value: number | null; iconBg: string; className?: string
 }) {
   return (
-    <div className={cn('flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3', className)}>
+    <div className={cn('flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 flex-1 min-w-[150px]', className)}>
       <div className={cn('flex size-10 shrink-0 items-center justify-center rounded-lg', iconBg)}>
         {icon}
       </div>
@@ -188,13 +176,33 @@ function KpiCard({ icon, label, value, iconBg, className }: {
 
 // ─── Column manager ───────────────────────────────────────────────────────────
 
-function ColManager({ cols, onChange, onClose }: {
+function ColManager({ cols, onChange, onClose, anchorRef }: {
   cols: ColDef[]
   onChange: (cols: ColDef[]) => void
   onClose: () => void
+  anchorRef: React.RefObject<HTMLElement>
 }) {
   const [draggingId, setDraggingId] = useState<string | null>(null)
   const [overTarget, setOverTarget] = useState<{ id: string; panel: 'visible' | 'hidden' } | null>(null)
+
+  // Clamped position (not a `right:0` CSS anchor) — the anchor button's own right edge is rarely
+  // flush with the true viewport edge on narrow, so a right-anchored popover can still push its
+  // LEFT edge off-screen. Computed from the anchor's rect, recomputed on resize.
+  const [pos, setPos] = useState<{ left: number; top: number; width: number } | null>(null)
+  useLayoutEffect(() => {
+    const el = anchorRef.current
+    if (!el) return
+    const margin = 12
+    const width = Math.min(420, window.innerWidth - margin * 2)
+    function compute() {
+      const rect = el!.getBoundingClientRect()
+      const left = Math.min(Math.max(margin, rect.right - width), window.innerWidth - width - margin)
+      setPos({ left, top: rect.bottom + 6, width })
+    }
+    compute()
+    window.addEventListener('resize', compute)
+    return () => window.removeEventListener('resize', compute)
+  }, [anchorRef])
 
   const visibleCols = cols.filter(c => c.visible)
   const hiddenCols  = cols.filter(c => !c.visible)
@@ -266,8 +274,12 @@ function ColManager({ cols, onChange, onClose }: {
     )
   }
 
+  if (!pos) return null
   return (
-    <div className="absolute right-0 top-full z-50 mt-1.5 w-[420px] rounded-xl border border-border bg-card shadow-xl">
+    <div
+      style={{ position: 'fixed', left: pos.left, top: pos.top, width: pos.width }}
+      className="z-50 rounded-xl border border-border bg-card shadow-xl"
+    >
       <div className="flex items-center justify-between border-b border-border px-3 py-2.5">
         <span className="text-sm font-semibold">{t('columns')}</span>
         <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
@@ -415,7 +427,7 @@ function ExportModal({ cols, search, status, total, onClose }: {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <div className="w-full max-w-lg rounded-2xl border border-border bg-card shadow-2xl">
@@ -506,6 +518,16 @@ export default function NewsListPage({ active, onOpen, onNew }: {
   const { can, loaded: capsLoaded } = useCaps(NEWS_CAPS_KEY)
   const canList = can('list')
 
+  const narrow = useIsNarrow()
+  const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set())
+  function toggleExpand(id: number) {
+    setExpandedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+
   // ── View mode toggle ─────────────────────────────────────────────────────────
   const [mode, setMode] = useState<ViewMode>(_cache?.mode ?? 'react')
   const [iframeLoaded, setIframeLoaded] = useState(_cache?.iframeLoaded ?? false)
@@ -515,43 +537,26 @@ export default function NewsListPage({ active, onOpen, onNew }: {
 
   function updateCols(next: ColDef[]) { setCols(next); saveCols(next) }
 
-  // ── Narrow viewport: force ESSENTIAL_COLS visible (ignoring the ColManager preference,
-  // in both directions), rest reachable via the per-row "+" toggle. ────────────────────
-  const narrow = useIsNarrow()
-  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set())
-  function toggleExpand(id: number) {
-    setExpandedRows(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id); else next.add(id)
-      return next
-    })
-  }
-
-  const narrowCols = useMemo(
-    () => (narrow ? cols.map(c => ({ ...c, visible: ESSENTIAL_COLS.has(c.id) })) : cols),
-    [cols, narrow],
-  )
-  const hiddenCols = useMemo(
-    () => (narrow ? narrowCols.filter(c => !c.visible) : []),
-    [narrowCols, narrow],
-  )
-
-  // Pinned columns always appear first in the table (desktop only — narrow drops pinning).
+  // Pinned columns always appear first in the table
   const visibleCols = useMemo(() => {
-    const v = narrowCols.filter(c => c.visible)
-    if (narrow) return v
+    const v = cols.filter(c => c.visible)
     return [...v.filter(c => c.pinned), ...v.filter(c => !c.pinned)]
-  }, [narrowCols, narrow])
+  }, [cols])
 
-  // Minimum table width = sum of column min-widths (+ the "+" toggle column on narrow).
-  const tableMinWidth = useMemo(() => {
-    if (narrow) {
-      return NARROW_TOGGLE_COL_WIDTH
-        + visibleCols.reduce((s, c) => s + (COL_MIN_WIDTHS_NARROW[c.id] ?? 100), 0)
-        + COL_FIXED_WIDTHS._actions
-    }
-    return visibleCols.reduce((s, c) => s + (COL_MIN_WIDTHS[c.id] ?? 100), 0) + COL_MIN_WIDTHS._actions
-  }, [visibleCols, narrow])
+  // Narrow viewport: collapse to the single essential column (title — it identifies the row;
+  // 'title' can never be hidden, see ColManager's isMandatory) regardless of the user's own
+  // saved column preferences, with the rest revealed per-row via the "+" toggle. `hasHidden` is
+  // tied to `narrow` alone — NOT to whether the user has manually hidden a column on desktop.
+  const essentialCols = useMemo(() => cols.filter(c => c.id === 'title'), [cols])
+  const narrowHiddenSourceCols = useMemo(() => cols.map(c => ({ ...c, visible: c.id === 'title' })), [cols])
+  const displayCols = narrow ? essentialCols : visibleCols
+  const hasHidden = narrow
+
+  // Minimum table width = sum of column min-widths
+  const tableMinWidth = useMemo(
+    () => visibleCols.reduce((s, c) => s + (COL_MIN_WIDTHS[c.id] ?? 100), 0) + COL_MIN_WIDTHS._actions,
+    [visibleCols],
+  )
 
   // ── Pin offset measurement (DOM-based for accuracy) ────────────────────────
   const headerTableRef = useRef<HTMLTableElement>(null)
@@ -694,7 +699,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
 
   // ── Pin styles ─────────────────────────────────────────────────────────────
   function pinStyle(col: ColDef, isHeader = false): React.CSSProperties {
-    if (narrow || !col.pinned) return {}
+    if (!col.pinned) return {}
     return {
       position: 'sticky',
       left: pinOffsets[col.id] ?? 0,
@@ -708,16 +713,15 @@ export default function NewsListPage({ active, onOpen, onNew }: {
   function Colgroup() {
     return (
       <colgroup>
-        {narrow && <col style={{ width: NARROW_TOGGLE_COL_WIDTH, minWidth: NARROW_TOGGLE_COL_WIDTH }} />}
-        {visibleCols.map(col => {
-          if (narrow) {
-            return <col key={col.id} style={{ minWidth: COL_MIN_WIDTHS_NARROW[col.id] ?? 100 }} />
-          }
+        {narrow && <col style={{ width: 40, minWidth: 40 }} />}
+        {displayCols.map(col => {
           const fixed = COL_FIXED_WIDTHS[col.id]
           return (
             <col
               key={col.id}
-              style={fixed ? { width: fixed, minWidth: fixed } : { minWidth: COL_MIN_WIDTHS[col.id] ?? 160 }}
+              style={narrow
+                ? { minWidth: 0 }
+                : fixed ? { width: fixed, minWidth: fixed } : { minWidth: COL_MIN_WIDTHS[col.id] ?? 160 }}
             />
           )
         })}
@@ -763,25 +767,23 @@ export default function NewsListPage({ active, onOpen, onNew }: {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="flex h-full flex-col gap-5 overflow-y-auto p-4 sm:p-6">
+    <div className="flex h-full flex-col gap-5 overflow-y-auto p-6">
 
       {/* Header — comes BEFORE the KPI strip (matches melis-core's Users tool layout order:
           title/actions first, then KPIs). Narrow viewports especially need the title above
           the fold rather than pushed down by the stat cards. */}
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className={cn(narrow && 'min-w-0')}>
           <h1 className={cn('text-xl font-semibold tracking-tight', narrow && 'truncate')}>{t('news_title')}</h1>
           <p className={cn('text-sm text-muted-foreground', narrow && 'truncate')}>{t('news_subtitle')}</p>
         </div>
-        {/* On narrow: mode toggle stacks above "Nouvel article" (which stretches full-width),
-            same as melis-core's Users tool — stays a compact column beside the title instead
-            of wrapping below it. */}
-        <div className={cn('flex items-center gap-2', narrow && 'shrink-0 flex-col')}>
-          {/* Mode toggle */}
+        <div className="flex items-center gap-2">
+          {/* Mode toggle — icon-only on narrow (title attr keeps it accessible) */}
           <div className="flex items-center rounded-lg border border-border bg-muted/40 p-1 gap-1">
             <button
               type="button"
               onClick={() => setMode('react')}
+              title={t('view_new')}
               className={cn(
                 'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
                 mode === 'react'
@@ -790,11 +792,12 @@ export default function NewsListPage({ active, onOpen, onNew }: {
               )}
             >
               <Code2 className="size-3.5" />
-              {t('view_new')}
+              {!narrow && t('view_new')}
             </button>
             <button
               type="button"
               onClick={() => { setMode('iframe'); setIframeLoaded(true) }}
+              title={t('view_old')}
               className={cn(
                 'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
                 mode === 'iframe'
@@ -803,11 +806,11 @@ export default function NewsListPage({ active, onOpen, onNew }: {
               )}
             >
               <Layout className="size-3.5" />
-              {t('view_old')}
+              {!narrow && t('view_old')}
             </button>
           </div>
           {can('create') && (
-            <Button onClick={onNew} size="sm" className={cn('gap-1.5', narrow && 'w-full')}>
+            <Button onClick={onNew} size="sm" className="gap-1.5">
               <Plus className="size-4" />
               {t('new_article')}
             </Button>
@@ -815,11 +818,12 @@ export default function NewsListPage({ active, onOpen, onNew }: {
         </div>
       </div>
 
-      {/* KPI strip — masqué si la liste est refusée (fait partie de la « liste »). Grid
-          (not flex-wrap) so narrow always lands on an even 2-per-row layout — same
-          `grid-cols-2 ... sm:grid-cols-N` pattern as melis-core's Users tool. */}
+      {/* KPI strip — masqué si la liste est refusée (fait partie de la « liste »). On narrow,
+          a real 2-col grid (not flex-wrap) so the 3 cards land evenly instead of an odd
+          2-then-1 wrap; the 3rd card spans both columns so it still fills its row. JS ternary
+          (not `sm:`) per this brick's convention — see shared/useIsNarrow.ts. */}
       {canList && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className={narrow ? 'grid grid-cols-2 gap-3' : 'flex flex-wrap gap-3'}>
           <KpiCard
             icon={<Newspaper    className="size-5 text-blue-500"    />}
             label={t('total_articles')}
@@ -837,7 +841,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
             label={t('count_drafts')}
             value={kpiStats?.draft     ?? null}
             iconBg="bg-orange-500/10"
-            className="col-span-2 sm:col-span-1"
+            className={narrow ? 'col-span-2' : undefined}
           />
         </div>
       )}
@@ -864,11 +868,8 @@ export default function NewsListPage({ active, onOpen, onNew }: {
         </p>
       ) : (<>
 
-      {/* Filters + actions — narrow-only additions never remove/replace a desktop class, so at
-          narrow=false every className below renders byte-identical to the original desktop
-          layout. Same pattern as melis-core's Users tool: full-width search + segmented status
-          control, action buttons wrapping 2-per-row. */}
-      <div className="flex flex-wrap items-center gap-2">
+      {/* Filters + actions */}
+      <div className={narrow ? 'flex flex-col gap-2' : 'flex flex-wrap items-center gap-2'}>
         <div className={cn('relative', narrow ? 'w-full' : 'min-w-[200px] flex-1 max-w-sm')}>
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -902,38 +903,30 @@ export default function NewsListPage({ active, onOpen, onNew }: {
           ))}
         </div>
 
-        <div className={cn('flex items-center gap-2', narrow ? 'w-full flex-wrap' : 'ml-auto')}>
-          <Button
-            variant="outline" size="sm"
-            className={cn('gap-1.5', narrow && 'h-auto min-h-9 flex-[1_1_calc(50%_-_4px)] justify-center whitespace-normal text-center')}
-            onClick={resetFilters}
-          >
+        {/* "Reset filters" always gets its own full-width row on narrow — a FR/EN i18n string
+            like "reset_filters" is long enough that pairing it 50/50 with anything wraps ugly. */}
+        <div className={narrow ? 'flex w-full flex-col gap-2' : 'ml-auto flex items-center gap-2'}>
+          <Button variant="outline" size="sm" className={cn('gap-1.5', narrow && 'w-full')} onClick={resetFilters}>
             <RotateCcw className="size-3.5" />
             {t('reset_filters')}
           </Button>
-          <div ref={colMgrRef} className={cn('relative', narrow && 'flex-[1_1_calc(50%_-_4px)]')}>
-            <Button
-              variant="outline" size="sm"
-              className={cn('gap-1.5', narrow && 'h-auto min-h-9 w-full justify-center whitespace-normal text-center')}
-              onClick={() => setShowColMgr(v => !v)}
-            >
-              <Columns3 className="size-3.5" />
-              {t('columns')}
-            </Button>
-            {showColMgr && (
-              <ColManager cols={cols} onChange={updateCols} onClose={() => setShowColMgr(false)} />
+          <div className={narrow ? 'flex w-full gap-2' : 'contents'}>
+            <div ref={colMgrRef} className={cn('relative', narrow && 'flex-1')}>
+              <Button variant="outline" size="sm" className={cn('gap-1.5', narrow && 'w-full')} onClick={() => setShowColMgr(v => !v)}>
+                <Columns3 className="size-3.5" />
+                {t('columns')}
+              </Button>
+              {showColMgr && (
+                <ColManager cols={cols} onChange={updateCols} onClose={() => setShowColMgr(false)} anchorRef={colMgrRef} />
+              )}
+            </div>
+            {can('export') && (
+              <Button variant="outline" size="sm" className={cn('gap-1.5', narrow && 'flex-1')} onClick={() => setShowExport(true)}>
+                <Download className="size-3.5" />
+                {t('export')}
+              </Button>
             )}
           </div>
-          {can('export') && (
-            <Button
-              variant="outline" size="sm"
-              className={cn('gap-1.5', narrow && 'h-auto min-h-9 flex-[1_1_calc(50%_-_4px)] justify-center whitespace-normal text-center')}
-              onClick={() => setShowExport(true)}
-            >
-              <Download className="size-3.5" />
-              {t('export')}
-            </Button>
-          )}
         </div>
       </div>
 
@@ -946,13 +939,13 @@ export default function NewsListPage({ active, onOpen, onNew }: {
             <table
               ref={headerTableRef}
               className="w-full text-sm"
-              style={{ tableLayout: 'fixed', minWidth: tableMinWidth }}
+              style={narrow ? { tableLayout: 'auto', width: '100%' } : { tableLayout: 'fixed', minWidth: tableMinWidth }}
             >
               <Colgroup />
               <thead>
                 <tr className="bg-muted/40">
-                  {narrow && <th className="px-2 py-3" />}
-                  {visibleCols.map(col => (
+                  {narrow && <th className="w-10 px-2 py-3" />}
+                  {displayCols.map(col => (
                     <th
                       key={col.id}
                       data-col-id={col.id}
@@ -998,57 +991,59 @@ export default function NewsListPage({ active, onOpen, onNew }: {
           ) : (
             <table
               className="w-full text-sm"
-              style={{ tableLayout: 'fixed', minWidth: tableMinWidth }}
+              style={narrow ? { tableLayout: 'auto', width: '100%' } : { tableLayout: 'fixed', minWidth: tableMinWidth }}
             >
               <Colgroup />
               <tbody>
                 {items.map(item => (
                   <Fragment key={item.id}>
-                  <tr
-                    className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors cursor-pointer"
-                    onClick={() => onOpen(item.id, item.title)}
-                  >
-                    {narrow && hiddenCols.length > 0 && (
-                      <td className="px-2 py-3" onClick={e => e.stopPropagation()}>
-                        <ExpandToggle expanded={expandedRows.has(item.id)} onClick={() => toggleExpand(item.id)} />
+                    <tr
+                      className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors cursor-pointer"
+                      onClick={() => onOpen(item.id, item.title)}
+                    >
+                      {narrow && (
+                        <td className="px-2 py-3" onClick={(e) => e.stopPropagation()}>
+                          <ExpandToggle expanded={expandedIds.has(item.id)} onClick={() => toggleExpand(item.id)} />
+                        </td>
+                      )}
+                      {displayCols.map(col => (
+                        <td key={col.id} className="px-4 py-3" style={pinStyle(col)}>
+                          {renderCell(item, col)}
+                        </td>
+                      ))}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-1">
+                          {can('edit') && (
+                            <Button
+                              variant="ghost" size="icon" className="size-8"
+                              onClick={(e) => { e.stopPropagation(); onOpen(item.id, item.title) }} title={t('edit')}
+                            >
+                              <Edit2 className="size-3.5" />
+                            </Button>
+                          )}
+                          {can('delete') && (
+                            <Button
+                              variant="ghost" size="icon"
+                              className="size-8 text-destructive hover:text-destructive"
+                              onClick={(e) => { e.stopPropagation(); handleDelete(item.id, item.title) }}
+                              disabled={deleting === item.id} title={t('delete')}
+                            >
+                              {deleting === item.id
+                                ? <Loader2 className="size-3.5 animate-spin" />
+                                : <Trash2 className="size-3.5" />}
+                            </Button>
+                          )}
+                        </div>
                       </td>
+                    </tr>
+                    {narrow && hasHidden && expandedIds.has(item.id) && (
+                      <HiddenColsRow
+                        cols={narrowHiddenSourceCols}
+                        labelFor={(id) => cols.find(c => c.id === id)?.label ?? id}
+                        renderValue={(id) => getCellText(item, id)}
+                        colSpan={displayCols.length + 2}
+                      />
                     )}
-                    {visibleCols.map(col => (
-                      <td key={col.id} className="px-4 py-3" style={pinStyle(col)}>
-                        {renderCell(item, col)}
-                      </td>
-                    ))}
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1">
-                        {can('edit') && (
-                          <Button
-                            variant="ghost" size="icon" className="size-8"
-                            onClick={(e) => { e.stopPropagation(); onOpen(item.id, item.title) }} title={t('edit')}
-                          >
-                            <Edit2 className="size-3.5" />
-                          </Button>
-                        )}
-                        {can('delete') && (
-                          <Button
-                            variant="ghost" size="icon"
-                            className="size-8 text-destructive hover:text-destructive"
-                            onClick={(e) => { e.stopPropagation(); handleDelete(item.id, item.title) }}
-                            disabled={deleting === item.id} title={t('delete')}
-                          >
-                            {deleting === item.id
-                              ? <Loader2 className="size-3.5 animate-spin" />
-                              : <Trash2 className="size-3.5" />}
-                          </Button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                  {narrow && expandedRows.has(item.id) && (
-                    <HiddenColsRow
-                      colSpan={visibleCols.length + 2}
-                      items={hiddenCols.map(col => ({ id: col.id, label: col.label, value: renderCell(item, col) }))}
-                    />
-                  )}
                   </Fragment>
                 ))}
               </tbody>
