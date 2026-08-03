@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowDown, ArrowUp, ArrowUpDown, CheckCircle2, Code2, Columns3,
   Download, Edit2, FileDown, FileSpreadsheet, FileText, GripVertical,
@@ -12,6 +12,8 @@ import { cn } from './lib/utils'
 import { t, newsLang } from './lib/i18n'
 import * as newsApi from './lib/news-api'
 import { useCaps } from './shared/useCaps'
+import { useIsNarrow } from './shared/useIsNarrow'
+import { ExpandToggle, HiddenColsRow } from './shared/ExpandableRow'
 import { useKeysetList } from './use-keyset-list'
 
 // News tool capability key — must match config/react.capabilities.php, i.e. the melisKey of the
@@ -71,6 +73,18 @@ const COL_MIN_WIDTHS: Record<string, number> = {
   status:         88,
   _actions:       80,
 }
+
+// On narrow viewports, only these columns stay in the header (regardless of the ColManager
+// preference); the rest are reachable per-row via the "+" toggle — see shared/ExpandableRow.tsx.
+const ESSENTIAL_COLS = new Set(['title', 'status'])
+
+// Column min-widths used only on narrow, once the table is down to ESSENTIAL_COLS — much
+// smaller than COL_MIN_WIDTHS below (which assumes every desktop column is present).
+const COL_MIN_WIDTHS_NARROW: Record<string, number> = {
+  title:  120,
+  status:  64,
+}
+const NARROW_TOGGLE_COL_WIDTH = 32
 
 const DEFAULT_COLS: ColDef[] = [
   { id: 'id',            label: t('col_id'),          visible: true,  pinned: false },
@@ -152,21 +166,21 @@ function StatusBadge({ status }: { status: 0 | 1 }) {
 
 // ─── KPI card ─────────────────────────────────────────────────────────────────
 
-function KpiCard({ icon, label, value, iconBg }: {
-  icon: React.ReactNode; label: string; value: number | null; iconBg: string
+function KpiCard({ icon, label, value, iconBg, className }: {
+  icon: React.ReactNode; label: string; value: number | null; iconBg: string; className?: string
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 flex-1 min-w-[150px]">
+    <div className={cn('flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3', className)}>
       <div className={cn('flex size-10 shrink-0 items-center justify-center rounded-lg', iconBg)}>
         {icon}
       </div>
-      <div>
+      <div className="min-w-0">
         <div className="text-2xl font-bold leading-none text-foreground">
           {value === null
             ? <Loader2 className="size-4 animate-spin text-muted-foreground" />
             : value.toLocaleString(newsLang() === 'fr' ? 'fr-FR' : 'en-GB')}
         </div>
-        <div className="mt-0.5 text-xs text-muted-foreground">{label}</div>
+        <div className="mt-0.5 truncate text-xs text-muted-foreground">{label}</div>
       </div>
     </div>
   )
@@ -501,17 +515,43 @@ export default function NewsListPage({ active, onOpen, onNew }: {
 
   function updateCols(next: ColDef[]) { setCols(next); saveCols(next) }
 
-  // Pinned columns always appear first in the table
-  const visibleCols = useMemo(() => {
-    const v = cols.filter(c => c.visible)
-    return [...v.filter(c => c.pinned), ...v.filter(c => !c.pinned)]
-  }, [cols])
+  // ── Narrow viewport: force ESSENTIAL_COLS visible (ignoring the ColManager preference,
+  // in both directions), rest reachable via the per-row "+" toggle. ────────────────────
+  const narrow = useIsNarrow()
+  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set())
+  function toggleExpand(id: number) {
+    setExpandedRows(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
 
-  // Minimum table width = sum of column min-widths
-  const tableMinWidth = useMemo(
-    () => visibleCols.reduce((s, c) => s + (COL_MIN_WIDTHS[c.id] ?? 100), 0) + COL_MIN_WIDTHS._actions,
-    [visibleCols],
+  const narrowCols = useMemo(
+    () => (narrow ? cols.map(c => ({ ...c, visible: ESSENTIAL_COLS.has(c.id) })) : cols),
+    [cols, narrow],
   )
+  const hiddenCols = useMemo(
+    () => (narrow ? narrowCols.filter(c => !c.visible) : []),
+    [narrowCols, narrow],
+  )
+
+  // Pinned columns always appear first in the table (desktop only — narrow drops pinning).
+  const visibleCols = useMemo(() => {
+    const v = narrowCols.filter(c => c.visible)
+    if (narrow) return v
+    return [...v.filter(c => c.pinned), ...v.filter(c => !c.pinned)]
+  }, [narrowCols, narrow])
+
+  // Minimum table width = sum of column min-widths (+ the "+" toggle column on narrow).
+  const tableMinWidth = useMemo(() => {
+    if (narrow) {
+      return NARROW_TOGGLE_COL_WIDTH
+        + visibleCols.reduce((s, c) => s + (COL_MIN_WIDTHS_NARROW[c.id] ?? 100), 0)
+        + COL_FIXED_WIDTHS._actions
+    }
+    return visibleCols.reduce((s, c) => s + (COL_MIN_WIDTHS[c.id] ?? 100), 0) + COL_MIN_WIDTHS._actions
+  }, [visibleCols, narrow])
 
   // ── Pin offset measurement (DOM-based for accuracy) ────────────────────────
   const headerTableRef = useRef<HTMLTableElement>(null)
@@ -654,7 +694,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
 
   // ── Pin styles ─────────────────────────────────────────────────────────────
   function pinStyle(col: ColDef, isHeader = false): React.CSSProperties {
-    if (!col.pinned) return {}
+    if (narrow || !col.pinned) return {}
     return {
       position: 'sticky',
       left: pinOffsets[col.id] ?? 0,
@@ -668,7 +708,11 @@ export default function NewsListPage({ active, onOpen, onNew }: {
   function Colgroup() {
     return (
       <colgroup>
+        {narrow && <col style={{ width: NARROW_TOGGLE_COL_WIDTH, minWidth: NARROW_TOGGLE_COL_WIDTH }} />}
         {visibleCols.map(col => {
+          if (narrow) {
+            return <col key={col.id} style={{ minWidth: COL_MIN_WIDTHS_NARROW[col.id] ?? 100 }} />
+          }
           const fixed = COL_FIXED_WIDTHS[col.id]
           return (
             <col
@@ -719,39 +763,20 @@ export default function NewsListPage({ active, onOpen, onNew }: {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="flex h-full flex-col gap-5 overflow-y-auto p-6">
+    <div className="flex h-full flex-col gap-5 overflow-y-auto p-4 sm:p-6">
 
-      {/* KPI strip — masqué si la liste est refusée (fait partie de la « liste ») */}
-      {canList && (
-        <div className="flex flex-wrap gap-3">
-          <KpiCard
-            icon={<Newspaper    className="size-5 text-blue-500"    />}
-            label={t('total_articles')}
-            value={kpiStats?.total    ?? null}
-            iconBg="bg-blue-500/10"
-          />
-          <KpiCard
-            icon={<CheckCircle2 className="size-5 text-emerald-500" />}
-            label={t('count_published')}
-            value={kpiStats?.published ?? null}
-            iconBg="bg-emerald-500/10"
-          />
-          <KpiCard
-            icon={<FileText     className="size-5 text-orange-500"  />}
-            label={t('count_drafts')}
-            value={kpiStats?.draft     ?? null}
-            iconBg="bg-orange-500/10"
-          />
+      {/* Header — comes BEFORE the KPI strip (matches melis-core's Users tool layout order:
+          title/actions first, then KPIs). Narrow viewports especially need the title above
+          the fold rather than pushed down by the stat cards. */}
+      <div className="flex items-center justify-between gap-3">
+        <div className={cn(narrow && 'min-w-0')}>
+          <h1 className={cn('text-xl font-semibold tracking-tight', narrow && 'truncate')}>{t('news_title')}</h1>
+          <p className={cn('text-sm text-muted-foreground', narrow && 'truncate')}>{t('news_subtitle')}</p>
         </div>
-      )}
-
-      {/* Header */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight">{t('news_title')}</h1>
-          <p className="text-sm text-muted-foreground">{t('news_subtitle')}</p>
-        </div>
-        <div className="flex items-center gap-2">
+        {/* On narrow: mode toggle stacks above "Nouvel article" (which stretches full-width),
+            same as melis-core's Users tool — stays a compact column beside the title instead
+            of wrapping below it. */}
+        <div className={cn('flex items-center gap-2', narrow && 'shrink-0 flex-col')}>
           {/* Mode toggle */}
           <div className="flex items-center rounded-lg border border-border bg-muted/40 p-1 gap-1">
             <button
@@ -782,13 +807,40 @@ export default function NewsListPage({ active, onOpen, onNew }: {
             </button>
           </div>
           {can('create') && (
-            <Button onClick={onNew} size="sm" className="gap-1.5">
+            <Button onClick={onNew} size="sm" className={cn('gap-1.5', narrow && 'w-full')}>
               <Plus className="size-4" />
               {t('new_article')}
             </Button>
           )}
         </div>
       </div>
+
+      {/* KPI strip — masqué si la liste est refusée (fait partie de la « liste »). Grid
+          (not flex-wrap) so narrow always lands on an even 2-per-row layout — same
+          `grid-cols-2 ... sm:grid-cols-N` pattern as melis-core's Users tool. */}
+      {canList && (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <KpiCard
+            icon={<Newspaper    className="size-5 text-blue-500"    />}
+            label={t('total_articles')}
+            value={kpiStats?.total    ?? null}
+            iconBg="bg-blue-500/10"
+          />
+          <KpiCard
+            icon={<CheckCircle2 className="size-5 text-emerald-500" />}
+            label={t('count_published')}
+            value={kpiStats?.published ?? null}
+            iconBg="bg-emerald-500/10"
+          />
+          <KpiCard
+            icon={<FileText     className="size-5 text-orange-500"  />}
+            label={t('count_drafts')}
+            value={kpiStats?.draft     ?? null}
+            iconBg="bg-orange-500/10"
+            className="col-span-2 sm:col-span-1"
+          />
+        </div>
+      )}
 
       {/* Vue Melis classique — gardée montée pour ne pas recharger au retoggle */}
       {iframeLoaded && (
@@ -812,9 +864,12 @@ export default function NewsListPage({ active, onOpen, onNew }: {
         </p>
       ) : (<>
 
-      {/* Filters + actions */}
+      {/* Filters + actions — narrow-only additions never remove/replace a desktop class, so at
+          narrow=false every className below renders byte-identical to the original desktop
+          layout. Same pattern as melis-core's Users tool: full-width search + segmented status
+          control, action buttons wrapping 2-per-row. */}
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative min-w-[200px] flex-1 max-w-sm">
+        <div className={cn('relative', narrow ? 'w-full' : 'min-w-[200px] flex-1 max-w-sm')}>
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder={t('search_ph')}
@@ -823,7 +878,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
             className="pl-9 h-9"
           />
         </div>
-        <div className="flex h-9 items-center rounded-lg border border-border bg-muted/40 p-0.5 gap-0.5">
+        <div className={cn('flex h-9 items-center rounded-lg border border-border bg-muted/40 p-0.5 gap-0.5', narrow && 'w-full')}>
           {([
             { value: '',  label: t('filter_all'),      dot: null              },
             { value: '1', label: t('filter_active'),   dot: 'bg-emerald-500' },
@@ -835,6 +890,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
               onClick={() => setStatus(opt.value)}
               className={cn(
                 'flex h-full items-center gap-1.5 rounded-md px-3 text-xs font-medium whitespace-nowrap transition-colors',
+                narrow && 'flex-1 justify-center',
                 status === opt.value
                   ? 'bg-card shadow-sm text-foreground'
                   : 'text-muted-foreground hover:text-foreground',
@@ -846,13 +902,21 @@ export default function NewsListPage({ active, onOpen, onNew }: {
           ))}
         </div>
 
-        <div className="ml-auto flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={resetFilters}>
+        <div className={cn('flex items-center gap-2', narrow ? 'w-full flex-wrap' : 'ml-auto')}>
+          <Button
+            variant="outline" size="sm"
+            className={cn('gap-1.5', narrow && 'h-auto min-h-9 flex-[1_1_calc(50%_-_4px)] justify-center whitespace-normal text-center')}
+            onClick={resetFilters}
+          >
             <RotateCcw className="size-3.5" />
             {t('reset_filters')}
           </Button>
-          <div ref={colMgrRef} className="relative">
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setShowColMgr(v => !v)}>
+          <div ref={colMgrRef} className={cn('relative', narrow && 'flex-[1_1_calc(50%_-_4px)]')}>
+            <Button
+              variant="outline" size="sm"
+              className={cn('gap-1.5', narrow && 'h-auto min-h-9 w-full justify-center whitespace-normal text-center')}
+              onClick={() => setShowColMgr(v => !v)}
+            >
               <Columns3 className="size-3.5" />
               {t('columns')}
             </Button>
@@ -861,7 +925,11 @@ export default function NewsListPage({ active, onOpen, onNew }: {
             )}
           </div>
           {can('export') && (
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setShowExport(true)}>
+            <Button
+              variant="outline" size="sm"
+              className={cn('gap-1.5', narrow && 'h-auto min-h-9 flex-[1_1_calc(50%_-_4px)] justify-center whitespace-normal text-center')}
+              onClick={() => setShowExport(true)}
+            >
               <Download className="size-3.5" />
               {t('export')}
             </Button>
@@ -883,6 +951,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
               <Colgroup />
               <thead>
                 <tr className="bg-muted/40">
+                  {narrow && <th className="px-2 py-3" />}
                   {visibleCols.map(col => (
                     <th
                       key={col.id}
@@ -934,11 +1003,16 @@ export default function NewsListPage({ active, onOpen, onNew }: {
               <Colgroup />
               <tbody>
                 {items.map(item => (
+                  <Fragment key={item.id}>
                   <tr
-                    key={item.id}
                     className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors cursor-pointer"
                     onClick={() => onOpen(item.id, item.title)}
                   >
+                    {narrow && hiddenCols.length > 0 && (
+                      <td className="px-2 py-3" onClick={e => e.stopPropagation()}>
+                        <ExpandToggle expanded={expandedRows.has(item.id)} onClick={() => toggleExpand(item.id)} />
+                      </td>
+                    )}
                     {visibleCols.map(col => (
                       <td key={col.id} className="px-4 py-3" style={pinStyle(col)}>
                         {renderCell(item, col)}
@@ -969,6 +1043,13 @@ export default function NewsListPage({ active, onOpen, onNew }: {
                       </div>
                     </td>
                   </tr>
+                  {narrow && expandedRows.has(item.id) && (
+                    <HiddenColsRow
+                      colSpan={visibleCols.length + 2}
+                      items={hiddenCols.map(col => ({ id: col.id, label: col.label, value: renderCell(item, col) }))}
+                    />
+                  )}
+                  </Fragment>
                 ))}
               </tbody>
             </table>

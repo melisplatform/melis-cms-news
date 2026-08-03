@@ -985,8 +985,8 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
 
       {/* Sticky header — le titre/retour vit dans la barre de sous-onglets (NewsPage) ;
           ici on ne garde que les actions (Preview / statut / Save). */}
-      <header className="sticky top-0 z-10 flex items-center justify-end border-b border-border bg-background/95 px-5 py-2.5 backdrop-blur-sm">
-        <div className="flex items-center gap-2">
+      <header className="sticky top-0 z-10 flex items-center justify-end border-b border-border bg-background/95 px-3 sm:px-5 py-2.5 backdrop-blur-sm">
+        <div className="flex flex-wrap items-center justify-end gap-2">
           {previewUrl && (
             <Button
               variant="ghost"
@@ -1023,14 +1023,15 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
         </div>
       </header>
 
-      {/* Two-column body */}
-      <div className="flex items-start">
+      {/* Two-column body — stacks to a single column below `sm` (fixed 256px sidebar has no
+          room to sit beside content on a phone width; see react-mobile-responsive-pattern). */}
+      <div className="flex flex-col items-stretch sm:flex-row sm:items-start">
 
         {/* Main content */}
-        <main className="flex-1 min-w-0 px-8 py-6 space-y-6">
+        <main className="flex-1 min-w-0 px-4 sm:px-8 py-6 space-y-6">
 
           {/* Language switcher */}
-          <div className="flex items-center gap-1 rounded-lg bg-muted p-1 w-fit">
+          <div className="flex flex-wrap items-center gap-1 rounded-lg bg-muted p-1 w-fit">
             {languages.length > 0
               ? languages.map((lang) => (
                   <button
@@ -1270,7 +1271,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
         </main>
 
         {/* Sidebar */}
-        <aside className="w-64 shrink-0 self-start sticky top-[57px] border-l border-border bg-muted/10 p-4 space-y-4">
+        <aside className="w-full sm:w-64 shrink-0 self-stretch sm:self-start sm:sticky sm:top-[57px] border-t sm:border-t-0 sm:border-l border-border bg-muted/10 p-4 space-y-4">
 
           <SidebarSection title={t('status')} icon={GitBranch}>
             <div className="flex items-center justify-between gap-2">
