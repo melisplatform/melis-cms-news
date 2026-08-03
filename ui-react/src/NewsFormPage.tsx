@@ -1225,12 +1225,12 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
               ) : (
                 <>
                   {/* Add a comment (back-office → validé d'office) */}
-                  <div className="flex flex-col gap-2 rounded-lg border border-border bg-muted/10 p-3 sm:flex-row sm:items-start">
+                  <div className={cn('flex gap-2 rounded-lg border border-border bg-muted/10 p-3', narrow ? 'flex-col' : 'flex-row items-start')}>
                     <Input
                       value={newComment.name}
                       onChange={(e) => setNewComment((c) => ({ ...c, name: e.target.value }))}
                       placeholder={t('comment_name_ph')}
-                      className="h-9 sm:w-40"
+                      className={cn('h-9', !narrow && 'w-40')}
                     />
                     <textarea
                       value={newComment.text}
@@ -1241,7 +1241,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
                     />
                     <Button
                       size="sm"
-                      className="h-9 gap-1.5 self-end sm:self-start"
+                      className={cn('h-9 gap-1.5', narrow ? 'self-end' : 'self-start')}
                       onClick={addComment}
                       disabled={commentBusy || !newComment.text.trim()}
                     >

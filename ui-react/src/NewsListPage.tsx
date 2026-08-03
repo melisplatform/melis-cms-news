@@ -772,12 +772,15 @@ export default function NewsListPage({ active, onOpen, onNew }: {
       {/* Header — comes BEFORE the KPI strip (matches melis-core's Users tool layout order:
           title/actions first, then KPIs). Narrow viewports especially need the title above
           the fold rather than pushed down by the stat cards. */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
+      <div className="flex items-center justify-between gap-3">
         <div className={cn(narrow && 'min-w-0')}>
           <h1 className={cn('text-xl font-semibold tracking-tight', narrow && 'truncate')}>{t('news_title')}</h1>
           <p className={cn('text-sm text-muted-foreground', narrow && 'truncate')}>{t('news_subtitle')}</p>
         </div>
-        <div className="flex items-center gap-2">
+        {/* On narrow: stacks internally (toggle row above "Nouvel article") so this whole block
+            stays narrow enough to sit BESIDE the title on the same row, instead of the row
+            wrapping below it — same pattern as melis-core's Users tool. */}
+        <div className={cn('flex items-center gap-2', narrow && 'shrink-0 flex-col')}>
           {/* Mode toggle — icon-only on narrow (title attr keeps it accessible) */}
           <div className="flex items-center rounded-lg border border-border bg-muted/40 p-1 gap-1">
             <button
@@ -810,7 +813,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
             </button>
           </div>
           {can('create') && (
-            <Button onClick={onNew} size="sm" className="gap-1.5">
+            <Button onClick={onNew} size="sm" className={cn('gap-1.5', narrow && 'w-full')}>
               <Plus className="size-4" />
               {t('new_article')}
             </Button>
@@ -939,7 +942,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
             <table
               ref={headerTableRef}
               className="w-full text-sm"
-              style={narrow ? { tableLayout: 'auto', width: '100%' } : { tableLayout: 'fixed', minWidth: tableMinWidth }}
+              style={narrow ? { tableLayout: 'fixed', width: '100%' } : { tableLayout: 'fixed', minWidth: tableMinWidth }}
             >
               <Colgroup />
               <thead>
@@ -991,7 +994,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
           ) : (
             <table
               className="w-full text-sm"
-              style={narrow ? { tableLayout: 'auto', width: '100%' } : { tableLayout: 'fixed', minWidth: tableMinWidth }}
+              style={narrow ? { tableLayout: 'fixed', width: '100%' } : { tableLayout: 'fixed', minWidth: tableMinWidth }}
             >
               <Colgroup />
               <tbody>
