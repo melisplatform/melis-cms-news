@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { ExternalLink, Loader2, AlertCircle } from 'lucide-react'
 import { Button } from './ui/button'
 import { t } from '../lib/i18n'
+import { cn } from '../lib/utils'
+import { useIsNarrow } from '../shared/useIsNarrow'
 import * as newsApi from '../lib/news-api'
 
 export function PreviewTab({ newsId, isNew }: {
@@ -9,6 +11,7 @@ export function PreviewTab({ newsId, isNew }: {
   isNew: boolean
 }) {
   const id = isNew ? undefined : Number(newsId)
+  const narrow = useIsNarrow()
   const [pages, setPages] = useState<newsApi.PreviewPage[]>([])
   const [selectedPageId, setSelectedPageId] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
@@ -78,12 +81,13 @@ export function PreviewTab({ newsId, isNew }: {
       {!loading && pages.length > 0 && (
         <div className="space-y-3">
           {/* Sélecteur affiché uniquement si plusieurs pages de détail (parité legacy). */}
-          <div className="flex items-center justify-between gap-3">
+          <div className={cn('flex gap-2', narrow ? 'flex-col items-stretch' : 'items-center justify-between gap-3')}>
             {pages.length > 1 ? (
               <select
                 value={selectedPageId ?? ''}
                 onChange={(e) => setSelectedPageId(Number(e.target.value))}
-                className="h-8 max-w-xs flex-1 rounded-md border border-input bg-background px-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                className={cn('h-8 min-w-0 rounded-md border border-input bg-background px-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring',
+                  narrow ? 'w-full' : 'max-w-xs flex-1')}
                 aria-label={t('preview_select_page')}
               >
                 {pages.map((page) => (
@@ -93,14 +97,14 @@ export function PreviewTab({ newsId, isNew }: {
                 ))}
               </select>
             ) : (
-              <span />
+              !narrow && <span />
             )}
 
             {selectedPage && (
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-1.5 text-xs"
+                className={cn('gap-1.5 text-xs', narrow && 'w-full')}
                 onClick={() => window.open(selectedPage.url, '_blank')}
               >
                 <ExternalLink className="size-3" />
