@@ -14,6 +14,7 @@ import * as newsApi from './lib/news-api'
 import { useCaps } from './shared/useCaps'
 import { useIsNarrow } from './shared/useIsNarrow'
 import { ExpandToggle, HiddenColsRow } from './shared/ExpandableRow'
+import { useDragReorder } from './shared/use-drag-reorder'
 import { useKeysetList } from './use-keyset-list'
 
 // News tool capability key — must match config/react.capabilities.php, i.e. the melisKey of the
@@ -182,8 +183,12 @@ function ColManager({ cols, onChange, onClose, anchorRef }: {
   onClose: () => void
   anchorRef: React.RefObject<HTMLElement>
 }) {
-  const [draggingId, setDraggingId] = useState<string | null>(null)
-  const [overTarget, setOverTarget] = useState<{ id: string; panel: 'visible' | 'hidden' } | null>(null)
+  // `next` comes back typed as the hook's minimal { id, visible } shape — cast to this module's
+  // richer ColDef (label + pinned), which is what the objects actually still carry at runtime
+  // (commitDrop only ever spreads from the `cols` we pass in).
+  const { draggingId: dragId, overTarget: over, dragPos, startDragMouse, startDragTouch } = useDragReorder({
+    cols, onChange: (next) => { const full = next as ColDef[]; onChange(full); saveCols(full) },
+  })
 
   // Clamped position (not a `right:0` CSS anchor) — the anchor button's own right edge is rarely
   // flush with the true viewport edge on narrow, so a right-anchored popover can still push its
@@ -207,51 +212,20 @@ function ColManager({ cols, onChange, onClose, anchorRef }: {
   const visibleCols = cols.filter(c => c.visible)
   const hiddenCols  = cols.filter(c => !c.visible)
 
-  function handleDrop(panel: 'visible' | 'hidden') {
-    if (!draggingId) return
-    const srcItem = cols.find(c => c.id === draggingId)!
-    if (srcItem.id === 'title' && panel === 'hidden') { setDraggingId(null); setOverTarget(null); return }
-
-    const updatedItem = { ...srcItem, visible: panel === 'visible' }
-    let vList = visibleCols.filter(c => c.id !== draggingId)
-    let hList = hiddenCols.filter(c => c.id !== draggingId)
-
-    if (panel === 'visible') {
-      const dstId = overTarget?.id
-      if (!dstId || dstId === '__panel__') {
-        vList = [...vList, updatedItem]
-      } else {
-        const idx = vList.findIndex(c => c.id === dstId)
-        vList = idx === -1 ? [...vList, updatedItem] : [...vList.slice(0, idx), updatedItem, ...vList.slice(idx)]
-      }
-    } else {
-      hList = [...hList, updatedItem]
-    }
-
-    onChange([...vList, ...hList])
-    setDraggingId(null)
-    setOverTarget(null)
-  }
-
-  function renderItem(col: ColDef, panel: 'visible' | 'hidden') {
+  function item(col: ColDef, panel: 'visible' | 'hidden') {
     const isMandatory = col.id === 'title'
-    const isOver = overTarget?.id === col.id && overTarget?.panel === panel
+    const isOver = over?.id === col.id && over?.panel === panel
     return (
       <div
         key={col.id}
-        draggable={!isMandatory}
-        onDragStart={() => setDraggingId(col.id)}
-        onDragEnd={() => { setDraggingId(null); setOverTarget(null) }}
-        onDragOver={e => {
-          e.preventDefault()
-          e.stopPropagation()
-          if (overTarget?.id !== col.id || overTarget?.panel !== panel)
-            setOverTarget({ id: col.id, panel })
-        }}
+        data-col-item={col.id}
+        onMouseDown={isMandatory ? undefined : startDragMouse(col.id)}
+        onTouchStart={isMandatory ? undefined : startDragTouch(col.id)}
+        style={{ touchAction: 'none' }}
         className={cn(
           'flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm select-none transition-colors',
           !isMandatory && 'cursor-grab active:cursor-grabbing',
-          draggingId === col.id && 'opacity-40',
+          dragId === col.id && 'opacity-40',
           isOver ? 'bg-primary/10 ring-1 ring-primary/30' : 'hover:bg-accent',
           col.pinned && panel === 'visible' && !isOver && 'bg-primary/5',
         )}
@@ -276,6 +250,7 @@ function ColManager({ cols, onChange, onClose, anchorRef }: {
 
   if (!pos) return null
   return (
+    <>
     <div
       style={{ position: 'fixed', left: pos.left, top: pos.top, width: pos.width }}
       className="z-50 rounded-xl border border-border bg-card shadow-xl"
@@ -289,31 +264,27 @@ function ColManager({ cols, onChange, onClose, anchorRef }: {
 
       <div className="grid grid-cols-2 gap-2 p-3">
         <div
-          className="flex flex-col gap-0.5 min-h-[140px] max-h-[min(48vh,320px)] overflow-y-auto min-w-0 rounded-lg border border-dashed border-border p-1.5"
-          onDragOver={e => {
-            e.preventDefault()
-            if (overTarget?.id !== '__panel__' || overTarget?.panel !== 'hidden')
-              setOverTarget({ id: '__panel__', panel: 'hidden' })
-          }}
-          onDrop={e => { e.preventDefault(); handleDrop('hidden') }}
+          data-col-panel="hidden"
+          className={cn(
+            'flex flex-col gap-0.5 min-h-[140px] max-h-[min(48vh,320px)] overflow-y-auto min-w-0 rounded-lg border border-dashed p-1.5',
+            over?.id === '__panel__' && over.panel === 'hidden' ? 'border-primary/40 bg-primary/5' : 'border-border',
+          )}
         >
           <p className="px-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t('cols_hidden')}</p>
           {hiddenCols.length === 0
             ? <div className="flex flex-1 items-center justify-center py-4 text-[11px] text-muted-foreground/40">{t('drag_here')}</div>
-            : hiddenCols.map(col => renderItem(col, 'hidden'))}
+            : hiddenCols.map(col => item(col, 'hidden'))}
         </div>
 
         <div
-          className="flex flex-col gap-0.5 min-h-[140px] max-h-[min(48vh,320px)] overflow-y-auto min-w-0 rounded-lg border border-dashed border-border p-1.5"
-          onDragOver={e => {
-            e.preventDefault()
-            if (overTarget?.id !== '__panel__' || overTarget?.panel !== 'visible')
-              setOverTarget({ id: '__panel__', panel: 'visible' })
-          }}
-          onDrop={e => { e.preventDefault(); handleDrop('visible') }}
+          data-col-panel="visible"
+          className={cn(
+            'flex flex-col gap-0.5 min-h-[140px] max-h-[min(48vh,320px)] overflow-y-auto min-w-0 rounded-lg border border-dashed p-1.5',
+            over?.id === '__panel__' && over.panel === 'visible' ? 'border-primary/40 bg-primary/5' : 'border-border',
+          )}
         >
           <p className="px-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t('cols_visible')}</p>
-          {visibleCols.map(col => renderItem(col, 'visible'))}
+          {visibleCols.map(col => item(col, 'visible'))}
         </div>
       </div>
 
@@ -326,59 +297,48 @@ function ColManager({ cols, onChange, onClose, anchorRef }: {
         </button>
       </div>
     </div>
+    {dragId && dragPos && (
+      <div
+        style={{ position: 'fixed', zIndex: 60, left: dragPos.x, top: dragPos.y, transform: 'translate(-50%, -50%)', pointerEvents: 'none', display: 'flex', alignItems: 'center', gap: 8, borderRadius: 8, padding: '6px 10px', fontSize: 14, fontWeight: 500, background: 'var(--color-card)', border: '1px solid color-mix(in srgb, var(--color-primary) 40%, transparent)', boxShadow: '0 4px 16px rgba(0,0,0,.25)' }}
+      >
+        <GripVertical className="size-3.5 shrink-0 text-muted-foreground/40" />
+        {cols.find(c => c.id === dragId)?.label ?? dragId}
+      </div>
+    )}
+    </>
   )
 }
 
 // ─── Export modal ─────────────────────────────────────────────────────────────
 
-function ExportModal({ cols, search, status, total, onClose }: {
+function ExportModal({ cols: colsProp, search, status, total, onClose }: {
   cols: ColDef[]
   search: string
   status: '' | '0' | '1'
   total: number
   onClose: () => void
 }) {
-  const [included, setIncluded] = useState<ColDef[]>(() => cols.filter(c => c.visible))
-  const [excluded, setExcluded] = useState<ColDef[]>(() => cols.filter(c => !c.visible))
+  const [cols, setCols] = useState<ColDef[]>(colsProp)
+  const { draggingId: dragId, overTarget: over, dragPos, startDragMouse, startDragTouch } = useDragReorder({
+    cols, onChange: (next) => setCols(next as ColDef[]),
+  })
+  const included = cols.filter(c => c.visible)
+  const excluded = cols.filter(c => !c.visible)
   const [format, setFormat]     = useState<'csv' | 'xlsx'>('xlsx')
   const [exporting, setExporting] = useState(false)
 
-  const [draggingId, setDraggingId] = useState<string | null>(null)
-  const [overTarget, setOverTarget] = useState<{ id: string; panel: 'included' | 'excluded' } | null>(null)
-
-  function handleDrop(panel: 'included' | 'excluded') {
-    if (!draggingId) return
-    const src = [...included, ...excluded].find(c => c.id === draggingId)!
-    let inc = included.filter(c => c.id !== draggingId)
-    let exc = excluded.filter(c => c.id !== draggingId)
-    if (panel === 'included') {
-      const dstId = overTarget?.id
-      if (!dstId || dstId === '__panel__') { inc = [...inc, src] }
-      else {
-        const idx = inc.findIndex(c => c.id === dstId)
-        inc = idx === -1 ? [...inc, src] : [...inc.slice(0, idx), src, ...inc.slice(idx)]
-      }
-    } else { exc = [...exc, src] }
-    setIncluded(inc); setExcluded(exc)
-    setDraggingId(null); setOverTarget(null)
-  }
-
-  function renderItem(col: ColDef, panel: 'included' | 'excluded') {
-    const isOver = overTarget?.id === col.id && overTarget?.panel === panel
+  function item(col: ColDef, panel: 'visible' | 'hidden') {
+    const isOver = over?.id === col.id && over?.panel === panel
     return (
       <div
         key={col.id}
-        draggable
-        onDragStart={() => setDraggingId(col.id)}
-        onDragEnd={() => { setDraggingId(null); setOverTarget(null) }}
-        onDragOver={e => {
-          e.preventDefault(); e.stopPropagation()
-          if (overTarget?.id !== col.id || overTarget?.panel !== panel)
-            setOverTarget({ id: col.id, panel })
-        }}
+        data-col-item={col.id}
+        onMouseDown={startDragMouse(col.id)}
+        onTouchStart={startDragTouch(col.id)}
+        style={{ touchAction: 'none' }}
         className={cn(
           'flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm select-none cursor-grab active:cursor-grabbing transition-colors',
-          draggingId === col.id && 'opacity-40',
+          dragId === col.id && 'opacity-40',
           isOver ? 'bg-primary/10 ring-1 ring-primary/30' : 'hover:bg-accent',
         )}
       >
@@ -466,24 +426,28 @@ function ExportModal({ cols, search, status, total, onClose }: {
             </p>
             <div className="grid grid-cols-2 gap-2">
               <div
-                className="flex flex-col gap-0.5 min-h-[100px] max-h-[min(48vh,320px)] overflow-y-auto min-w-0 rounded-lg border border-dashed border-border p-1.5"
-                onDragOver={e => { e.preventDefault(); if (overTarget?.id !== '__panel__' || overTarget?.panel !== 'excluded') setOverTarget({ id: '__panel__', panel: 'excluded' }) }}
-                onDrop={e => { e.preventDefault(); handleDrop('excluded') }}
+                data-col-panel="hidden"
+                className={cn(
+                  'flex flex-col gap-0.5 min-h-[100px] max-h-[min(48vh,320px)] overflow-y-auto min-w-0 rounded-lg border border-dashed p-1.5',
+                  over?.id === '__panel__' && over.panel === 'hidden' ? 'border-primary/40 bg-primary/5' : 'border-border',
+                )}
               >
                 <p className="px-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t('excluded')}</p>
                 {excluded.length === 0
                   ? <div className="flex flex-1 items-center justify-center py-3 text-[11px] text-muted-foreground/40">{t('drag_here')}</div>
-                  : excluded.map(col => renderItem(col, 'excluded'))}
+                  : excluded.map(col => item(col, 'hidden'))}
               </div>
               <div
-                className="flex flex-col gap-0.5 min-h-[100px] max-h-[min(48vh,320px)] overflow-y-auto min-w-0 rounded-lg border border-dashed border-border p-1.5"
-                onDragOver={e => { e.preventDefault(); if (overTarget?.id !== '__panel__' || overTarget?.panel !== 'included') setOverTarget({ id: '__panel__', panel: 'included' }) }}
-                onDrop={e => { e.preventDefault(); handleDrop('included') }}
+                data-col-panel="visible"
+                className={cn(
+                  'flex flex-col gap-0.5 min-h-[100px] max-h-[min(48vh,320px)] overflow-y-auto min-w-0 rounded-lg border border-dashed p-1.5',
+                  over?.id === '__panel__' && over.panel === 'visible' ? 'border-primary/40 bg-primary/5' : 'border-border',
+                )}
               >
                 <p className="px-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t('included')}</p>
                 {included.length === 0
                   ? <div className="flex flex-1 items-center justify-center py-3 text-[11px] text-muted-foreground/40">{t('drag_here')}</div>
-                  : included.map(col => renderItem(col, 'included'))}
+                  : included.map(col => item(col, 'visible'))}
               </div>
             </div>
           </div>
@@ -497,6 +461,14 @@ function ExportModal({ cols, search, status, total, onClose }: {
           </Button>
         </div>
       </div>
+      {dragId && dragPos && (
+        <div
+          style={{ position: 'fixed', zIndex: 60, left: dragPos.x, top: dragPos.y, transform: 'translate(-50%, -50%)', pointerEvents: 'none', display: 'flex', alignItems: 'center', gap: 8, borderRadius: 8, padding: '6px 10px', fontSize: 14, fontWeight: 500, background: 'var(--color-card)', border: '1px solid color-mix(in srgb, var(--color-primary) 40%, transparent)', boxShadow: '0 4px 16px rgba(0,0,0,.25)' }}
+        >
+          <GripVertical className="size-3.5 shrink-0 text-muted-foreground/40" />
+          {cols.find(c => c.id === dragId)?.label ?? dragId}
+        </div>
+      )}
     </div>
   )
 }
@@ -543,14 +515,14 @@ export default function NewsListPage({ active, onOpen, onNew }: {
     return [...v.filter(c => c.pinned), ...v.filter(c => !c.pinned)]
   }, [cols])
 
-  // Narrow viewport: collapse to the single essential column (title — it identifies the row;
-  // 'title' can never be hidden, see ColManager's isMandatory) regardless of the user's own
-  // saved column preferences, with the rest revealed per-row via the "+" toggle. `hasHidden` is
-  // tied to `narrow` alone — NOT to whether the user has manually hidden a column on desktop.
-  const essentialCols = useMemo(() => cols.filter(c => c.id === 'title'), [cols])
-  const narrowHiddenSourceCols = useMemo(() => cols.map(c => ({ ...c, visible: c.id === 'title' })), [cols])
-  const displayCols = narrow ? essentialCols : visibleCols
-  const hasHidden = narrow
+  // A Hidden column disappears entirely on both desktop and mobile — same rule everywhere, no "+"
+  // peek at Hidden ones. Desktop shows every Visible column inline (pin-sorted, via `visibleCols`
+  // above — unchanged). Mobile can't fit many columns, so only the FIRST Visible column (by the
+  // user's dragged order in ColManager, NOT pin order) anchors inline; every OTHER Visible column
+  // surfaces behind the per-row "+" instead, in that same order.
+  const shownColsList = useMemo(() => cols.filter(c => c.visible), [cols])
+  const displayCols = narrow ? shownColsList.map((c, i) => ({ ...c, visible: i === 0 })) : visibleCols
+  const hasHidden = narrow && shownColsList.length > 1
 
   // Minimum table width = sum of column min-widths
   const tableMinWidth = useMemo(
@@ -713,8 +685,8 @@ export default function NewsListPage({ active, onOpen, onNew }: {
   function Colgroup() {
     return (
       <colgroup>
-        {narrow && <col style={{ width: 40, minWidth: 40 }} />}
-        {displayCols.map(col => {
+        {hasHidden && <col style={{ width: 40, minWidth: 40 }} />}
+        {displayCols.filter(col => col.visible).map(col => {
           const fixed = COL_FIXED_WIDTHS[col.id]
           return (
             <col
@@ -947,8 +919,8 @@ export default function NewsListPage({ active, onOpen, onNew }: {
               <Colgroup />
               <thead>
                 <tr className="bg-muted/40">
-                  {narrow && <th className="w-10 px-2 py-3" />}
-                  {displayCols.map(col => (
+                  {hasHidden && <th className="w-10 px-2 py-3" />}
+                  {displayCols.filter(col => col.visible).map(col => (
                     <th
                       key={col.id}
                       data-col-id={col.id}
@@ -1004,12 +976,12 @@ export default function NewsListPage({ active, onOpen, onNew }: {
                       className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors cursor-pointer"
                       onClick={() => onOpen(item.id, item.title)}
                     >
-                      {narrow && (
+                      {hasHidden && (
                         <td className="px-2 py-3" onClick={(e) => e.stopPropagation()}>
                           <ExpandToggle expanded={expandedIds.has(item.id)} onClick={() => toggleExpand(item.id)} />
                         </td>
                       )}
-                      {displayCols.map(col => (
+                      {displayCols.filter(col => col.visible).map(col => (
                         <td key={col.id} className="px-4 py-3" style={pinStyle(col)}>
                           {renderCell(item, col)}
                         </td>
@@ -1039,12 +1011,12 @@ export default function NewsListPage({ active, onOpen, onNew }: {
                         </div>
                       </td>
                     </tr>
-                    {narrow && hasHidden && expandedIds.has(item.id) && (
+                    {hasHidden && expandedIds.has(item.id) && (
                       <HiddenColsRow
-                        cols={narrowHiddenSourceCols}
+                        cols={displayCols}
                         labelFor={(id) => cols.find(c => c.id === id)?.label ?? id}
                         renderValue={(id) => getCellText(item, id)}
-                        colSpan={displayCols.length + 2}
+                        colSpan={displayCols.filter(col => col.visible).length + 2}
                       />
                     )}
                   </Fragment>
