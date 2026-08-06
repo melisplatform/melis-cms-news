@@ -541,15 +541,27 @@ function ImageSlot({ src, label, disabled, uploading, onPick, onRemove }: {
   onPick: (file: File) => void; onRemove: () => void
 }) {
   if (src) {
+    // Actions TOUJOURS visibles sous l'image (barre dédiée) : pas d'overlay `absolute inset-0`
+    // en opacity-0 — un tel overlay reste CLIQUABLE (opacity n'annule pas les pointer-events) et,
+    // son bouton « Supprimer » étant centré sur l'image, un simple clic sur la vignette supprimait
+    // le média par accident. Ici la vignette n'a aucune zone cliquable cachée.
     return (
-      <div className="group relative overflow-hidden rounded-xl border border-border bg-card">
+      <div className="relative overflow-hidden rounded-xl border border-border bg-card">
         <img src={src} alt={label} className="h-32 w-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).src = '' }} />
-        <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-          <span className="text-xs font-medium text-white">{label}</span>
-          <button type="button" onClick={onRemove} disabled={uploading}
-            className="rounded-md bg-white/15 px-2 py-1 text-[11px] font-medium text-white hover:bg-red-500/80">
-            {uploading ? '…' : t('remove')}
-          </button>
+        <div className="flex items-center justify-between gap-2 border-t border-border px-2 py-1.5">
+          <span className="truncate text-[11px] font-medium text-muted-foreground">{label}</span>
+          <div className="flex items-center gap-1">
+            <label className={cn('rounded-md px-2 py-1 text-[11px] font-medium text-muted-foreground hover:bg-muted',
+              uploading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer')} title={t('replace')}>
+              {t('replace')}
+              <input type="file" accept="image/*" className="hidden" disabled={disabled || uploading}
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) onPick(f); e.currentTarget.value = '' }} />
+            </label>
+            <button type="button" onClick={onRemove} disabled={uploading}
+              className="rounded-md px-2 py-1 text-[11px] font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50">
+              {uploading ? '…' : t('remove')}
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -1269,8 +1281,6 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
             </section>
           )}
 
-          {/* Preview */}
-          <PreviewTab newsId={newsId} isNew={isNew} />
         </main>
 
         {/* Sidebar — full width, stacked below main, no sticky positioning on narrow (sticky top
@@ -1518,6 +1528,12 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
             </SidebarSection>
           )}
         </aside>
+      </div>
+
+      {/* Preview — rendu tout à la fin, en pleine largeur SOUS main + sidebar (et donc après la
+          sidebar en vue étroite où elle se replie en dessous), et non plus dans la colonne main. */}
+      <div className={cn('border-t border-border', narrow ? 'px-4 py-4' : 'px-8 py-6')}>
+        <PreviewTab newsId={newsId} isNew={isNew} />
       </div>
 
       {/* Modale Workflow (validation) — MUTUALISÉE : composant fourni par MelisSmallBusiness via

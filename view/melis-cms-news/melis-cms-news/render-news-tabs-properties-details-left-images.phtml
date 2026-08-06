@@ -21,10 +21,10 @@
 	       foreach($this->images as $image){
 	       ?>
 	       <div class="me-p-image">
-        	<img src="<?= $image['image']?>">
+        	<img src="<?= $this->escapeHtmlAttr($image['image'])?>">
         		<div class="hover-details">
         			<div class="me-p-btn-cont">
-        				<a class="viewImageDocument" href="<?= $image['image']?>" target="_blank">
+        				<a class="viewImageDocument" href="<?= $this->escapeHtmlAttr($image['image'])?>" target="_blank">
         					<i class="fa fa-eye"></i>
         				</a>
         				<a class="newsEditImage" data-newsid ="<?= $image['cnews_id']?>" data-column="<?= $image['column']?>"  data-filetype="image">
