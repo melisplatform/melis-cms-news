@@ -19,6 +19,7 @@ import { t } from './lib/i18n'
 import * as newsApi from './lib/news-api'
 import { useCaps } from './shared/useCaps'
 import { useIsNarrow } from './shared/useIsNarrow'
+import { FormErrorBanner, koNotify, okNotify, type FormIssue } from './shared/melis-form-errors'
 
 // News tool capability key — must match config/react.capabilities.php, i.e. the melisKey of the
 // rights-bearing menu node. NOT `meliscmsnews_left_menu`: that is the type-link target and stays
@@ -876,12 +877,14 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
       // N'envoyer le flag de modération que si le module Comments est actif (colonne présente).
       if (commentsActive) payload.validateComments = form.validateComments
       const res = await newsApi.saveNews(payload)
-      window.postMessage({ __melisNotif: true, kind: 'ok', title: 'News', message: t('saved_ok') }, '*')
+      okNotify(t('news_title'), t('saved_ok'))
       // Le conteneur (NewsPage) convertit l'onglet « new » en onglet de l'article créé,
       // ou met à jour le libellé d'un article existant.
       onSaved(res.id, form.title.trim() || `Article #${res.id}`)
     } catch (e) {
-      setApiError(e instanceof Error ? e.message : t('err_save'))
+      const m = e instanceof Error ? e.message : t('err_save')
+      setApiError(m)
+      koNotify(t('news_title'), m)
     } finally {
       setSaving(false)
     }
@@ -986,6 +989,12 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
     : 'bg-amber-500/10 text-amber-600 border-amber-500/20'
   const statusDot    = isPublished ? 'bg-emerald-500' : 'bg-amber-400'
 
+  // Champs en erreur (validation client) → listés dans la bannière, avec leur libellé humain.
+  const validationIssues: FormIssue[] = [
+    ...(errors.title  ? [{ label: t('col_title'), message: errors.title  }] : []),
+    ...(errors.siteId ? [{ label: t('site'),      message: errors.siteId }] : []),
+  ]
+
   if (loading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
@@ -1026,8 +1035,6 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
             {isPublished ? t('published') : t('unpublished')}
           </span>
 
-          {apiError && <span className={cn('text-xs text-destructive', narrow ? 'w-full truncate' : 'truncate max-w-xs')}>{apiError}</span>}
-
           {canSave && (
             <Button size="sm" className="h-8 gap-1.5 min-w-[88px] text-xs" onClick={handleSave} disabled={saving}>
               {saving
@@ -1044,6 +1051,15 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
 
         {/* Main content */}
         <main className={cn('flex-1 min-w-0 space-y-6', narrow ? 'px-4 py-4' : 'px-8 py-6')}>
+
+          {/* Bannière d'erreur unifiée — résumé scannable en haut du formulaire : liste les champs
+              obligatoires manquants (validation client) OU l'erreur serveur d'enregistrement.
+              Le surlignage rouge inline des champs (titre) est conservé en plus. */}
+          {(validationIssues.length > 0 || apiError) && (
+            validationIssues.length > 0
+              ? <FormErrorBanner title={t('check_required')} issues={validationIssues} />
+              : <FormErrorBanner title={apiError ?? undefined} />
+          )}
 
           {/* Language switcher */}
           <div className={cn('flex items-center gap-1 rounded-lg bg-muted p-1 w-fit', narrow && 'flex-wrap')}>

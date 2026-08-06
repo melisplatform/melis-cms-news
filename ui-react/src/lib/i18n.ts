@@ -103,6 +103,7 @@ const DICT: Record<string, { en: string; fr: string }> = {
   err_delete:         { en: 'Delete error',       fr: 'Erreur de suppression' },
   title_required:     { en: 'Title is required',  fr: 'Le titre est obligatoire' },
   site_required:      { en: 'Please select a site', fr: 'Veuillez sélectionner un site' },
+  check_required:     { en: 'Please check the required fields.', fr: 'Veuillez vérifier les champs obligatoires.' },
 
   // ── List: header / KPIs ──
   news_title:         { en: 'News',               fr: 'Actualités' },
