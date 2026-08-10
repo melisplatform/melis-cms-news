@@ -67,7 +67,7 @@ class MelisCmsNewsTable extends MelisGenericTable
         $select->where('melis_cms_news.cnews_id =' . (int)$newsId);
 
         if (!is_null($langId)) {
-            $select->where('melis_cms_news_texts.cnews_lang_id =' . $langId);
+            $select->where('melis_cms_news_texts.cnews_lang_id =' . (int)$langId);
         }
 
         $resultData = $this->tableGateway->selectWith($select);
@@ -188,21 +188,24 @@ class MelisCmsNewsTable extends MelisGenericTable
     public function checkForDuplicates($search)
     {
         $search = '%' . $search . '%';
-        $sql = "select Number From 
-        (select cnews_documents1 as Number from melis_cms_news WHERE cnews_documents1 LIKE '" . $search . "'
+        $sql = "select Number From
+        (select cnews_documents1 as Number from melis_cms_news WHERE cnews_documents1 LIKE ?
         union all
-        select cnews_documents2 as Number from melis_cms_news WHERE cnews_documents2 LIKE '" . $search . "'
+        select cnews_documents2 as Number from melis_cms_news WHERE cnews_documents2 LIKE ?
         union all
-        select cnews_documents3 as Number from melis_cms_news WHERE cnews_documents3 LIKE '" . $search . "'
+        select cnews_documents3 as Number from melis_cms_news WHERE cnews_documents3 LIKE ?
         union all
-        select cnews_image1  as Number from melis_cms_news WHERE cnews_image1 LIKE '" . $search . "'
+        select cnews_image1  as Number from melis_cms_news WHERE cnews_image1 LIKE ?
         union all
-        select cnews_image2  as Number from melis_cms_news WHERE cnews_image2 LIKE '" . $search . "'
+        select cnews_image2  as Number from melis_cms_news WHERE cnews_image2 LIKE ?
         union all
-        select cnews_image3 as Number from melis_cms_news WHERE cnews_image2 LIKE '" . $search . "'
+        select cnews_image3 as Number from melis_cms_news WHERE cnews_image2 LIKE ?
         ) myTab";
 
-        $resultData = $this->tableGateway->getAdapter()->driver->getConnection()->execute($sql);
+        // Parameterize the query with bound placeholders to prevent SQL injection
+        $adapter = $this->tableGateway->getAdapter();
+        $statement = $adapter->createStatement($sql);
+        $resultData = $statement->execute([$search, $search, $search, $search, $search, $search]);
         return $resultData;
     }
 
@@ -246,11 +249,11 @@ class MelisCmsNewsTable extends MelisGenericTable
         $select->where(array('cnews_status' => '1'));
 
         if (!is_null($siteId)) {
-            $select->where->equalTo('cnews_site_id', $siteId);
+            $select->where->equalTo('cnews_site_id', (int)$siteId);
         }
 
-        $select->where('MONTH(cnews_publish_date) = ' . $month);
-        $select->where('YEAR(cnews_publish_date) =' . $year);
+        $select->where('MONTH(cnews_publish_date) = ' . (int)$month);
+        $select->where('YEAR(cnews_publish_date) =' . (int)$year);
         $select->group("melis_cms_news.cnews_id");
         $select->where->nest->greaterThan('cnews_unpublish_date', date('Y-m-d H:i:s', strtotime("now")))->or->isNull('cnews_unpublish_date')->unnest;
 

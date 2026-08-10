@@ -11,6 +11,7 @@ return [
 				 * MelisCmsNewsService.php
 				 */
 				'MelisCmsNewsService' => [
+				    '_description' => 'tr_meliscmsnews_ws_desc_news',
 
 					'getNewsList' => [
 						'attributes' => [
@@ -528,6 +529,114 @@ return [
                                     ['name' => 'StringTrim']
                                 ],
                             ],
+						],
+					],
+				],
+
+				/**
+				 * This service retrieves the front URL of a news article's page
+				 * MelisCmsNewsSeoService.php
+				 */
+				'MelisCmsNewsSeoService' => [
+				    '_description' => 'tr_meliscmsnews_ws_desc_newsseo',
+
+					'getPageLink' => [
+						'attributes' => [
+							'name' => 'microservice_form',
+							'id'   => 'microservice_form',
+							'method' => 'POST',
+							'action' => $_SERVER['REQUEST_URI']
+						],
+						'hydrator' => 'Laminas\Hydrator\ArraySerializableHydrator',
+						'elements' => [
+							[
+								'spec' => [
+									'name' => 'idPage',
+									'type' => 'Text',
+									'options' => [ 'label' => 'idPage' ],
+									'attributes' => [
+										'id' => 'idPage',
+										'value' => '',
+										'class' => '',
+										'placeholder' => '1',
+										'data-type' => 'int'
+									],
+								],
+							],
+							[
+								'spec' => [
+									'name' => 'newsId',
+									'type' => 'Text',
+									'options' => [ 'label' => 'newsId' ],
+									'attributes' => [
+										'id' => 'newsId',
+										'value' => '',
+										'class' => '',
+										'placeholder' => '1',
+										'data-type' => 'int'
+									],
+								],
+							],
+							[
+								'spec' => [
+									'name' => 'absolute',
+									'type' => 'Text',
+									'options' => [ 'label' => 'absolute' ],
+									'attributes' => [
+										'id' => 'absolute',
+										'value' => '',
+										'class' => '',
+										'placeholder' => 'false',
+										'data-type' => 'bool'
+									],
+								],
+							],
+						],
+						'input_filter' => [
+							'idPage' => [
+								'name' => 'idPage',
+								'required' => true,
+								'validators' => [
+									[
+										'name' => 'IsInt',
+										'options' => [
+											'message' => [
+												\Laminas\I18n\Validator\IsInt::INVALID => 'idPage must be an integer'
+											],
+										],
+									],
+								],
+								'filters' => [
+									['name' => 'StripTags'],
+									['name' => 'StringTrim']
+								],
+							],
+							'newsId' => [
+								'name' => 'newsId',
+								'required' => true,
+								'validators' => [
+									[
+										'name' => 'IsInt',
+										'options' => [
+											'message' => [
+												\Laminas\I18n\Validator\IsInt::INVALID => 'newsId must be an integer'
+											],
+										],
+									],
+								],
+								'filters' => [
+									['name' => 'StripTags'],
+									['name' => 'StringTrim']
+								],
+							],
+							'absolute' => [
+								'name' => 'absolute',
+								'required' => false,
+								'filters' => [
+									['name' => 'StripTags'],
+									['name' => 'StringTrim']
+								],
+							],
 						],
 					],
 				],

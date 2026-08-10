@@ -39,6 +39,7 @@ const DICT: Record<string, { en: string; fr: string }> = {
   media_max:          { en: 'max. 3',             fr: 'max. 3' },
   attach_file:        { en: 'Click to attach a file', fr: 'Cliquer pour joindre un fichier' },
   remove:             { en: 'Remove',             fr: 'Supprimer' },
+  replace:            { en: 'Replace',            fr: 'Remplacer' },
   media_save_first:   { en: 'Save the article first to add images and files.', fr: "Enregistrez l'article pour pouvoir ajouter des images et des fichiers." },
   save_first_short:   { en: 'Save the article first', fr: "Enregistrez d'abord l'article" },
 
@@ -102,6 +103,7 @@ const DICT: Record<string, { en: string; fr: string }> = {
   err_delete:         { en: 'Delete error',       fr: 'Erreur de suppression' },
   title_required:     { en: 'Title is required',  fr: 'Le titre est obligatoire' },
   site_required:      { en: 'Please select a site', fr: 'Veuillez sélectionner un site' },
+  check_required:     { en: 'Please check the required fields.', fr: 'Veuillez vérifier les champs obligatoires.' },
 
   // ── List: header / KPIs ──
   news_title:         { en: 'News',               fr: 'Actualités' },

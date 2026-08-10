@@ -26,7 +26,7 @@ if (!empty($this->zoneconfig['conf']['id']))
                                 		if($this->type == 'image'):?>
                                 		<div class="center-block">
                                             <span class="thumbnail">
-                                              <img class="imgDocThumbnail" width="128" height="128" src="<?= $img?>">
+                                              <img class="imgDocThumbnail" width="128" height="128" src="<?= $this->escapeHtmlAttr($img)?>">
                                             </span>
                                         </div>
                                           <?php 

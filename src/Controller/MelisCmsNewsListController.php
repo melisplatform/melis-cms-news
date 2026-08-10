@@ -238,6 +238,8 @@ class MelisCmsNewsListController extends MelisAbstractActionController
 
             $sortOrder = $this->getRequest()->getPost('order');
             $sortOrder = $sortOrder[0]['dir'];
+            // Whitelist the sort direction to prevent SQL injection through the ORDER BY clause
+            $sortOrder = (strtoupper((string) $sortOrder) === 'ASC') ? 'ASC' : 'DESC';
 
             $selCol = $this->getRequest()->getPost('order');
             $selCol = $colId[$selCol[0]['column']];

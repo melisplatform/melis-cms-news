@@ -14,7 +14,9 @@ use Laminas\File\Transfer\Adapter\Http;
 use Laminas\Form\ElementInterface;
 use Laminas\Form\Factory;
 use Laminas\Session\Container;
+use Laminas\Validator\File\Extension;
 use Laminas\Validator\File\IsImage;
+use Laminas\Validator\File\MimeType;
 use Laminas\Validator\File\Size;
 use Laminas\View\Model\JsonModel;
 use Laminas\View\Model\ViewModel;
@@ -1309,23 +1311,84 @@ class MelisCmsNewsController extends MelisAbstractActionController
                 ],
             ]);
 
+            /**
+             * Strict server-side allow-lists. These are enforced on EVERY branch, regardless of the
+             * client-supplied "type", to prevent an unrestricted file upload leading to RCE
+             * (e.g. dropping .php/.phtml/.phar/.svg/.htaccess into a web-served directory).
+             */
+            $allowedImageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            $allowedDocExtensions   = ['pdf', 'docx', 'xlsx', 'csv', 'txt'];
+            $allowedImageMimeTypes  = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            $allowedDocMimeTypes    = [
+                'application/pdf',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'application/msword',
+                'application/vnd.ms-excel',
+                'text/csv',
+                'text/plain',
+                'application/zip', // docx/xlsx are zip containers; detected MIME is often application/zip
+            ];
+
             $postValues = $this->getRequest()->getPost()->toArray();
             $uploadedFile = $this->getRequest()->getFiles()->toArray()['cnews_document'];
 
             //set validators for file only or image only
-            if ($postValues['type'] == 'image') {
+            if (($postValues['type'] ?? '') == 'image') {
                 $type = 'image';
+                $allowedExtensions = $allowedImageExtensions;
+                $allowedMimeTypes  = $allowedImageMimeTypes;
                 $validator = [$size, $imageValidator];
             } else {
+                $type = 'file';
+                // Documents may also be images (they share the media folder); allow both sets.
+                $allowedExtensions = array_merge($allowedImageExtensions, $allowedDocExtensions);
+                $allowedMimeTypes  = array_merge($allowedImageMimeTypes, $allowedDocMimeTypes);
                 $validator = [$size];
             }
+
+            // Extension allow-list (case-insensitive) + real MIME sniff on every branch.
+            $extensionValidator = new Extension([
+                'extension' => $allowedExtensions,
+                'case'      => false,
+            ]);
+            $mimeValidator = new MimeType([
+                'mimeType'          => $allowedMimeTypes,
+                'enableHeaderCheck' => true,
+            ]);
+            $validator[] = $extensionValidator;
+            $validator[] = $mimeValidator;
+
+            // cnews_id is used to build a filesystem path: force it to an integer.
+            $newsId = (int) ($postValues['cnews_id'] ?? 0);
 
             if (!empty($uploadedFile['name'])) {
                 //format name
                 $fileName = $uploadedFile['name'];
 
+                // Reject dangerous extensions explicitly, on top of the allow-list, and neutralise
+                // any path traversal / double-extension tricks by keeping only a sanitized basename.
+                $rawExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+                $forbiddenExtensions = ['php', 'phtml', 'phar', 'pht', 'php3', 'php4', 'php5', 'php7', 'phps', 'svg', 'html', 'htm', 'xhtml', 'htaccess', 'js', 'exe', 'sh'];
+                if (!in_array($rawExtension, $allowedExtensions, true) || in_array($rawExtension, $forbiddenExtensions, true)) {
+                    return [
+                        'upload'   => false,
+                        'type'     => $type,
+                        'fileName' => '',
+                        'errors'   => 'tr_meliscmsnews_save_upload_file_type_not_allowed',
+                    ];
+                }
+
+                // Build a safe filename: sanitized base + validated extension only.
+                $baseName = pathinfo($fileName, PATHINFO_FILENAME);
+                $baseName = preg_replace('/[^A-Za-z0-9_-]/', '_', $baseName);
+                if ($baseName === '' || $baseName === null) {
+                    $baseName = 'file';
+                }
+                $fileName = $baseName . '.' . $rawExtension;
+
                 //create folder based on news id
-                if ($this->createFolder($postValues['cnews_id'])) {
+                if ($this->createFolder($newsId)) {
                     $adapter = new Http();
 
                     // do saving
@@ -1345,8 +1408,8 @@ class MelisCmsNewsController extends MelisAbstractActionController
                     }
 
                     if ($adapter->isValid()) {
-                        $adapter->setDestination('public' . $conPath . $postValues['cnews_id'] . '/');
-                        $newFileName = $this->renameIfDuplicateFile($conPath . $postValues['cnews_id'] . '/' . $fileName);
+                        $adapter->setDestination('public' . $conPath . $newsId . '/');
+                        $newFileName = $this->renameIfDuplicateFile($conPath . $newsId . '/' . $fileName);
                         $savedDocFileName = 'public' . $newFileName;
                         $adapter->addFilter('Laminas\Filter\File\Rename', [
                             'target' => $savedDocFileName,
@@ -1400,12 +1463,12 @@ class MelisCmsNewsController extends MelisAbstractActionController
      */
     private function createFolder($id)
     {
-        $path = 'public/media/news/' . $id . '/';
+        $path = 'public/media/news/' . (int) $id . '/';
         if (file_exists($path)) {
-            chmod($path, 0777);
+            chmod($path, 0755);
             $status = true;
         } else {
-            $status = mkdir($path, 0777, true);
+            $status = mkdir($path, 0755, true);
             $this->createFolder($id);
         }
 

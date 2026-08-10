@@ -18,6 +18,8 @@ import { cn } from './lib/utils'
 import { t } from './lib/i18n'
 import * as newsApi from './lib/news-api'
 import { useCaps } from './shared/useCaps'
+import { useIsNarrow } from './shared/useIsNarrow'
+import { FormErrorBanner, koNotify, okNotify, type FormIssue } from './shared/melis-form-errors'
 
 // News tool capability key — must match config/react.capabilities.php, i.e. the melisKey of the
 // rights-bearing menu node. NOT `meliscmsnews_left_menu`: that is the type-link target and stays
@@ -540,15 +542,27 @@ function ImageSlot({ src, label, disabled, uploading, onPick, onRemove }: {
   onPick: (file: File) => void; onRemove: () => void
 }) {
   if (src) {
+    // Actions TOUJOURS visibles sous l'image (barre dédiée) : pas d'overlay `absolute inset-0`
+    // en opacity-0 — un tel overlay reste CLIQUABLE (opacity n'annule pas les pointer-events) et,
+    // son bouton « Supprimer » étant centré sur l'image, un simple clic sur la vignette supprimait
+    // le média par accident. Ici la vignette n'a aucune zone cliquable cachée.
     return (
-      <div className="group relative overflow-hidden rounded-xl border border-border bg-card">
+      <div className="relative overflow-hidden rounded-xl border border-border bg-card">
         <img src={src} alt={label} className="h-32 w-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).src = '' }} />
-        <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-          <span className="text-xs font-medium text-white">{label}</span>
-          <button type="button" onClick={onRemove} disabled={uploading}
-            className="rounded-md bg-white/15 px-2 py-1 text-[11px] font-medium text-white hover:bg-red-500/80">
-            {uploading ? '…' : t('remove')}
-          </button>
+        <div className="flex items-center justify-between gap-2 border-t border-border px-2 py-1.5">
+          <span className="truncate text-[11px] font-medium text-muted-foreground">{label}</span>
+          <div className="flex items-center gap-1">
+            <label className={cn('rounded-md px-2 py-1 text-[11px] font-medium text-muted-foreground hover:bg-muted',
+              uploading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer')} title={t('replace')}>
+              {t('replace')}
+              <input type="file" accept="image/*" className="hidden" disabled={disabled || uploading}
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) onPick(f); e.currentTarget.value = '' }} />
+            </label>
+            <button type="button" onClick={onRemove} disabled={uploading}
+              className="rounded-md px-2 py-1 text-[11px] font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50">
+              {uploading ? '…' : t('remove')}
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -623,6 +637,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
   const isNew = newsId === 'new'
   // On garde `id` en string|undefined (comme l'ancien useParams) pour ne rien changer au reste.
   const id = isNew ? undefined : String(newsId)
+  const narrow = useIsNarrow()
 
   // Capacités : droit d'enregistrer = create (nouvel article) ou edit (existant).
   const { can } = useCaps(NEWS_CAPS_KEY)
@@ -862,12 +877,14 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
       // N'envoyer le flag de modération que si le module Comments est actif (colonne présente).
       if (commentsActive) payload.validateComments = form.validateComments
       const res = await newsApi.saveNews(payload)
-      window.postMessage({ __melisNotif: true, kind: 'ok', title: 'News', message: t('saved_ok') }, '*')
+      okNotify(t('news_title'), t('saved_ok'))
       // Le conteneur (NewsPage) convertit l'onglet « new » en onglet de l'article créé,
       // ou met à jour le libellé d'un article existant.
       onSaved(res.id, form.title.trim() || `Article #${res.id}`)
     } catch (e) {
-      setApiError(e instanceof Error ? e.message : t('err_save'))
+      const m = e instanceof Error ? e.message : t('err_save')
+      setApiError(m)
+      koNotify(t('news_title'), m)
     } finally {
       setSaving(false)
     }
@@ -972,6 +989,12 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
     : 'bg-amber-500/10 text-amber-600 border-amber-500/20'
   const statusDot    = isPublished ? 'bg-emerald-500' : 'bg-amber-400'
 
+  // Champs en erreur (validation client) → listés dans la bannière, avec leur libellé humain.
+  const validationIssues: FormIssue[] = [
+    ...(errors.title  ? [{ label: t('col_title'), message: errors.title  }] : []),
+    ...(errors.siteId ? [{ label: t('site'),      message: errors.siteId }] : []),
+  ]
+
   if (loading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
@@ -986,16 +1009,17 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
       {/* Sticky header — le titre/retour vit dans la barre de sous-onglets (NewsPage) ;
           ici on ne garde que les actions (Preview / statut / Save). */}
       <header className="sticky top-0 z-10 flex items-center justify-end border-b border-border bg-background/95 px-5 py-2.5 backdrop-blur-sm">
-        <div className="flex items-center gap-2">
+        <div className={cn('flex items-center gap-2', narrow && 'flex-wrap justify-end')}>
           {previewUrl && (
             <Button
               variant="ghost"
               size="sm"
               className="h-8 gap-1.5 text-muted-foreground text-xs"
+              title={t('preview')}
               onClick={() => window.open(previewUrl, '_blank')}
             >
               <Eye className="size-3.5" />
-              {t('preview')}
+              {!narrow && t('preview')}
             </Button>
           )}
 
@@ -1011,8 +1035,6 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
             {isPublished ? t('published') : t('unpublished')}
           </span>
 
-          {apiError && <span className="text-xs text-destructive">{apiError}</span>}
-
           {canSave && (
             <Button size="sm" className="h-8 gap-1.5 min-w-[88px] text-xs" onClick={handleSave} disabled={saving}>
               {saving
@@ -1023,14 +1045,24 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
         </div>
       </header>
 
-      {/* Two-column body */}
-      <div className="flex items-start">
+      {/* Two-column body — stacked on narrow (fixed-width aside would otherwise squeeze main
+          content down to near-zero width, which is what caused the mangled mobile layout). */}
+      <div className={narrow ? 'flex flex-col' : 'flex items-start'}>
 
         {/* Main content */}
-        <main className="flex-1 min-w-0 px-8 py-6 space-y-6">
+        <main className={cn('flex-1 min-w-0 space-y-6', narrow ? 'px-4 py-4' : 'px-8 py-6')}>
+
+          {/* Bannière d'erreur unifiée — résumé scannable en haut du formulaire : liste les champs
+              obligatoires manquants (validation client) OU l'erreur serveur d'enregistrement.
+              Le surlignage rouge inline des champs (titre) est conservé en plus. */}
+          {(validationIssues.length > 0 || apiError) && (
+            validationIssues.length > 0
+              ? <FormErrorBanner title={t('check_required')} issues={validationIssues} />
+              : <FormErrorBanner title={apiError ?? undefined} />
+          )}
 
           {/* Language switcher */}
-          <div className="flex items-center gap-1 rounded-lg bg-muted p-1 w-fit">
+          <div className={cn('flex items-center gap-1 rounded-lg bg-muted p-1 w-fit', narrow && 'flex-wrap')}>
             {languages.length > 0
               ? languages.map((lang) => (
                   <button
@@ -1173,7 +1205,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
               <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
                 {t('images')} <span className="normal-case text-muted-foreground/70">({t('media_max')})</span>
               </p>
-              <div className="grid grid-cols-3 gap-3">
+              <div className={cn('grid gap-3', narrow ? 'grid-cols-1' : 'grid-cols-3')}>
                 {([1, 2, 3] as const).map((slot) => {
                   const col = newsApi.mediaColumn('image', slot)
                   return (
@@ -1221,12 +1253,12 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
               ) : (
                 <>
                   {/* Add a comment (back-office → validé d'office) */}
-                  <div className="flex flex-col gap-2 rounded-lg border border-border bg-muted/10 p-3 sm:flex-row sm:items-start">
+                  <div className={cn('flex gap-2 rounded-lg border border-border bg-muted/10 p-3', narrow ? 'flex-col' : 'flex-row items-start')}>
                     <Input
                       value={newComment.name}
                       onChange={(e) => setNewComment((c) => ({ ...c, name: e.target.value }))}
                       placeholder={t('comment_name_ph')}
-                      className="h-9 sm:w-40"
+                      className={cn('h-9', !narrow && 'w-40')}
                     />
                     <textarea
                       value={newComment.text}
@@ -1237,7 +1269,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
                     />
                     <Button
                       size="sm"
-                      className="h-9 gap-1.5 self-end sm:self-start"
+                      className={cn('h-9 gap-1.5', narrow ? 'self-end' : 'self-start')}
                       onClick={addComment}
                       disabled={commentBusy || !newComment.text.trim()}
                     >
@@ -1265,12 +1297,13 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
             </section>
           )}
 
-          {/* Preview */}
-          <PreviewTab newsId={newsId} isNew={isNew} />
         </main>
 
-        {/* Sidebar */}
-        <aside className="w-64 shrink-0 self-start sticky top-[57px] border-l border-border bg-muted/10 p-4 space-y-4">
+        {/* Sidebar — full width, stacked below main, no sticky positioning on narrow (sticky top
+            makes no sense once this is no longer a side column). */}
+        <aside className={narrow
+          ? 'w-full border-t border-border bg-muted/10 p-4 space-y-4'
+          : 'w-64 shrink-0 self-start sticky top-[57px] border-l border-border bg-muted/10 p-4 space-y-4'}>
 
           <SidebarSection title={t('status')} icon={GitBranch}>
             <div className="flex items-center justify-between gap-2">
@@ -1511,6 +1544,12 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
             </SidebarSection>
           )}
         </aside>
+      </div>
+
+      {/* Preview — rendu tout à la fin, en pleine largeur SOUS main + sidebar (et donc après la
+          sidebar en vue étroite où elle se replie en dessous), et non plus dans la colonne main. */}
+      <div className={cn('border-t border-border', narrow ? 'px-4 py-4' : 'px-8 py-6')}>
+        <PreviewTab newsId={newsId} isNew={isNew} />
       </div>
 
       {/* Modale Workflow (validation) — MUTUALISÉE : composant fourni par MelisSmallBusiness via

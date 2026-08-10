@@ -124,16 +124,17 @@ export interface NewsDetail extends NewsItem {
 export interface NewsListResult {
   items: NewsItem[]
   total: number
-  page: number
-  limit: number
+  nextCursor: string | null
 }
 
 export interface NewsListParams {
-  page?: number
   limit?: number
   search?: string
   status?: '' | '0' | '1'
   siteId?: number
+  sort?: string
+  dir?: 'asc' | 'desc'
+  after?: string
 }
 
 export interface User {
@@ -201,11 +202,13 @@ export async function fetchLanguages(): Promise<Language[]> {
 
 export async function fetchNewsList(params: NewsListParams = {}): Promise<NewsListResult> {
   const qs = new URLSearchParams()
-  if (params.page)   qs.set('page',   String(params.page))
   if (params.limit)  qs.set('limit',  String(params.limit))
   if (params.search) qs.set('search', params.search)
   if (params.status !== undefined && params.status !== '') qs.set('status', params.status)
   if (params.siteId) qs.set('siteId', String(params.siteId))
+  if (params.sort)   qs.set('sort',   params.sort)
+  if (params.dir)    qs.set('dir',    params.dir)
+  if (params.after)  qs.set('after',  params.after)
   return apiFetch<NewsListResult>(`/melis/react-api/news?${qs}`)
 }
 

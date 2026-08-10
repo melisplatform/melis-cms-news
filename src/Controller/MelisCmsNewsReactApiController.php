@@ -5,6 +5,7 @@ namespace MelisCmsNews\Controller;
 use Laminas\Http\PhpEnvironment\Response as HttpResponse;
 use Laminas\Session\Container as SessionContainer;
 use MelisCore\Controller\MelisAbstractActionController;
+use MelisCore\Controller\MelisReactKeysetListTrait;
 use MelisReactApi\Controller\CapabilityGuardTrait;
 
 /**
@@ -26,6 +27,7 @@ use MelisReactApi\Controller\CapabilityGuardTrait;
 class MelisCmsNewsReactApiController extends MelisAbstractActionController
 {
     use CapabilityGuardTrait;
+    use MelisReactKeysetListTrait;
 
     // News tool — capability key, and the key guarding access to the tool. MUST stay in sync with
     // config/react.capabilities.php: denyUnlessCan() resolves capabilities through this constant, so
@@ -73,49 +75,105 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
         if ($deny = $this->denyUnlessCan('list')) { return $deny; }
 
         try {
-            $page   = max(1, (int) $this->params()->fromQuery('page', 1));
-            $limit  = min(9999, max(1, (int) $this->params()->fromQuery('limit', 20)));
+            $limit  = min(9999, max(1, (int) $this->params()->fromQuery('limit', 25)));
             $search = $this->params()->fromQuery('search', null);
             $rawStatus = $this->params()->fromQuery('status', '');
             $status = ($rawStatus !== '' && $rawStatus !== null) ? (int) $rawStatus : null;
             $rawSite = $this->params()->fromQuery('siteId', '');
             $siteId = ($rawSite !== '' && $rawSite !== null) ? (int) $rawSite : null;
-            // langId optional — null = toutes langues, valeur explicite ou session
+            // langId optional — vide = langue de session (titre affiché), avec repli sur une
+            // traduction non vide (comme le legacy qui montre toute langue non vide).
             $rawLang = $this->params()->fromQuery('langId', '');
-            $langId  = ($rawLang !== '' && $rawLang !== null) ? (int) $rawLang : null;
-            $start  = ($page - 1) * $limit;
+            $langId  = ($rawLang !== '' && $rawLang !== null) ? (int) $rawLang : $this->getCurrentLangId();
 
-            $service = $this->getServiceManager()->get('MelisCmsNewsService');
+            $sort   = $this->params()->fromQuery('sort', 'id');
+            $dir     = $this->params()->fromQuery('dir', 'desc');
+            $after  = (string) $this->params()->fromQuery('after', '');
 
-            $items = $service->getNewsList(
-                $status, $langId,
-                null, null, null, null, 0,
-                $start, $limit,
-                'cnews_id', 'DESC',
-                $siteId, $search ?: null, false
-            );
+            $db = $this->getServiceManager()->get('Laminas\Db\Adapter\AdapterInterface');
 
-            $total = $service->getNewsList(
-                $status, $langId,
-                null, null, null, null, 0,
-                0, null,
-                'cnews_id', 'DESC',
-                $siteId, $search ?: null, true
-            );
+            // Le TITRE/SOUS-TITRE est stocké par langue dans melis_cms_news_texts. On résout la
+            // valeur affichée en sous-requêtes corrélées : traduction de la langue courante, puis
+            // repli sur la 1re traduction NON VIDE (une news peut n'exister que dans une autre
+            // langue). Garantit exactement UNE ligne par news (indispensable au keyset : tri + id
+            // uniques) — contrairement au LEFT JOIN texts du legacy qui duplique en all-langues.
+            // $langId est un (int) → inliné directement (le trait keyset ne binde pas de params de
+            // SELECT / d'expression de tri ; aucune entrée utilisateur brute dans ces expressions).
+            $lid = (int) $langId;
+            $titleExpr = "COALESCE(NULLIF((SELECT tx.cnews_title FROM melis_cms_news_texts tx
+                                WHERE tx.cnews_id = n.cnews_id AND tx.cnews_lang_id = $lid LIMIT 1), ''),
+                            NULLIF((SELECT tx2.cnews_title FROM melis_cms_news_texts tx2
+                                WHERE tx2.cnews_id = n.cnews_id AND tx2.cnews_title IS NOT NULL
+                                  AND tx2.cnews_title <> '' ORDER BY tx2.cnews_lang_id LIMIT 1), ''),
+                            '')";
+            $subtitleExpr = "COALESCE(NULLIF((SELECT tx.cnews_subtitle FROM melis_cms_news_texts tx
+                                WHERE tx.cnews_id = n.cnews_id AND tx.cnews_lang_id = $lid LIMIT 1), ''),
+                            NULLIF((SELECT tx2.cnews_subtitle FROM melis_cms_news_texts tx2
+                                WHERE tx2.cnews_id = n.cnews_id AND tx2.cnews_title IS NOT NULL
+                                  AND tx2.cnews_title <> '' ORDER BY tx2.cnews_lang_id LIMIT 1), ''),
+                            '')";
+
+            // SELECT : colonnes de base + titre/sous-titre résolus + libellé du site.
+            $selectCols = "n.cnews_id, n.cnews_status, n.cnews_site_id,
+                    n.cnews_creation_date, n.cnews_publish_date, n.cnews_unpublish_date,
+                    s.site_name, s.site_label,
+                    ($titleExpr) AS cnews_title,
+                    ($subtitleExpr) AS cnews_subtitle";
+
+            // Filtres : on garde TOUS les filtres legacy + le garde-fou « titre non vide ».
+            $filterWhere  = ["($titleExpr) <> ''"];
+            $filterParams = [];
+            if ($status !== null) { $filterWhere[] = 'n.cnews_status = ?';  $filterParams[] = $status; }
+            if ($siteId !== null) { $filterWhere[] = 'n.cnews_site_id = ?'; $filterParams[] = $siteId; }
+            if ($search !== null && $search !== '') {
+                $like = '%' . $search . '%';
+                $filterWhere[]  = "(CAST(n.cnews_id AS CHAR) LIKE ? OR ($titleExpr) LIKE ?)";
+                $filterParams[] = $like;
+                $filterParams[] = $like;
+            }
+
+            // Colonnes triables (whitelist) → expression SQL NON-NULL. Le tri « title »/« subtitle »
+            // porte sur le TITRE RÉSOLU (la valeur affichée) et non sur une colonne brute par langue.
+            $sortMap = [
+                'id'            => 'n.cnews_id',
+                'title'         => "($titleExpr)",
+                'subtitle'      => "($subtitleExpr)",
+                'site'          => "COALESCE(NULLIF(s.site_label, ''), s.site_name, '')",
+                'status'        => 'n.cnews_status',
+                'publishDate'   => "COALESCE(n.cnews_publish_date, '1000-01-01 00:00:00')",
+                'unpublishDate' => "COALESCE(n.cnews_unpublish_date, '1000-01-01 00:00:00')",
+                'creationDate'  => "COALESCE(n.cnews_creation_date, '1000-01-01 00:00:00')",
+            ];
+
+            [$rowsRaw, $total, $next] = $this->keysetList([
+                'db'           => $db,
+                'from'         => 'melis_cms_news n',
+                'joins'        => 'LEFT JOIN melis_cms_site s ON s.site_id = n.cnews_site_id',
+                'selectCols'   => $selectCols,
+                'filterWhere'  => $filterWhere,
+                'filterParams' => $filterParams,
+                'sortMap'      => $sortMap,
+                'idCol'        => 'n.cnews_id',
+                'idAlias'      => 'cnews_id',
+                'sortKey'      => $sort,
+                'dir'          => $dir,
+                'after'        => $after,
+                'limit'        => $limit,
+            ]);
 
             $rows = [];
-            foreach (($items ?: []) as $row) {
-                $r      = is_object($row) ? (array) $row : $row;
+            foreach (($rowsRaw ?: []) as $row) {
+                $r = is_object($row) ? (array) $row : $row;
+                unset($r['__sortval']);
                 $rows[] = $this->formatNewsItem($r);
             }
 
             return $this->jsonResponse([
                 'success' => true,
                 'data'    => [
-                    'items' => $rows,
-                    'total' => is_numeric($total) ? (int) $total : count($rows),
-                    'page'  => $page,
-                    'limit' => $limit,
+                    'items'      => $rows,
+                    'total'      => (int) $total,
+                    'nextCursor' => $next,
                 ],
             ]);
         } catch (\Throwable $e) {
@@ -221,10 +279,18 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
                 'cnews_slider_id'      => isset($body['sliderId']) && $body['sliderId']
                     ? (int) $body['sliderId']
                     : null,
-                'cnews_author_account' => isset($body['authorId']) && $body['authorId']
-                    ? (int) $body['authorId']
-                    : null,
             ];
+
+            // Auteur : la colonne cnews_author_account n'appartient pas à MelisCmsNews, elle est
+            // ajoutée à melis_cms_news par MelisCmsUserAccount (ALTER TABLE au bootstrap, et
+            // seulement sur les routes `melis-backoffice` — donc jamais depuis le SPA React).
+            // Comme le legacy, on ne l'écrit que si elle existe réellement, sinon saveNews plante
+            // ("Unknown column 'cnews_author_account' in 'field list'").
+            if ($this->hasAuthorAccountColumn()) {
+                $newsData['cnews_author_account'] = isset($body['authorId']) && $body['authorId']
+                    ? (int) $body['authorId']
+                    : null;
+            }
 
             // Flag de modération des commentaires (colonne cnews_validate_comments ajoutée par
             // MelisCmsComments au bootstrap). On ne l'écrit QUE si le module est actif (sinon la
@@ -552,6 +618,10 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
             // If the module is not installed, graceful degradation: returns empty array.
             $users = [];
             try {
+                // Pas de colonne auteur → rien à sélectionner : on masque la section côté React.
+                if (!$this->hasAuthorAccountColumn()) {
+                    return $this->jsonResponse(['success' => true, 'data' => []]);
+                }
                 $service = $this->getServiceManager()->get('FrontUserAccountService');
                 $userRows = $service->getAllUsers();
 
@@ -712,6 +782,28 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
         } catch (\Throwable $e) {
             return $this->errorResponse($e);
         }
+    }
+
+    /**
+     * true si la colonne cnews_author_account existe réellement dans melis_cms_news.
+     * (Ajoutée par MelisCmsUserAccount ; le module peut être actif sans que l'ALTER ait
+     * encore tourné, cf. saveAction.) Mémoïsé pour ne pas requêter la metadata deux fois.
+     */
+    private ?bool $authorColumnExists = null;
+
+    private function hasAuthorAccountColumn(): bool
+    {
+        if ($this->authorColumnExists !== null) {
+            return $this->authorColumnExists;
+        }
+        try {
+            $columns = $this->getServiceManager()->get('MelisCmsNewsTable')->getTableColumns();
+            $this->authorColumnExists = in_array('cnews_author_account', (array) $columns, true);
+        } catch (\Throwable) {
+            $this->authorColumnExists = false;
+        }
+
+        return $this->authorColumnExists;
     }
 
     /** Service de commentaires si le module MelisCmsComments est actif, sinon null. */

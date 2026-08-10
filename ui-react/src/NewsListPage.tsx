@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowDown, ArrowUp, ArrowUpDown, CheckCircle2, Code2, Columns3,
   Download, Edit2, FileDown, FileSpreadsheet, FileText, GripVertical,
@@ -12,6 +12,10 @@ import { cn } from './lib/utils'
 import { t, newsLang } from './lib/i18n'
 import * as newsApi from './lib/news-api'
 import { useCaps } from './shared/useCaps'
+import { useIsNarrow } from './shared/useIsNarrow'
+import { ExpandToggle, HiddenColsRow } from './shared/ExpandableRow'
+import { useDragReorder } from './shared/use-drag-reorder'
+import { useKeysetList } from './use-keyset-list'
 
 // News tool capability key — must match config/react.capabilities.php, i.e. the melisKey of the
 // rights-bearing menu node. NOT `meliscmsnews_left_menu`: that is the type-link target and stays
@@ -25,13 +29,13 @@ type ViewMode = 'react' | 'iframe'
 interface ListCache {
   items: newsApi.NewsItem[]
   total: number
-  page: number
+  cursor: string | null
+  hasMore: boolean
+  sortCol: string
+  sortDir: 'asc' | 'desc'
   search: string
   status: '' | '0' | '1'
-  sortCol: string | null
-  sortDir: 'asc' | 'desc'
   kpiStats: newsApi.NewsStats | null
-  hasMore: boolean
   mode: ViewMode
   iframeLoaded: boolean
 }
@@ -134,20 +138,6 @@ function getCellText(item: newsApi.NewsItem, colId: string): string {
   }
 }
 
-function getSortValue(item: newsApi.NewsItem, colId: string): string | number {
-  switch (colId) {
-    case 'id':            return item.id
-    case 'title':         return item.title || ''
-    case 'subtitle':      return item.subtitle || ''
-    case 'site':          return item.siteName || ''
-    case 'publishDate':   return item.publishDate || ''
-    case 'unpublishDate': return item.unpublishDate || ''
-    case 'creationDate':  return item.creationDate || ''
-    case 'status':        return item.status
-    default:              return ''
-  }
-}
-
 // ─── Status badge ─────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: 0 | 1 }) {
@@ -165,21 +155,21 @@ function StatusBadge({ status }: { status: 0 | 1 }) {
 
 // ─── KPI card ─────────────────────────────────────────────────────────────────
 
-function KpiCard({ icon, label, value, iconBg }: {
-  icon: React.ReactNode; label: string; value: number | null; iconBg: string
+function KpiCard({ icon, label, value, iconBg, className }: {
+  icon: React.ReactNode; label: string; value: number | null; iconBg: string; className?: string
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 flex-1 min-w-[150px]">
+    <div className={cn('flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 flex-1 min-w-[150px]', className)}>
       <div className={cn('flex size-10 shrink-0 items-center justify-center rounded-lg', iconBg)}>
         {icon}
       </div>
-      <div>
+      <div className="min-w-0">
         <div className="text-2xl font-bold leading-none text-foreground">
           {value === null
             ? <Loader2 className="size-4 animate-spin text-muted-foreground" />
             : value.toLocaleString(newsLang() === 'fr' ? 'fr-FR' : 'en-GB')}
         </div>
-        <div className="mt-0.5 text-xs text-muted-foreground">{label}</div>
+        <div className="mt-0.5 truncate text-xs text-muted-foreground">{label}</div>
       </div>
     </div>
   )
@@ -187,62 +177,55 @@ function KpiCard({ icon, label, value, iconBg }: {
 
 // ─── Column manager ───────────────────────────────────────────────────────────
 
-function ColManager({ cols, onChange, onClose }: {
+function ColManager({ cols, onChange, onClose, anchorRef }: {
   cols: ColDef[]
   onChange: (cols: ColDef[]) => void
   onClose: () => void
+  anchorRef: React.RefObject<HTMLElement>
 }) {
-  const [draggingId, setDraggingId] = useState<string | null>(null)
-  const [overTarget, setOverTarget] = useState<{ id: string; panel: 'visible' | 'hidden' } | null>(null)
+  // `next` comes back typed as the hook's minimal { id, visible } shape — cast to this module's
+  // richer ColDef (label + pinned), which is what the objects actually still carry at runtime
+  // (commitDrop only ever spreads from the `cols` we pass in).
+  const { draggingId: dragId, overTarget: over, dragPos, startDragMouse, startDragTouch } = useDragReorder({
+    cols, onChange: (next) => { const full = next as ColDef[]; onChange(full); saveCols(full) },
+  })
+
+  // Clamped position (not a `right:0` CSS anchor) — the anchor button's own right edge is rarely
+  // flush with the true viewport edge on narrow, so a right-anchored popover can still push its
+  // LEFT edge off-screen. Computed from the anchor's rect, recomputed on resize.
+  const [pos, setPos] = useState<{ left: number; top: number; width: number } | null>(null)
+  useLayoutEffect(() => {
+    const el = anchorRef.current
+    if (!el) return
+    const margin = 12
+    const width = Math.min(420, window.innerWidth - margin * 2)
+    function compute() {
+      const rect = el!.getBoundingClientRect()
+      const left = Math.min(Math.max(margin, rect.right - width), window.innerWidth - width - margin)
+      setPos({ left, top: rect.bottom + 6, width })
+    }
+    compute()
+    window.addEventListener('resize', compute)
+    return () => window.removeEventListener('resize', compute)
+  }, [anchorRef])
 
   const visibleCols = cols.filter(c => c.visible)
   const hiddenCols  = cols.filter(c => !c.visible)
 
-  function handleDrop(panel: 'visible' | 'hidden') {
-    if (!draggingId) return
-    const srcItem = cols.find(c => c.id === draggingId)!
-    if (srcItem.id === 'title' && panel === 'hidden') { setDraggingId(null); setOverTarget(null); return }
-
-    const updatedItem = { ...srcItem, visible: panel === 'visible' }
-    let vList = visibleCols.filter(c => c.id !== draggingId)
-    let hList = hiddenCols.filter(c => c.id !== draggingId)
-
-    if (panel === 'visible') {
-      const dstId = overTarget?.id
-      if (!dstId || dstId === '__panel__') {
-        vList = [...vList, updatedItem]
-      } else {
-        const idx = vList.findIndex(c => c.id === dstId)
-        vList = idx === -1 ? [...vList, updatedItem] : [...vList.slice(0, idx), updatedItem, ...vList.slice(idx)]
-      }
-    } else {
-      hList = [...hList, updatedItem]
-    }
-
-    onChange([...vList, ...hList])
-    setDraggingId(null)
-    setOverTarget(null)
-  }
-
-  function renderItem(col: ColDef, panel: 'visible' | 'hidden') {
+  function item(col: ColDef, panel: 'visible' | 'hidden') {
     const isMandatory = col.id === 'title'
-    const isOver = overTarget?.id === col.id && overTarget?.panel === panel
+    const isOver = over?.id === col.id && over?.panel === panel
     return (
       <div
         key={col.id}
-        draggable={!isMandatory}
-        onDragStart={() => setDraggingId(col.id)}
-        onDragEnd={() => { setDraggingId(null); setOverTarget(null) }}
-        onDragOver={e => {
-          e.preventDefault()
-          e.stopPropagation()
-          if (overTarget?.id !== col.id || overTarget?.panel !== panel)
-            setOverTarget({ id: col.id, panel })
-        }}
+        data-col-item={col.id}
+        onMouseDown={isMandatory ? undefined : startDragMouse(col.id)}
+        onTouchStart={isMandatory ? undefined : startDragTouch(col.id)}
+        style={{ touchAction: 'none' }}
         className={cn(
           'flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm select-none transition-colors',
           !isMandatory && 'cursor-grab active:cursor-grabbing',
-          draggingId === col.id && 'opacity-40',
+          dragId === col.id && 'opacity-40',
           isOver ? 'bg-primary/10 ring-1 ring-primary/30' : 'hover:bg-accent',
           col.pinned && panel === 'visible' && !isOver && 'bg-primary/5',
         )}
@@ -265,8 +248,13 @@ function ColManager({ cols, onChange, onClose }: {
     )
   }
 
+  if (!pos) return null
   return (
-    <div className="absolute right-0 top-full z-50 mt-1.5 w-[420px] rounded-xl border border-border bg-card shadow-xl">
+    <>
+    <div
+      style={{ position: 'fixed', left: pos.left, top: pos.top, width: pos.width }}
+      className="z-50 rounded-xl border border-border bg-card shadow-xl"
+    >
       <div className="flex items-center justify-between border-b border-border px-3 py-2.5">
         <span className="text-sm font-semibold">{t('columns')}</span>
         <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
@@ -276,31 +264,27 @@ function ColManager({ cols, onChange, onClose }: {
 
       <div className="grid grid-cols-2 gap-2 p-3">
         <div
-          className="flex flex-col gap-0.5 min-h-[140px] max-h-[min(48vh,320px)] overflow-y-auto min-w-0 rounded-lg border border-dashed border-border p-1.5"
-          onDragOver={e => {
-            e.preventDefault()
-            if (overTarget?.id !== '__panel__' || overTarget?.panel !== 'hidden')
-              setOverTarget({ id: '__panel__', panel: 'hidden' })
-          }}
-          onDrop={e => { e.preventDefault(); handleDrop('hidden') }}
+          data-col-panel="hidden"
+          className={cn(
+            'flex flex-col gap-0.5 min-h-[140px] max-h-[min(48vh,320px)] overflow-y-auto min-w-0 rounded-lg border border-dashed p-1.5',
+            over?.id === '__panel__' && over.panel === 'hidden' ? 'border-primary/40 bg-primary/5' : 'border-border',
+          )}
         >
           <p className="px-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t('cols_hidden')}</p>
           {hiddenCols.length === 0
             ? <div className="flex flex-1 items-center justify-center py-4 text-[11px] text-muted-foreground/40">{t('drag_here')}</div>
-            : hiddenCols.map(col => renderItem(col, 'hidden'))}
+            : hiddenCols.map(col => item(col, 'hidden'))}
         </div>
 
         <div
-          className="flex flex-col gap-0.5 min-h-[140px] max-h-[min(48vh,320px)] overflow-y-auto min-w-0 rounded-lg border border-dashed border-border p-1.5"
-          onDragOver={e => {
-            e.preventDefault()
-            if (overTarget?.id !== '__panel__' || overTarget?.panel !== 'visible')
-              setOverTarget({ id: '__panel__', panel: 'visible' })
-          }}
-          onDrop={e => { e.preventDefault(); handleDrop('visible') }}
+          data-col-panel="visible"
+          className={cn(
+            'flex flex-col gap-0.5 min-h-[140px] max-h-[min(48vh,320px)] overflow-y-auto min-w-0 rounded-lg border border-dashed p-1.5',
+            over?.id === '__panel__' && over.panel === 'visible' ? 'border-primary/40 bg-primary/5' : 'border-border',
+          )}
         >
           <p className="px-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t('cols_visible')}</p>
-          {visibleCols.map(col => renderItem(col, 'visible'))}
+          {visibleCols.map(col => item(col, 'visible'))}
         </div>
       </div>
 
@@ -313,59 +297,48 @@ function ColManager({ cols, onChange, onClose }: {
         </button>
       </div>
     </div>
+    {dragId && dragPos && (
+      <div
+        style={{ position: 'fixed', zIndex: 60, left: dragPos.x, top: dragPos.y, transform: 'translate(-50%, -50%)', pointerEvents: 'none', display: 'flex', alignItems: 'center', gap: 8, borderRadius: 8, padding: '6px 10px', fontSize: 14, fontWeight: 500, background: 'var(--color-card)', border: '1px solid color-mix(in srgb, var(--color-primary) 40%, transparent)', boxShadow: '0 4px 16px rgba(0,0,0,.25)' }}
+      >
+        <GripVertical className="size-3.5 shrink-0 text-muted-foreground/40" />
+        {cols.find(c => c.id === dragId)?.label ?? dragId}
+      </div>
+    )}
+    </>
   )
 }
 
 // ─── Export modal ─────────────────────────────────────────────────────────────
 
-function ExportModal({ cols, search, status, total, onClose }: {
+function ExportModal({ cols: colsProp, search, status, total, onClose }: {
   cols: ColDef[]
   search: string
   status: '' | '0' | '1'
   total: number
   onClose: () => void
 }) {
-  const [included, setIncluded] = useState<ColDef[]>(() => cols.filter(c => c.visible))
-  const [excluded, setExcluded] = useState<ColDef[]>(() => cols.filter(c => !c.visible))
+  const [cols, setCols] = useState<ColDef[]>(colsProp)
+  const { draggingId: dragId, overTarget: over, dragPos, startDragMouse, startDragTouch } = useDragReorder({
+    cols, onChange: (next) => setCols(next as ColDef[]),
+  })
+  const included = cols.filter(c => c.visible)
+  const excluded = cols.filter(c => !c.visible)
   const [format, setFormat]     = useState<'csv' | 'xlsx'>('xlsx')
   const [exporting, setExporting] = useState(false)
 
-  const [draggingId, setDraggingId] = useState<string | null>(null)
-  const [overTarget, setOverTarget] = useState<{ id: string; panel: 'included' | 'excluded' } | null>(null)
-
-  function handleDrop(panel: 'included' | 'excluded') {
-    if (!draggingId) return
-    const src = [...included, ...excluded].find(c => c.id === draggingId)!
-    let inc = included.filter(c => c.id !== draggingId)
-    let exc = excluded.filter(c => c.id !== draggingId)
-    if (panel === 'included') {
-      const dstId = overTarget?.id
-      if (!dstId || dstId === '__panel__') { inc = [...inc, src] }
-      else {
-        const idx = inc.findIndex(c => c.id === dstId)
-        inc = idx === -1 ? [...inc, src] : [...inc.slice(0, idx), src, ...inc.slice(idx)]
-      }
-    } else { exc = [...exc, src] }
-    setIncluded(inc); setExcluded(exc)
-    setDraggingId(null); setOverTarget(null)
-  }
-
-  function renderItem(col: ColDef, panel: 'included' | 'excluded') {
-    const isOver = overTarget?.id === col.id && overTarget?.panel === panel
+  function item(col: ColDef, panel: 'visible' | 'hidden') {
+    const isOver = over?.id === col.id && over?.panel === panel
     return (
       <div
         key={col.id}
-        draggable
-        onDragStart={() => setDraggingId(col.id)}
-        onDragEnd={() => { setDraggingId(null); setOverTarget(null) }}
-        onDragOver={e => {
-          e.preventDefault(); e.stopPropagation()
-          if (overTarget?.id !== col.id || overTarget?.panel !== panel)
-            setOverTarget({ id: col.id, panel })
-        }}
+        data-col-item={col.id}
+        onMouseDown={startDragMouse(col.id)}
+        onTouchStart={startDragTouch(col.id)}
+        style={{ touchAction: 'none' }}
         className={cn(
           'flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm select-none cursor-grab active:cursor-grabbing transition-colors',
-          draggingId === col.id && 'opacity-40',
+          dragId === col.id && 'opacity-40',
           isOver ? 'bg-primary/10 ring-1 ring-primary/30' : 'hover:bg-accent',
         )}
       >
@@ -379,8 +352,17 @@ function ExportModal({ cols, search, status, total, onClose }: {
     if (included.length === 0) return
     setExporting(true)
     try {
-      const result = await newsApi.fetchNewsList({ page: 1, limit: 9999, search: search || undefined, status: status || undefined })
-      const rows = result.items.map(item => included.map(c => getCellText(item, c.id)))
+      // Récupère TOUT le jeu filtré en bouclant sur le curseur keyset (100/lot).
+      const all: newsApi.NewsItem[] = []
+      let cursor: string | null | undefined
+      do {
+        const res = await newsApi.fetchNewsList({
+          limit: 100, search: search || undefined, status: status || undefined, after: cursor || undefined,
+        })
+        all.push(...res.items)
+        cursor = res.nextCursor
+      } while (cursor)
+      const rows = all.map(item => included.map(c => getCellText(item, c.id)))
       const date = new Date().toISOString().slice(0, 10)
       if (format === 'xlsx') {
         const ws = XLSX.utils.aoa_to_sheet([included.map(c => c.label), ...rows])
@@ -405,7 +387,7 @@ function ExportModal({ cols, search, status, total, onClose }: {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <div className="w-full max-w-lg rounded-2xl border border-border bg-card shadow-2xl">
@@ -444,24 +426,28 @@ function ExportModal({ cols, search, status, total, onClose }: {
             </p>
             <div className="grid grid-cols-2 gap-2">
               <div
-                className="flex flex-col gap-0.5 min-h-[100px] max-h-[min(48vh,320px)] overflow-y-auto min-w-0 rounded-lg border border-dashed border-border p-1.5"
-                onDragOver={e => { e.preventDefault(); if (overTarget?.id !== '__panel__' || overTarget?.panel !== 'excluded') setOverTarget({ id: '__panel__', panel: 'excluded' }) }}
-                onDrop={e => { e.preventDefault(); handleDrop('excluded') }}
+                data-col-panel="hidden"
+                className={cn(
+                  'flex flex-col gap-0.5 min-h-[100px] max-h-[min(48vh,320px)] overflow-y-auto min-w-0 rounded-lg border border-dashed p-1.5',
+                  over?.id === '__panel__' && over.panel === 'hidden' ? 'border-primary/40 bg-primary/5' : 'border-border',
+                )}
               >
                 <p className="px-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t('excluded')}</p>
                 {excluded.length === 0
                   ? <div className="flex flex-1 items-center justify-center py-3 text-[11px] text-muted-foreground/40">{t('drag_here')}</div>
-                  : excluded.map(col => renderItem(col, 'excluded'))}
+                  : excluded.map(col => item(col, 'hidden'))}
               </div>
               <div
-                className="flex flex-col gap-0.5 min-h-[100px] max-h-[min(48vh,320px)] overflow-y-auto min-w-0 rounded-lg border border-dashed border-border p-1.5"
-                onDragOver={e => { e.preventDefault(); if (overTarget?.id !== '__panel__' || overTarget?.panel !== 'included') setOverTarget({ id: '__panel__', panel: 'included' }) }}
-                onDrop={e => { e.preventDefault(); handleDrop('included') }}
+                data-col-panel="visible"
+                className={cn(
+                  'flex flex-col gap-0.5 min-h-[100px] max-h-[min(48vh,320px)] overflow-y-auto min-w-0 rounded-lg border border-dashed p-1.5',
+                  over?.id === '__panel__' && over.panel === 'visible' ? 'border-primary/40 bg-primary/5' : 'border-border',
+                )}
               >
                 <p className="px-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t('included')}</p>
                 {included.length === 0
                   ? <div className="flex flex-1 items-center justify-center py-3 text-[11px] text-muted-foreground/40">{t('drag_here')}</div>
-                  : included.map(col => renderItem(col, 'included'))}
+                  : included.map(col => item(col, 'visible'))}
               </div>
             </div>
           </div>
@@ -475,6 +461,14 @@ function ExportModal({ cols, search, status, total, onClose }: {
           </Button>
         </div>
       </div>
+      {dragId && dragPos && (
+        <div
+          style={{ position: 'fixed', zIndex: 60, left: dragPos.x, top: dragPos.y, transform: 'translate(-50%, -50%)', pointerEvents: 'none', display: 'flex', alignItems: 'center', gap: 8, borderRadius: 8, padding: '6px 10px', fontSize: 14, fontWeight: 500, background: 'var(--color-card)', border: '1px solid color-mix(in srgb, var(--color-primary) 40%, transparent)', boxShadow: '0 4px 16px rgba(0,0,0,.25)' }}
+        >
+          <GripVertical className="size-3.5 shrink-0 text-muted-foreground/40" />
+          {cols.find(c => c.id === dragId)?.label ?? dragId}
+        </div>
+      )}
     </div>
   )
 }
@@ -496,6 +490,16 @@ export default function NewsListPage({ active, onOpen, onNew }: {
   const { can, loaded: capsLoaded } = useCaps(NEWS_CAPS_KEY)
   const canList = can('list')
 
+  const narrow = useIsNarrow()
+  const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set())
+  function toggleExpand(id: number) {
+    setExpandedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+
   // ── View mode toggle ─────────────────────────────────────────────────────────
   const [mode, setMode] = useState<ViewMode>(_cache?.mode ?? 'react')
   const [iframeLoaded, setIframeLoaded] = useState(_cache?.iframeLoaded ?? false)
@@ -510,6 +514,15 @@ export default function NewsListPage({ active, onOpen, onNew }: {
     const v = cols.filter(c => c.visible)
     return [...v.filter(c => c.pinned), ...v.filter(c => !c.pinned)]
   }, [cols])
+
+  // A Hidden column disappears entirely on both desktop and mobile — same rule everywhere, no "+"
+  // peek at Hidden ones. Desktop shows every Visible column inline (pin-sorted, via `visibleCols`
+  // above — unchanged). Mobile can't fit many columns, so only the FIRST Visible column (by the
+  // user's dragged order in ColManager, NOT pin order) anchors inline; every OTHER Visible column
+  // surfaces behind the per-row "+" instead, in that same order.
+  const shownColsList = useMemo(() => cols.filter(c => c.visible), [cols])
+  const displayCols = narrow ? shownColsList.map((c, i) => ({ ...c, visible: i === 0 })) : visibleCols
+  const hasHidden = narrow && shownColsList.length > 1
 
   // Minimum table width = sum of column min-widths
   const tableMinWidth = useMemo(
@@ -556,44 +569,44 @@ export default function NewsListPage({ active, onOpen, onNew }: {
   // ── Scroll sync: body horizontal ↔ header ─────────────────────────────────
   const headerScrollRef = useRef<HTMLDivElement>(null)
   const bodyScrollRef   = useRef<HTMLDivElement>(null)
-  const sentinelRef     = useRef<HTMLDivElement>(null)
-  const loadMoreRef     = useRef<() => void>(() => {})
 
-  // ── List state ─────────────────────────────────────────────────────────────
-  const [items,       setItems]       = useState<newsApi.NewsItem[]>(_cache?.items ?? [])
-  const [total,       setTotal]       = useState(_cache?.total ?? 0)
-  const [loading,     setLoading]     = useState(false)
-  const [loadingMore, setLoadingMore] = useState(false)
-  const [hasMore,     setHasMore]     = useState(_cache?.hasMore ?? true)
-  const [error,       setError]       = useState<string | null>(null)
-  const [page,        setPage]        = useState(_cache?.page ?? 1)
-  const [search,      setSearch]      = useState(_cache?.search ?? '')
-  const [status,      setStatus]      = useState<'' | '0' | '1'>(_cache?.status ?? '')
-  const [deleting,    setDeleting]    = useState<number | null>(null)
-  // Bumped par « Réinitialiser les filtres » : force le refetch même quand les filtres
-  // sont déjà à leur valeur par défaut (sinon l'effet de chargement ne se redéclenche pas).
-  const [refreshKey,  setRefreshKey]  = useState(0)
+  // ── Filtres ──────────────────────────────────────────────────────────────
+  const [search,   setSearch]   = useState(_cache?.search ?? '')
+  const [status,   setStatus]   = useState<'' | '0' | '1'>(_cache?.status ?? '')
+  const [deleting, setDeleting] = useState<number | null>(null)
 
-  // ── Sort ───────────────────────────────────────────────────────────────────
-  const [sortCol, setSortCol] = useState<string | null>(_cache?.sortCol ?? null)
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>(_cache?.sortDir ?? 'asc')
+  // ── Liste : scroll infini + tri server-side + keyset (hook mutualisé) ──────
+  // Le fetcher capture les filtres courants ; `deps` relance un chargement frais à
+  // chaque changement de filtre. On gate sur capsLoaded/canList : tant que les caps
+  // ne sont pas résolues (ou liste refusée) le fetcher renvoie un jeu vide sans
+  // appeler l'API (évite un flash « Forbidden » / un 403). Le re-fetch se déclenche
+  // automatiquement dès que `capsLoaded`/`canList` changent (présents dans `deps`).
+  const {
+    items, total, loading, hasMore, sentinelRef,
+    sortCol, sortDir, toggleSort, reload, removeLocal, snapshot,
+  } = useKeysetList<newsApi.NewsItem>({
+    fetcher: (a) => {
+      if (!capsLoaded || !canList) return Promise.resolve({ items: [], total: 0, nextCursor: null })
+      return newsApi.fetchNewsList({
+        ...a,
+        search: search || undefined,
+        status: status || undefined,
+      })
+    },
+    deps: [search, status, capsLoaded, canList],
+    limit: LIMIT,
+    defaultSort: 'id',
+    defaultDir: 'desc',
+    initial: _cache
+      ? {
+          items: _cache.items, total: _cache.total, cursor: _cache.cursor,
+          hasMore: _cache.hasMore, sortCol: _cache.sortCol, sortDir: _cache.sortDir,
+        }
+      : undefined,
+    skipInitial: !!(_cache && _cache.items.length),
+  })
 
-  function handleSort(colId: string) {
-    if (sortCol === colId) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
-    else { setSortCol(colId); setSortDir('asc') }
-  }
-
-  const sortedItems = useMemo(() => {
-    if (!sortCol) return items
-    return [...items].sort((a, b) => {
-      const va = getSortValue(a, sortCol)
-      const vb = getSortValue(b, sortCol)
-      const cmp = typeof va === 'number' && typeof vb === 'number'
-        ? va - vb
-        : String(va).localeCompare(String(vb), newsLang() === 'fr' ? 'fr' : 'en', { sensitivity: 'base' })
-      return sortDir === 'asc' ? cmp : -cmp
-    })
-  }, [items, sortCol, sortDir])
+  function handleSort(colId: string) { toggleSort(colId) }
 
   // ── KPIs (from dedicated stats endpoint) ──────────────────────────────────
   const [kpiStats, setKpiStats] = useState<newsApi.NewsStats | null>(_cache?.kpiStats ?? null)
@@ -608,69 +621,23 @@ export default function NewsListPage({ active, onOpen, onNew }: {
   useEffect(() => { if (active) loadKpis() }, [active])
 
   // ── Cache: track current state + save on unmount ───────────────────────────
-  const cacheRef = useRef({ items, total, page, search, status, sortCol, sortDir, kpiStats, hasMore, mode, iframeLoaded })
-  useEffect(() => { cacheRef.current = { items, total, page, search, status, sortCol, sortDir, kpiStats, hasMore, mode, iframeLoaded } })
+  const cacheRef = useRef<ListCache>({
+    ...snapshot(), search, status, kpiStats, mode, iframeLoaded,
+  })
+  useEffect(() => {
+    cacheRef.current = { ...snapshot(), search, status, kpiStats, mode, iframeLoaded }
+  })
   useEffect(() => () => { _cache = cacheRef.current }, [])
 
-  // ── List loading ───────────────────────────────────────────────────────────
-  useEffect(() => {
-    // Attendre la résolution des capacités avant tout appel (évite un flash « Forbidden »).
-    if (!capsLoaded) return
-    // Liste refusée → on n'appelle pas l'API (la vue « pas de droits » sera rendue à la place).
-    if (!canList) { setItems([]); setTotal(0); setHasMore(false); setLoading(false); setError(null); return }
-    // Restore from cache on re-mount (navigate back): items already in state, skip API call
-    if (_cache?.items?.length) {
-      _cache = null  // consume → next filter change will reload normally
-      return
-    }
-    setPage(1); setHasMore(true); setLoading(true); setError(null)
-    newsApi.fetchNewsList({ page: 1, limit: LIMIT, search: search || undefined, status: status || undefined })
-      .then(res => { setItems(res.items); setTotal(res.total); setHasMore(res.items.length === LIMIT) })
-      .catch(e => setError(e instanceof Error ? e.message : t('error')))
-      .finally(() => setLoading(false))
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, status, capsLoaded, canList, refreshKey])
-
-  // Réinitialiser : recherche + statut + tri par défaut (aucun tri), puis refetch.
-  // On vide `items` pour repasser par l'état « Chargement » (sinon les anciennes lignes
-  // restent et le clic semble sans effet quand aucun filtre n'était posé).
+  // Réinitialiser : recherche + statut par défaut, puis rechargement frais.
+  // `_cache=null` pour ne pas restaurer un ancien état ; le changement de `search`/`status`
+  // (deps du hook) relance le fetch, et `reload()` couvre le cas où ils étaient déjà vides.
   function resetFilters() {
+    _cache = null
     setSearch('')
     setStatus('')
-    setSortCol(null)
-    setSortDir('asc')
-    setItems([])
-    setTotal(0)
-    setPage(1)
-    setHasMore(true)
-    setRefreshKey(k => k + 1)
+    reload()
   }
-
-  function loadMore() {
-    if (loadingMore || !hasMore || loading) return
-    const next = page + 1
-    setPage(next)
-    setLoadingMore(true)
-    newsApi.fetchNewsList({ page: next, limit: LIMIT, search: search || undefined, status: status || undefined })
-      .then(res => { setItems(prev => [...prev, ...res.items]); setHasMore(res.items.length === LIMIT) })
-      .catch(() => {})
-      .finally(() => setLoadingMore(false))
-  }
-
-  useLayoutEffect(() => { loadMoreRef.current = loadMore })
-
-  // Infinite scroll sentinel
-  useEffect(() => {
-    const el = sentinelRef.current
-    if (!el) return
-    const obs = new IntersectionObserver(
-      entries => { if (entries[0].isIntersecting) loadMoreRef.current() },
-      { threshold: 0.1 },
-    )
-    obs.observe(el)
-    return () => obs.disconnect()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   // ── UI panels ──────────────────────────────────────────────────────────────
   const [showColMgr, setShowColMgr] = useState(false)
@@ -693,8 +660,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
     setDeleting(id)
     try {
       await newsApi.deleteNews(id)
-      setItems(prev => prev.filter(n => n.id !== id))
-      setTotal(t => t - 1)
+      removeLocal(n => n.id === id)
       loadKpis()
     } catch (e) {
       alert(e instanceof Error ? e.message : t('error'))
@@ -719,12 +685,15 @@ export default function NewsListPage({ active, onOpen, onNew }: {
   function Colgroup() {
     return (
       <colgroup>
-        {visibleCols.map(col => {
+        {hasHidden && <col style={{ width: 40, minWidth: 40 }} />}
+        {displayCols.filter(col => col.visible).map(col => {
           const fixed = COL_FIXED_WIDTHS[col.id]
           return (
             <col
               key={col.id}
-              style={fixed ? { width: fixed, minWidth: fixed } : { minWidth: COL_MIN_WIDTHS[col.id] ?? 160 }}
+              style={narrow
+                ? { minWidth: 0 }
+                : fixed ? { width: fixed, minWidth: fixed } : { minWidth: COL_MIN_WIDTHS[col.id] ?? 160 }}
             />
           )
         })}
@@ -772,9 +741,64 @@ export default function NewsListPage({ active, onOpen, onNew }: {
   return (
     <div className="flex h-full flex-col gap-5 overflow-y-auto p-6">
 
-      {/* KPI strip — masqué si la liste est refusée (fait partie de la « liste ») */}
+      {/* Header — comes BEFORE the KPI strip (matches melis-core's Users tool layout order:
+          title/actions first, then KPIs). Narrow viewports especially need the title above
+          the fold rather than pushed down by the stat cards. */}
+      <div className="flex items-center justify-between gap-3">
+        <div className={cn(narrow && 'min-w-0')}>
+          <h1 className={cn('text-xl font-semibold tracking-tight', narrow && 'truncate')}>{t('news_title')}</h1>
+          <p className={cn('text-sm text-muted-foreground', narrow && 'truncate')}>{t('news_subtitle')}</p>
+        </div>
+        {/* On narrow: stacks internally (toggle row above "Nouvel article") so this whole block
+            stays narrow enough to sit BESIDE the title on the same row, instead of the row
+            wrapping below it — same pattern as melis-core's Users tool. */}
+        <div className={cn('flex items-center gap-2', narrow && 'shrink-0 flex-col')}>
+          {/* Mode toggle — icon-only on narrow (title attr keeps it accessible) */}
+          <div className="flex items-center rounded-lg border border-border bg-muted/40 p-1 gap-1">
+            <button
+              type="button"
+              onClick={() => setMode('react')}
+              title={t('view_new')}
+              className={cn(
+                'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+                mode === 'react'
+                  ? 'bg-card shadow-sm text-foreground'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              <Code2 className="size-3.5" />
+              {!narrow && t('view_new')}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setMode('iframe'); setIframeLoaded(true) }}
+              title={t('view_old')}
+              className={cn(
+                'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+                mode === 'iframe'
+                  ? 'bg-card shadow-sm text-foreground'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              <Layout className="size-3.5" />
+              {!narrow && t('view_old')}
+            </button>
+          </div>
+          {can('create') && (
+            <Button onClick={onNew} size="sm" className={cn('gap-1.5', narrow && 'w-full')}>
+              <Plus className="size-4" />
+              {t('new_article')}
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* KPI strip — masqué si la liste est refusée (fait partie de la « liste »). On narrow,
+          a real 2-col grid (not flex-wrap) so the 3 cards land evenly instead of an odd
+          2-then-1 wrap; the 3rd card spans both columns so it still fills its row. JS ternary
+          (not `sm:`) per this brick's convention — see shared/useIsNarrow.ts. */}
       {canList && (
-        <div className="flex flex-wrap gap-3">
+        <div className={narrow ? 'grid grid-cols-2 gap-3' : 'flex flex-wrap gap-3'}>
           <KpiCard
             icon={<Newspaper    className="size-5 text-blue-500"    />}
             label={t('total_articles')}
@@ -792,54 +816,10 @@ export default function NewsListPage({ active, onOpen, onNew }: {
             label={t('count_drafts')}
             value={kpiStats?.draft     ?? null}
             iconBg="bg-orange-500/10"
+            className={narrow ? 'col-span-2' : undefined}
           />
         </div>
       )}
-
-      {/* Header */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight">{t('news_title')}</h1>
-          <p className="text-sm text-muted-foreground">{t('news_subtitle')}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          {/* Mode toggle */}
-          <div className="flex items-center rounded-lg border border-border bg-muted/40 p-1 gap-1">
-            <button
-              type="button"
-              onClick={() => setMode('react')}
-              className={cn(
-                'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
-                mode === 'react'
-                  ? 'bg-card shadow-sm text-foreground'
-                  : 'text-muted-foreground hover:text-foreground',
-              )}
-            >
-              <Code2 className="size-3.5" />
-              {t('view_new')}
-            </button>
-            <button
-              type="button"
-              onClick={() => { setMode('iframe'); setIframeLoaded(true) }}
-              className={cn(
-                'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
-                mode === 'iframe'
-                  ? 'bg-card shadow-sm text-foreground'
-                  : 'text-muted-foreground hover:text-foreground',
-              )}
-            >
-              <Layout className="size-3.5" />
-              {t('view_old')}
-            </button>
-          </div>
-          {can('create') && (
-            <Button onClick={onNew} size="sm" className="gap-1.5">
-              <Plus className="size-4" />
-              {t('new_article')}
-            </Button>
-          )}
-        </div>
-      </div>
 
       {/* Vue Melis classique — gardée montée pour ne pas recharger au retoggle */}
       {iframeLoaded && (
@@ -864,8 +844,8 @@ export default function NewsListPage({ active, onOpen, onNew }: {
       ) : (<>
 
       {/* Filters + actions */}
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative min-w-[200px] flex-1 max-w-sm">
+      <div className={narrow ? 'flex flex-col gap-2' : 'flex flex-wrap items-center gap-2'}>
+        <div className={cn('relative', narrow ? 'w-full' : 'min-w-[200px] flex-1 max-w-sm')}>
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder={t('search_ph')}
@@ -874,7 +854,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
             className="pl-9 h-9"
           />
         </div>
-        <div className="flex h-9 items-center rounded-lg border border-border bg-muted/40 p-0.5 gap-0.5">
+        <div className={cn('flex h-9 items-center rounded-lg border border-border bg-muted/40 p-0.5 gap-0.5', narrow && 'w-full')}>
           {([
             { value: '',  label: t('filter_all'),      dot: null              },
             { value: '1', label: t('filter_active'),   dot: 'bg-emerald-500' },
@@ -886,6 +866,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
               onClick={() => setStatus(opt.value)}
               className={cn(
                 'flex h-full items-center gap-1.5 rounded-md px-3 text-xs font-medium whitespace-nowrap transition-colors',
+                narrow && 'flex-1 justify-center',
                 status === opt.value
                   ? 'bg-card shadow-sm text-foreground'
                   : 'text-muted-foreground hover:text-foreground',
@@ -897,34 +878,32 @@ export default function NewsListPage({ active, onOpen, onNew }: {
           ))}
         </div>
 
-        <div className="ml-auto flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={resetFilters}>
+        {/* "Reset filters" always gets its own full-width row on narrow — a FR/EN i18n string
+            like "reset_filters" is long enough that pairing it 50/50 with anything wraps ugly. */}
+        <div className={narrow ? 'flex w-full flex-col gap-2' : 'ml-auto flex items-center gap-2'}>
+          <Button variant="outline" size="sm" className={cn('gap-1.5', narrow && 'w-full')} onClick={resetFilters}>
             <RotateCcw className="size-3.5" />
             {t('reset_filters')}
           </Button>
-          <div ref={colMgrRef} className="relative">
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setShowColMgr(v => !v)}>
-              <Columns3 className="size-3.5" />
-              {t('columns')}
-            </Button>
-            {showColMgr && (
-              <ColManager cols={cols} onChange={updateCols} onClose={() => setShowColMgr(false)} />
+          <div className={narrow ? 'flex w-full gap-2' : 'contents'}>
+            <div ref={colMgrRef} className={cn('relative', narrow && 'flex-1')}>
+              <Button variant="outline" size="sm" className={cn('gap-1.5', narrow && 'w-full')} onClick={() => setShowColMgr(v => !v)}>
+                <Columns3 className="size-3.5" />
+                {t('columns')}
+              </Button>
+              {showColMgr && (
+                <ColManager cols={cols} onChange={updateCols} onClose={() => setShowColMgr(false)} anchorRef={colMgrRef} />
+              )}
+            </div>
+            {can('export') && (
+              <Button variant="outline" size="sm" className={cn('gap-1.5', narrow && 'flex-1')} onClick={() => setShowExport(true)}>
+                <Download className="size-3.5" />
+                {t('export')}
+              </Button>
             )}
           </div>
-          {can('export') && (
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setShowExport(true)}>
-              <Download className="size-3.5" />
-              {t('export')}
-            </Button>
-          )}
         </div>
       </div>
-
-      {error && (
-        <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-          {error}
-        </div>
-      )}
 
       {/* Table: sticky header + scrollable body */}
       <div className="rounded-xl border border-border bg-card" style={{ overflow: 'clip' }}>
@@ -935,12 +914,13 @@ export default function NewsListPage({ active, onOpen, onNew }: {
             <table
               ref={headerTableRef}
               className="w-full text-sm"
-              style={{ tableLayout: 'fixed', minWidth: tableMinWidth }}
+              style={narrow ? { tableLayout: 'fixed', width: '100%' } : { tableLayout: 'fixed', minWidth: tableMinWidth }}
             >
               <Colgroup />
               <thead>
                 <tr className="bg-muted/40">
-                  {visibleCols.map(col => (
+                  {hasHidden && <th className="w-10 px-2 py-3" />}
+                  {displayCols.filter(col => col.visible).map(col => (
                     <th
                       key={col.id}
                       data-col-id={col.id}
@@ -955,7 +935,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
                           ? sortDir === 'asc'
                             ? <ArrowUp className="size-3 text-primary" />
                             : <ArrowDown className="size-3 text-primary" />
-                          : <ArrowUpDown className="size-3 opacity-0 group-hover/th:opacity-40 transition-opacity" />}
+                          : <ArrowUpDown className="size-3 opacity-30" />}
                       </div>
                     </th>
                   ))}
@@ -977,55 +957,69 @@ export default function NewsListPage({ active, onOpen, onNew }: {
               headerScrollRef.current.scrollLeft = e.currentTarget.scrollLeft
           }}
         >
-          {(!capsLoaded || loading) && sortedItems.length === 0 ? (
+          {(!capsLoaded || loading) && items.length === 0 ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="size-5 animate-spin text-muted-foreground" />
             </div>
-          ) : sortedItems.length === 0 ? (
+          ) : items.length === 0 ? (
             <div className="py-20 text-center text-sm text-muted-foreground">{t('no_articles')}</div>
           ) : (
             <table
               className="w-full text-sm"
-              style={{ tableLayout: 'fixed', minWidth: tableMinWidth }}
+              style={narrow ? { tableLayout: 'fixed', width: '100%' } : { tableLayout: 'fixed', minWidth: tableMinWidth }}
             >
               <Colgroup />
               <tbody>
-                {sortedItems.map(item => (
-                  <tr
-                    key={item.id}
-                    className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors cursor-pointer"
-                    onClick={() => onOpen(item.id, item.title)}
-                  >
-                    {visibleCols.map(col => (
-                      <td key={col.id} className="px-4 py-3" style={pinStyle(col)}>
-                        {renderCell(item, col)}
+                {items.map(item => (
+                  <Fragment key={item.id}>
+                    <tr
+                      className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors cursor-pointer"
+                      onClick={() => onOpen(item.id, item.title)}
+                    >
+                      {hasHidden && (
+                        <td className="px-2 py-3" onClick={(e) => e.stopPropagation()}>
+                          <ExpandToggle expanded={expandedIds.has(item.id)} onClick={() => toggleExpand(item.id)} />
+                        </td>
+                      )}
+                      {displayCols.filter(col => col.visible).map(col => (
+                        <td key={col.id} className="px-4 py-3" style={pinStyle(col)}>
+                          {renderCell(item, col)}
+                        </td>
+                      ))}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-1">
+                          {can('edit') && (
+                            <Button
+                              variant="ghost" size="icon" className="size-8"
+                              onClick={(e) => { e.stopPropagation(); onOpen(item.id, item.title) }} title={t('edit')}
+                            >
+                              <Edit2 className="size-3.5" />
+                            </Button>
+                          )}
+                          {can('delete') && (
+                            <Button
+                              variant="ghost" size="icon"
+                              className="size-8 text-destructive hover:text-destructive"
+                              onClick={(e) => { e.stopPropagation(); handleDelete(item.id, item.title) }}
+                              disabled={deleting === item.id} title={t('delete')}
+                            >
+                              {deleting === item.id
+                                ? <Loader2 className="size-3.5 animate-spin" />
+                                : <Trash2 className="size-3.5" />}
+                            </Button>
+                          )}
+                        </div>
                       </td>
-                    ))}
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1">
-                        {can('edit') && (
-                          <Button
-                            variant="ghost" size="icon" className="size-8"
-                            onClick={(e) => { e.stopPropagation(); onOpen(item.id, item.title) }} title={t('edit')}
-                          >
-                            <Edit2 className="size-3.5" />
-                          </Button>
-                        )}
-                        {can('delete') && (
-                          <Button
-                            variant="ghost" size="icon"
-                            className="size-8 text-destructive hover:text-destructive"
-                            onClick={(e) => { e.stopPropagation(); handleDelete(item.id, item.title) }}
-                            disabled={deleting === item.id} title={t('delete')}
-                          >
-                            {deleting === item.id
-                              ? <Loader2 className="size-3.5 animate-spin" />
-                              : <Trash2 className="size-3.5" />}
-                          </Button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
+                    </tr>
+                    {hasHidden && expandedIds.has(item.id) && (
+                      <HiddenColsRow
+                        cols={displayCols}
+                        labelFor={(id) => cols.find(c => c.id === id)?.label ?? id}
+                        renderValue={(id) => getCellText(item, id)}
+                        colSpan={displayCols.filter(col => col.visible).length + 2}
+                      />
+                    )}
+                  </Fragment>
                 ))}
               </tbody>
             </table>
@@ -1033,7 +1027,7 @@ export default function NewsListPage({ active, onOpen, onNew }: {
 
           {/* Infinite scroll sentinel */}
           <div ref={sentinelRef} className="h-1" />
-          {loadingMore && (
+          {loading && items.length > 0 && (
             <div className="flex items-center justify-center gap-2 py-4 text-xs text-muted-foreground">
               <Loader2 className="size-3.5 animate-spin" />
               {t('loading')}

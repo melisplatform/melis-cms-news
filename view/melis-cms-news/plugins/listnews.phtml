@@ -5,10 +5,10 @@
                 <div class="col-sm-6 col-md-8">
                     <div class="form-inline">
                         <div class="form-group">
-                            <input type="text" class="form-control" name="date_min" id="date-min" placeholder="Date from" value="<?= $this->dateMin; ?>" readonly="readonly" />
+                            <input type="text" class="form-control" name="date_min" id="date-min" placeholder="Date from" value="<?= $this->escapeHtmlAttr($this->dateMin); ?>" readonly="readonly" />
                         </div>
                         <div class="form-group">
-                            <input type="text" class="form-control" name="date_max" id="date-max"  placeholder="Date to" value="<?= $this->dateMax; ?>" readonly="readonly" />
+                            <input type="text" class="form-control" name="date_max" id="date-max"  placeholder="Date to" value="<?= $this->escapeHtmlAttr($this->dateMax); ?>" readonly="readonly" />
                         </div>
                         <button type="submit" class="btn btn-default">Filter</button>
                     </div>
@@ -16,7 +16,7 @@
                 <div class="col-sm-6 col-md-4 text-right">
                     <div class="form-inline">
                         <div class="form-group">
-                            <input type="text" class="form-control" name="search" placeholder="Search News..." value="<?= $this->searchKey; ?>" />
+                            <input type="text" class="form-control" name="search" placeholder="Search News..." value="<?= $this->escapeHtmlAttr($this->searchKey); ?>" />
                         </div>
                         <button type="submit" class="btn btn-default">Search</button>
                     </div>
@@ -34,11 +34,11 @@
                     <div class="col-sm-6 col-md-4 post">
                         <div class="thumbnail">
                             <?php if(!empty($val['cnews_image1'])): ?>
-                                <img src="<?= $val['cnews_image1']; ?>" alt="..." />
+                                <img src="<?= $this->escapeHtmlAttr($val['cnews_image1']); ?>" alt="..." />
                             <?php endif; ?>
                             <div class="caption">
-                                <a href="<?= $val['newsLink']; ?>">
-                                    <h3><?= $val['cnews_title']; ?></h3>
+                                <a href="<?= $this->escapeHtmlAttr($val['newsLink']); ?>">
+                                    <h3><?= htmlspecialchars($val['cnews_title'], ENT_QUOTES); ?></h3>
                                 </a>
                                 <p><?= $firstParagraph; ?></p>
                             </div>

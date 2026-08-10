@@ -20,7 +20,7 @@
 		if(!empty($this->documents)){
 		    echo '<div class="news-file-cont">';
 		    foreach($this->documents as $doc):?>
-		    <p><?= $doc['documents'] ?>
+		    <p><?= $this->escapeHtml($doc['documents']) ?>
 		    	<i class="fa fa-times-circle removeAttachFile" data-newsid="<?= $doc['cnews_id']?>" data-column="<?= $doc['column']?>" data-type="file"></i> &nbsp;
 		    	<i class="fa fa-pencil newsEditImage" data-newsid="<?= $doc['cnews_id']?>" data-column="<?= $doc['column']?>" data-filetype="file" style="padding-right: 10px;"></i>
 				
