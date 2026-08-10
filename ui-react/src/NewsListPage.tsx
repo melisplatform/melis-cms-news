@@ -481,10 +481,12 @@ const LIMIT = 25
  * Liste des articles. Pilotée par le conteneur NewsPage (sous-onglets) : `onOpen`/`onNew`
  * ouvrent un sous-onglet d'édition DANS l'outil (plus de navigation d'URL ni d'onglet de shell).
  */
-export default function NewsListPage({ active, onOpen, onNew }: {
+export default function NewsListPage({ active, onOpen, onNew, refreshToken = 0 }: {
   active: boolean
   onOpen: (id: number, title: string) => void
   onNew: () => void
+  /** Incrémenté par NewsPage à chaque sauvegarde d'article : la liste se recharge au retour. */
+  refreshToken?: number
 }) {
   // ── Capacités (droits avancés list/create/edit/delete/export) ────────────────
   const { can, loaded: capsLoaded } = useCaps(NEWS_CAPS_KEY)
@@ -620,6 +622,21 @@ export default function NewsListPage({ active, onOpen, onNew }: {
   // Rafraîchit les compteurs quand on revient sur la liste (retour depuis un sous-onglet).
   useEffect(() => { if (active) loadKpis() }, [active])
 
+  // Retour à la liste APRÈS une sauvegarde (« ← Retour » depuis le formulaire) : la liste
+  // reste montée (display:none) pendant l'édition, donc rien ne la rechargerait et un article
+  // fraîchement créé n'y apparaîtrait pas. NewsPage incrémente `refreshToken` à chaque save ;
+  // on ne recharge que si le jeton a bougé depuis le dernier rechargement — une simple
+  // consultation aller/retour ne repart donc PAS de la page 1 (scroll infini préservé).
+  // `reload()` garde les lignes affichées jusqu'à l'arrivée du 1er lot (pas de clignotement).
+  const appliedTokenRef = useRef(refreshToken)
+  useEffect(() => {
+    if (!active || refreshToken === appliedTokenRef.current) return
+    appliedTokenRef.current = refreshToken
+    _cache = null
+    reload()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, refreshToken])
+
   // ── Cache: track current state + save on unmount ───────────────────────────
   const cacheRef = useRef<ListCache>({
     ...snapshot(), search, status, kpiStats, mode, iframeLoaded,
@@ -628,6 +645,20 @@ export default function NewsListPage({ active, onOpen, onNew }: {
     cacheRef.current = { ...snapshot(), search, status, kpiStats, mode, iframeLoaded }
   })
   useEffect(() => () => { _cache = cacheRef.current }, [])
+
+  // Rafraîchir : recharge la liste ET les compteurs SANS toucher aux filtres/tri
+  // (contrairement à resetFilters). `_cache=null` pour qu'un remontage ne restaure
+  // pas l'ancien jeu de lignes. `refreshing` ne sert qu'à l'animation de l'icône.
+  const [refreshing, setRefreshing] = useState(false)
+
+  function handleRefresh() {
+    _cache = null
+    setRefreshing(true)
+    setKpiStats(null)
+    reload()
+    loadKpis()
+    setTimeout(() => setRefreshing(false), 600)
+  }
 
   // Réinitialiser : recherche + statut par défaut, puis rechargement frais.
   // `_cache=null` pour ne pas restaurer un ancien état ; le changement de `search`/`status`
@@ -753,35 +784,48 @@ export default function NewsListPage({ active, onOpen, onNew }: {
             stays narrow enough to sit BESIDE the title on the same row, instead of the row
             wrapping below it — same pattern as melis-core's Users tool. */}
         <div className={cn('flex items-center gap-2', narrow && 'shrink-0 flex-col')}>
-          {/* Mode toggle — icon-only on narrow (title attr keeps it accessible) */}
-          <div className="flex items-center rounded-lg border border-border bg-muted/40 p-1 gap-1">
+          {/* Toggle + refresh restent sur UNE ligne : en narrow le bloc parent passe en
+              colonne, cette rangée d'icônes se retrouve alors au-dessus de « Nouvel article »
+              (même disposition que l'outil Utilisateurs de melis-core). */}
+          <div className="flex items-center gap-2">
+            {/* Mode toggle — icon-only on narrow (title attr keeps it accessible) */}
+            <div className="flex items-center rounded-lg border border-border bg-muted/40 p-1 gap-1">
+              <button
+                type="button"
+                onClick={() => setMode('react')}
+                title={t('view_new')}
+                className={cn(
+                  'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+                  mode === 'react'
+                    ? 'bg-card shadow-sm text-foreground'
+                    : 'text-muted-foreground hover:text-foreground',
+                )}
+              >
+                <Code2 className="size-3.5" />
+                {!narrow && t('view_new')}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setMode('iframe'); setIframeLoaded(true) }}
+                title={t('view_old')}
+                className={cn(
+                  'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+                  mode === 'iframe'
+                    ? 'bg-card shadow-sm text-foreground'
+                    : 'text-muted-foreground hover:text-foreground',
+                )}
+              >
+                <Layout className="size-3.5" />
+                {!narrow && t('view_old')}
+              </button>
+            </div>
             <button
               type="button"
-              onClick={() => setMode('react')}
-              title={t('view_new')}
-              className={cn(
-                'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
-                mode === 'react'
-                  ? 'bg-card shadow-sm text-foreground'
-                  : 'text-muted-foreground hover:text-foreground',
-              )}
+              onClick={handleRefresh}
+              title={t('refresh')}
+              className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
-              <Code2 className="size-3.5" />
-              {!narrow && t('view_new')}
-            </button>
-            <button
-              type="button"
-              onClick={() => { setMode('iframe'); setIframeLoaded(true) }}
-              title={t('view_old')}
-              className={cn(
-                'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
-                mode === 'iframe'
-                  ? 'bg-card shadow-sm text-foreground'
-                  : 'text-muted-foreground hover:text-foreground',
-              )}
-            >
-              <Layout className="size-3.5" />
-              {!narrow && t('view_old')}
+              <RotateCcw className={cn('size-3.5', refreshing && 'animate-spin')} />
             </button>
           </div>
           {can('create') && (
