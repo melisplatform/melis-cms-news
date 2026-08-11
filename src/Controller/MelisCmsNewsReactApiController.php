@@ -279,10 +279,18 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
                 'cnews_slider_id'      => isset($body['sliderId']) && $body['sliderId']
                     ? (int) $body['sliderId']
                     : null,
-                'cnews_author_account' => isset($body['authorId']) && $body['authorId']
-                    ? (int) $body['authorId']
-                    : null,
             ];
+
+            // Auteur : la colonne cnews_author_account n'appartient pas à MelisCmsNews, elle est
+            // ajoutée à melis_cms_news par MelisCmsUserAccount (ALTER TABLE au bootstrap, et
+            // seulement sur les routes `melis-backoffice` — donc jamais depuis le SPA React).
+            // Comme le legacy, on ne l'écrit que si elle existe réellement, sinon saveNews plante
+            // ("Unknown column 'cnews_author_account' in 'field list'").
+            if ($this->hasAuthorAccountColumn()) {
+                $newsData['cnews_author_account'] = isset($body['authorId']) && $body['authorId']
+                    ? (int) $body['authorId']
+                    : null;
+            }
 
             // Flag de modération des commentaires (colonne cnews_validate_comments ajoutée par
             // MelisCmsComments au bootstrap). On ne l'écrit QUE si le module est actif (sinon la
@@ -610,6 +618,10 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
             // If the module is not installed, graceful degradation: returns empty array.
             $users = [];
             try {
+                // Pas de colonne auteur → rien à sélectionner : on masque la section côté React.
+                if (!$this->hasAuthorAccountColumn()) {
+                    return $this->jsonResponse(['success' => true, 'data' => []]);
+                }
                 $service = $this->getServiceManager()->get('FrontUserAccountService');
                 $userRows = $service->getAllUsers();
 
@@ -770,6 +782,28 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
         } catch (\Throwable $e) {
             return $this->errorResponse($e);
         }
+    }
+
+    /**
+     * true si la colonne cnews_author_account existe réellement dans melis_cms_news.
+     * (Ajoutée par MelisCmsUserAccount ; le module peut être actif sans que l'ALTER ait
+     * encore tourné, cf. saveAction.) Mémoïsé pour ne pas requêter la metadata deux fois.
+     */
+    private ?bool $authorColumnExists = null;
+
+    private function hasAuthorAccountColumn(): bool
+    {
+        if ($this->authorColumnExists !== null) {
+            return $this->authorColumnExists;
+        }
+        try {
+            $columns = $this->getServiceManager()->get('MelisCmsNewsTable')->getTableColumns();
+            $this->authorColumnExists = in_array('cnews_author_account', (array) $columns, true);
+        } catch (\Throwable) {
+            $this->authorColumnExists = false;
+        }
+
+        return $this->authorColumnExists;
     }
 
     /** Service de commentaires si le module MelisCmsComments est actif, sinon null. */

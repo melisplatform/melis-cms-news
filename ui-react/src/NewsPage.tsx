@@ -69,6 +69,9 @@ function SubTabBar({ tabs, activeId, onBack, onSelect, onClose }: {
 export default function NewsPage() {
   const [view, setView] = useState<View>({ kind: 'list' })
   const [open, setOpen] = useState<OpenTab[]>([])
+  // Jeton de fraîcheur de la liste : incrémenté à chaque sauvegarde. La liste reste montée
+  // pendant l'édition, elle ne se rechargerait donc jamais toute seule au « ← Retour ».
+  const [savedTick, setSavedTick] = useState(0)
 
   const newLabel = () => t('new_article')
 
@@ -106,6 +109,7 @@ export default function NewsPage() {
       return [...prev, { id: savedId, name: label }]
     })
     setView({ kind: 'edit', id: savedId })
+    setSavedTick((n) => n + 1)
   }
 
   // ── Vue « Old » (iframe legacy) ──────────────────────────────────────────────────
@@ -146,7 +150,7 @@ export default function NewsPage() {
 
       <div style={{ flex: 1, minHeight: 0 }}>
         <div style={{ height: '100%', display: view.kind === 'list' ? 'block' : 'none' }}>
-          <NewsListPage active={view.kind === 'list'} onOpen={openEditor} onNew={openNew} />
+          <NewsListPage active={view.kind === 'list'} onOpen={openEditor} onNew={openNew} refreshToken={savedTick} />
         </div>
 
         {open.map((o) => (

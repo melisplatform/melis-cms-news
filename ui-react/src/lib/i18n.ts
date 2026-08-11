@@ -140,6 +140,7 @@ const DICT: Record<string, { en: string; fr: string }> = {
   loading:            { en: 'Loading…',           fr: 'Chargement…' },
   end_of_list:        { en: 'end of list',        fr: 'fin de la liste' },
   reset_filters:      { en: 'Reset filters',      fr: 'Réinitialiser les filtres' },
+  refresh:            { en: 'Refresh',            fr: 'Rafraîchir' },
 
   // ── List: columns manager + export modal ──
   columns:            { en: 'Columns',            fr: 'Colonnes' },
