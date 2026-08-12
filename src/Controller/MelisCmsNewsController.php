@@ -610,6 +610,16 @@ class MelisCmsNewsController extends MelisAbstractActionController
 
         $newsId = (int)$this->params()->fromQuery('newsId', '');
 
+        /**
+         * MelisCmsTags est optionnel (et n'est pas une dépendance composer de MelisCmsNews).
+         * La zone parente est déjà masquée quand il est absent, mais cette action reste
+         * appelable directement : sans le module, la config de formulaire ci-dessous et la
+         * table melis_cms_tag_entity n'existent pas, et la page entière planterait.
+         */
+        if (!$this->getServiceManager()->get('ModulesService')->isModuleLoaded('MelisCmsTags')) {
+            return new ViewModel();
+        }
+
         $melisCoreConfig = $this->getServiceManager()->get('MelisCoreConfig');
         $appConfigForm = $melisCoreConfig->getFormMergedAndOrdered('MelisCmsTags/forms/tag_select_form','tag_select_form');
         $formElements = $this->getServiceManager()->get('FormElementManager');

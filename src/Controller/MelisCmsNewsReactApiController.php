@@ -476,6 +476,12 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
     {
         if ($deny = $this->denyUnlessAccess()) { return $deny; }
 
+        // MelisCmsTags absent : liste vide plutôt qu'un 500. Le front ne demande normalement pas
+        // cette route dans ce cas (section masquée via /react-modules), mais elle reste appelable.
+        if (!$this->hasTagsTables()) {
+            return $this->jsonResponse(['success' => true, 'data' => []]);
+        }
+
         try {
             $rawLang = $this->params()->fromQuery('langId', '');
             $langId  = ($rawLang !== '' && $rawLang !== null)
@@ -806,6 +812,38 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
         return $this->authorColumnExists;
     }
 
+    /**
+     * true si les tables du module MelisCmsTags existent réellement en base.
+     * MelisCmsTags est OPTIONNEL et n'est pas une dépendance Composer de MelisCmsNews : sur une
+     * install qui ne l'a pas, melis_cms_tag / melis_cms_tag_texts / melis_cms_tag_entity n'existent
+     * pas et la moindre requête tag fait échouer toute la sauvegarde de la news
+     * ("Table 'melis_cms_tag_entity' doesn't exist"). On teste les TABLES et non le module : il peut
+     * être actif sans que son dbdeploy ait tourné, exactement comme hasAuthorAccountColumn().
+     * Mémoïsé : une seule requête metadata par requête HTTP.
+     */
+    private ?bool $tagsTablesExist = null;
+
+    private function hasTagsTables(): bool
+    {
+        if ($this->tagsTablesExist !== null) {
+            return $this->tagsTablesExist;
+        }
+        try {
+            $db  = $this->getServiceManager()->get('Laminas\Db\Adapter\AdapterInterface');
+            $row = $db->query(
+                'SELECT COUNT(*) AS nb FROM information_schema.tables
+                  WHERE table_schema = DATABASE() AND table_name IN (?, ?, ?)',
+                ['melis_cms_tag', 'melis_cms_tag_texts', 'melis_cms_tag_entity']
+            )->current();
+
+            $this->tagsTablesExist = $row && (int) ((array) $row)['nb'] === 3;
+        } catch (\Throwable) {
+            $this->tagsTablesExist = false;
+        }
+
+        return $this->tagsTablesExist;
+    }
+
     /** Service de commentaires si le module MelisCmsComments est actif, sinon null. */
     private function getCommentsService()
     {
@@ -989,6 +1027,12 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
     /** Retourne les IDs de tags assignés à une news (module optionnel MelisCmsTags). */
     private function getNewsTagIds(int $newsId): array
     {
+        // MelisCmsTags absent : aucune assignation possible. Sortie avant la requête, sinon on
+        // logge une erreur SQL à chaque ouverture de news (le catch ci-dessous la masquerait).
+        if (!$this->hasTagsTables()) {
+            return [];
+        }
+
         try {
             $db   = $this->getServiceManager()->get('Laminas\Db\Adapter\AdapterInterface');
             $rows = $db->query(
@@ -1121,6 +1165,13 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
      */
     private function syncNewsTags(int $newsId, array $tagIds): void
     {
+        // MelisCmsTags absent : rien à synchroniser. On sort AVANT toute requête plutôt que de
+        // laisser l'erreur SQL remonter et faire échouer la sauvegarde entière de la news
+        // (le front envoie toujours `tagIds`, même quand la section Tags n'est pas affichée).
+        if (!$this->hasTagsTables()) {
+            return;
+        }
+
         $tagIds = array_values(array_unique(array_filter(
             array_map('intval', $tagIds),
             static fn (int $id): bool => $id > 0
