@@ -16,6 +16,12 @@ use MelisCore\Controller\MelisAbstractActionController;
 
 class MelisCmsNewsListController extends MelisAbstractActionController
 {
+    /** @INFO: Tool access check (CWE-862). */
+    private function hasAccess($key)
+    {
+        return $this->getServiceManager()->get('MelisCoreRights')->canAccess($key);
+    }
+
     /**
      * renders the page container
      * @return \Laminas\View\Model\ViewModel
@@ -220,6 +226,9 @@ class MelisCmsNewsListController extends MelisAbstractActionController
      */
     public function renderNewsListDataAction()
     {
+        if (! $this->hasAccess('meliscmsnews_tools_section')) {
+            return new JsonModel(['draw' => (int) $this->getRequest()->getPost('draw', 0), 'recordsTotal' => 0, 'recordsFiltered' => 0, 'data' => []]);
+        }
         $success = 0;
         $colId = array();
         $dataCount = 0;
@@ -344,6 +353,10 @@ class MelisCmsNewsListController extends MelisAbstractActionController
      */
     public function deleteNewsAction()
     {
+        /** @INFO: Access check (tool right) — CWE-862 */
+        if (! $this->hasAccess('meliscmsnews_tools_section')) {
+            return new JsonModel(['success' => 0, 'textTitle' => '', 'textMessage' => 'tr_meliscore_microservice_api_key_no_access', 'errors' => [], 'datas' => []]);
+        }
         $this->getEventManager()->trigger('meliscmsnews_delete_news_start', $this, array());
         $response = array();
         $id = null;
