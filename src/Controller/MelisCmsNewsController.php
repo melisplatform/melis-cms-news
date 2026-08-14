@@ -24,6 +24,12 @@ use MelisCore\Controller\MelisAbstractActionController;
 
 class MelisCmsNewsController extends MelisAbstractActionController
 {
+    /** @INFO: Tool access check (CWE-862). */
+    private function hasAccess($key)
+    {
+        return $this->getServiceManager()->get('MelisCoreRights')->canAccess($key);
+    }
+
     /**
      * renders the page container
      * @return \Laminas\View\Model\ViewModel
@@ -489,6 +495,10 @@ class MelisCmsNewsController extends MelisAbstractActionController
 
     public function getNewsCategoryLastOrderNumAction()
     {
+        /** @INFO: Access check (tool right) — CWE-862 */
+        if (! $this->hasAccess('meliscmsnews_tools_section')) {
+            return new JsonModel(['success' => 0, 'textTitle' => '', 'textMessage' => 'tr_meliscore_microservice_api_key_no_access', 'errors' => [], 'datas' => []]);
+        }
         $id = "";
         $order = 1;
         if ($this->getRequest()->isXmlHttpRequest()) {
@@ -532,6 +542,10 @@ class MelisCmsNewsController extends MelisAbstractActionController
      */
     public function getCategoryTreeViewAction()
     {
+        /** @INFO: Access check (tool right) — CWE-862 */
+        if (! $this->hasAccess('meliscmsnews_tools_section')) {
+            return new JsonModel([]);
+        }
         $langLocale = $this->params()->fromQuery('langlocale');
         $siteId = $this->params()->fromQuery('siteId', null);
 
@@ -834,6 +848,10 @@ class MelisCmsNewsController extends MelisAbstractActionController
      */
     public function saveNewsLetterAction()
     {
+        /** @INFO: Access check (tool right) — CWE-862 */
+        if (! $this->hasAccess('meliscmsnews_tools_section')) {
+            return new JsonModel(['success' => 0, 'textTitle' => '', 'textMessage' => 'tr_meliscore_microservice_api_key_no_access', 'errors' => [], 'datas' => []]);
+        }
         $this->getEventManager()->trigger('meliscmsnews_save_news_letter_start', $this, []);
         $melisTool = $this->getServiceManager()->get('MelisCoreTool');
         $id = null;
@@ -1200,6 +1218,10 @@ class MelisCmsNewsController extends MelisAbstractActionController
 
     public function saveFileFormAction()
     {
+        /** @INFO: Access check (tool right) — CWE-862 */
+        if (! $this->hasAccess('meliscmsnews_tools_section')) {
+            return new JsonModel(['success' => 0, 'textTitle' => '', 'textMessage' => 'tr_meliscore_microservice_api_key_no_access', 'errors' => [], 'datas' => []]);
+        }
         $this->getEventManager()->trigger('meliscmsnews_save_news_file_start', $this, []);
         $newsSvc = $this->getServiceManager()->get('MelisCmsNewsService');
 
@@ -1503,6 +1525,10 @@ class MelisCmsNewsController extends MelisAbstractActionController
 
     public function removeAttachFileAction()
     {
+        /** @INFO: Access check (tool right) — CWE-862 */
+        if (! $this->hasAccess('meliscmsnews_tools_section')) {
+            return new JsonModel(['success' => 0, 'textTitle' => '', 'textMessage' => 'tr_meliscore_microservice_api_key_no_access', 'errors' => [], 'datas' => []]);
+        }
         $this->getEventManager()->trigger('meliscmsnews_delete_news_file_start', $this, []);
         $id = null;
         $success = 0;
