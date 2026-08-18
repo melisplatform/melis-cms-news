@@ -142,9 +142,24 @@ export interface User {
   name: string
 }
 
+/**
+ * Une traduction de l'actualité (une ligne de `melis_cms_news_texts`). Le formulaire les envoie
+ * TOUTES en un enregistrement, comme le formulaire legacy qui poste ses N blocs de langue d'un coup.
+ */
+export interface NewsTranslation {
+  langId: number
+  title: string
+  subtitle?: string
+  paragraphs?: string[]
+  seo?: Partial<NewsSeo>
+}
+
 export interface NewsSavePayload {
   id?: number | null
+  /** Langue affichée à l'enregistrement (titre/paragraphes « à plat » ci-dessous). */
   langId?: number
+  /** Toutes les traductions saisies. Absent → seule la langue `langId` est écrite (ancien format). */
+  translations?: NewsTranslation[]
   title: string
   subtitle?: string
   paragraphs?: string[]

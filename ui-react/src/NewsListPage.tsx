@@ -15,6 +15,8 @@ import { useCaps } from './shared/useCaps'
 import { useIsNarrow } from './shared/useIsNarrow'
 import { ExpandToggle, HiddenColsRow } from './shared/ExpandableRow'
 import { useDragReorder } from './shared/use-drag-reorder'
+import { ConfirmDialog } from './shared/confirm-dialog'
+import { koNotify } from './shared/melis-form-errors'
 import { useKeysetList } from './use-keyset-list'
 
 // News tool capability key — must match config/react.capabilities.php, i.e. the melisKey of the
@@ -576,6 +578,9 @@ export default function NewsListPage({ active, onOpen, onNew, refreshToken = 0 }
   const [search,   setSearch]   = useState(_cache?.search ?? '')
   const [status,   setStatus]   = useState<'' | '0' | '1'>(_cache?.status ?? '')
   const [deleting, setDeleting] = useState<number | null>(null)
+  // Élément en attente de confirmation de suppression → <ConfirmDialog> (jamais window.confirm(),
+  // dont la boîte native affiche l'URL du BO, ignore le thème et n'est pas traduisible).
+  const [pendingDelete, setPendingDelete] = useState<{ id: number; title: string } | null>(null)
 
   // ── Liste : scroll infini + tri server-side + keyset (hook mutualisé) ──────
   // Le fetcher capture les filtres courants ; `deps` relance un chargement frais à
@@ -686,15 +691,23 @@ export default function NewsListPage({ active, onOpen, onNew, refreshToken = 0 }
   }, [showColMgr])
 
   // ── Delete ─────────────────────────────────────────────────────────────────
-  async function handleDelete(id: number, title: string) {
-    if (!confirm(t('confirm_delete', { title }))) return
+  // Le clic n'appelle plus window.confirm() : il ARME la modale partagée (<ConfirmDialog>,
+  // rendue en fin de page), qui appelle confirmDelete() une fois l'utilisateur confirmé.
+  function handleDelete(id: number, title: string) {
+    setPendingDelete({ id, title })
+  }
+
+  async function confirmDelete() {
+    if (!pendingDelete) return
+    const { id } = pendingDelete
     setDeleting(id)
     try {
       await newsApi.deleteNews(id)
       removeLocal(n => n.id === id)
       loadKpis()
+      setPendingDelete(null)
     } catch (e) {
-      alert(e instanceof Error ? e.message : t('error'))
+      koNotify(t('news_title'), e instanceof Error ? e.message : t('error'))
     } finally {
       setDeleting(null)
     }
@@ -1087,6 +1100,18 @@ export default function NewsListPage({ active, onOpen, onNew, refreshToken = 0 }
       </>)}
 
       </div>{/* end React native view */}
+
+      {/* Confirmation de suppression — modale partagée du BO React (remplace window.confirm). */}
+      <ConfirmDialog
+        open={!!pendingDelete}
+        title={t('confirm_delete', { title: pendingDelete?.title || t('untitled') })}
+        description={t('confirm_delete_desc')}
+        confirmLabel={t('delete')}
+        cancelLabel={t('cancel')}
+        busy={deleting !== null}
+        onConfirm={confirmDelete}
+        onCancel={() => { if (deleting === null) setPendingDelete(null) }}
+      />
 
       {/* Export modal */}
       {showExport && (

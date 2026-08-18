@@ -310,24 +310,40 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
             // séquentiellement dans les colonnes 1..N et on enregistre cnews_paragraph_order
             // (liste des colonnes remplies, dans l'ordre) pour que le rendu front respecte
             // l'ordre. Les colonnes non utilisées sont vidées.
-            $paragraphs = array_values($body['paragraphs'] ?? []);
-            $textData   = [
-                'cnews_title'    => $body['title']    ?? '',
-                'cnews_subtitle' => $body['subtitle'] ?? '',
-            ];
-            $usedCols = [];
-            for ($i = 0; $i < 10; $i++) {
-                $col     = 'cnews_paragraph' . ($i + 1);
-                $content = isset($paragraphs[$i]) ? (string) $paragraphs[$i] : '';
-                $textData[$col] = $content;
-                if ($content !== '') { $usedCols[] = $col; }
+            // Le formulaire React envoie `translations` (toutes les traductions saisies, comme le
+            // formulaire legacy qui poste ses N blocs de langue d'un coup). Sans cette clé on
+            // retombe sur l'ancien format « une seule langue à plat », toujours accepté.
+            $translations = [];
+            foreach ((array) ($body['translations'] ?? []) as $translation) {
+                if (!is_array($translation) || empty($translation['langId'])) {
+                    continue;
+                }
+                $translations[(int) $translation['langId']] = $translation;
             }
-            $textData['cnews_paragraph_order'] = implode('-', $usedCols);
-            $this->saveNewsText((int) $newsId, $langId, $textData);
+            if (!$translations) {
+                $translations = [$langId => $body];
+            }
 
-            // Save SEO (language-specific)
-            if (!empty($body['seo'])) {
-                $this->saveNewsSeo((int) $newsId, $langId, $body['seo']);
+            foreach ($translations as $textLangId => $translation) {
+                $paragraphs = array_values((array) ($translation['paragraphs'] ?? []));
+                $textData   = [
+                    'cnews_title'    => (string) ($translation['title']    ?? ''),
+                    'cnews_subtitle' => (string) ($translation['subtitle'] ?? ''),
+                ];
+                $usedCols = [];
+                for ($i = 0; $i < 10; $i++) {
+                    $col     = 'cnews_paragraph' . ($i + 1);
+                    $content = isset($paragraphs[$i]) ? (string) $paragraphs[$i] : '';
+                    $textData[$col] = $content;
+                    if ($content !== '') { $usedCols[] = $col; }
+                }
+                $textData['cnews_paragraph_order'] = implode('-', $usedCols);
+                $this->saveNewsText((int) $newsId, (int) $textLangId, $textData);
+
+                // SEO — table dédiée, elle aussi indexée par langue.
+                if (!empty($translation['seo'])) {
+                    $this->saveNewsSeo((int) $newsId, (int) $textLangId, (array) $translation['seo']);
+                }
             }
 
             // Sync categories
