@@ -199,7 +199,7 @@ class MelisCmsNewsTable extends MelisGenericTable
         union all
         select cnews_image2  as Number from melis_cms_news WHERE cnews_image2 LIKE ?
         union all
-        select cnews_image3 as Number from melis_cms_news WHERE cnews_image2 LIKE ?
+        select cnews_image3 as Number from melis_cms_news WHERE cnews_image3 LIKE ?
         ) myTab";
 
         // Parameterize the query with bound placeholders to prevent SQL injection
