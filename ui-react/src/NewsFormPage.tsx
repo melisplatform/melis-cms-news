@@ -1407,7 +1407,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
               value={form.siteId}
               onChange={(e) => set('siteId', e.target.value)}
               className={cn(
-                'h-8 w-full rounded-md border border-input bg-background px-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring',
+                'h-8 w-full rounded-md border border-input bg-card px-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring',
                 errors.siteId && 'border-destructive',
               )}
             >
@@ -1426,7 +1426,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
               <select
                 value={form.authorId}
                 onChange={(e) => set('authorId', e.target.value)}
-                className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                className="h-8 w-full rounded-md border border-input bg-card px-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="">{t('choose')}</option>
                 {users.map((u) => (
@@ -1486,7 +1486,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
                     value={form.seo[key]}
                     onChange={(e) => setSeo(key, e.target.value)}
                     rows={2}
-                    className="w-full resize-none rounded-md border border-input bg-background px-2.5 py-1.5 text-xs placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring"
+                    className="w-full resize-none rounded-md border border-input bg-card px-2.5 py-1.5 text-xs placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring"
                   />
                 ) : (
                   <Input
@@ -1565,7 +1565,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
               <select
                 value={form.sliderId}
                 onChange={(e) => set('sliderId', e.target.value)}
-                className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                className="h-8 w-full rounded-md border border-input bg-card px-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="">{t('no_slider')}</option>
                 {sliders.map((s) => (
