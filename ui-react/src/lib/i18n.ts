@@ -166,6 +166,7 @@ const DICT: Record<string, { en: string; fr: string }> = {
   export_filename:    { en: 'news',               fr: 'actualites' },
 
   confirm_delete:     { en: 'Delete “{title}”?',  fr: 'Supprimer « {title} » ?' },
+  confirm_delete_desc: { en: 'This news item and its translations are permanently deleted. This action cannot be undone.', fr: 'Cette actualité et ses traductions seront définitivement supprimées. Cette action est irréversible.' },
   error:              { en: 'Error',              fr: 'Erreur' },
   export_subtitle:    { en: '{n} {rows} with the active filters', fr: '{n} {rows} avec les filtres actifs' },
 

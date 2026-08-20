@@ -3,7 +3,7 @@ import {
   Save, Loader2, ChevronDown, ChevronUp,
   Plus, X, Eye, Calendar, Globe, Tag, Search, SlidersHorizontal,
   GitBranch, Image, Paperclip, GripVertical, FolderTree, User,
-  MessageSquare, Check, Ban, Trash2, ChevronLeft, ChevronRight, AlertTriangle,
+  MessageSquare, Check, Ban, Trash2, ChevronLeft, ChevronRight,
 } from 'lucide-react'
 
 import { Button } from './components/ui/button'
@@ -20,6 +20,7 @@ import * as newsApi from './lib/news-api'
 import { useCaps } from './shared/useCaps'
 import { useIsNarrow } from './shared/useIsNarrow'
 import { FormErrorBanner, koNotify, okNotify, type FormIssue } from './shared/melis-form-errors'
+import { ConfirmDialog } from './shared/confirm-dialog'
 
 // News tool capability key — must match config/react.capabilities.php, i.e. the melisKey of the
 // rights-bearing menu node. NOT `meliscmsnews_left_menu`: that is the type-link target and stays
@@ -80,6 +81,28 @@ const EMPTY: FormState = {
 }
 
 const MAX_PARAGRAPHS = 10  // cnews_paragraph1-10 in DB
+
+// ─── Textes PAR LANGUE ─────────────────────────────────────────────────────────
+// L'actualité est stockée en deux morceaux : `melis_cms_news` (une ligne — statut, site, dates,
+// médias, slider, catégories, tags : INDÉPENDANT de la langue) et `melis_cms_news_texts`
+// (UNE LIGNE PAR LANGUE — titre, sous-titre, paragraphes, SEO). Le formulaire reflète ce
+// découpage : `form` porte les champs indépendants de la langue + les textes de la langue
+// AFFICHÉE, et `langTexts` garde en mémoire les textes des AUTRES langues déjà saisies/chargées.
+// Le bouton de langue échange donc vraiment le contenu (avant : un seul jeu de textes, donc la
+// même saisie sous chaque drapeau), et l'enregistrement écrit toutes les traductions en un appel
+// — comme le formulaire legacy, qui poste les N blocs de langue d'un coup.
+type LangText = Pick<FormState, 'title' | 'subtitle' | 'paragraphs' | 'seo'>
+
+const EMPTY_TEXT: LangText = { title: '', subtitle: '', paragraphs: [''], seo: EMPTY_SEO }
+
+const pickText = (f: FormState): LangText => ({
+  title: f.title, subtitle: f.subtitle, paragraphs: f.paragraphs, seo: f.seo,
+})
+
+/** Une traduction est « saisie » dès qu'un de ses champs porte du contenu. */
+const hasText = (x: LangText): boolean =>
+  !!(x.title.trim() || x.subtitle.trim() || x.paragraphs.some((p) => p.trim())
+     || Object.values(x.seo).some((v) => String(v ?? '').trim()))
 
 // La valeur BDD ("YYYY-MM-DD HH:MM:SS") et la valeur <input datetime-local> ("YYYY-MM-DDTHH:MM")
 // sont des heures MURALES (sans fuseau). On les manipule en chaînes — JAMAIS via new Date().toISOString()
@@ -240,58 +263,8 @@ function SidebarSection({
   )
 }
 
-// ─── Confirm dialog (léger, sans dépendance Radix) ──────────────────────────────
-// Modale de confirmation générique : overlay + backdrop, fermeture Échap ou clic extérieur,
-// focus auto sur le bouton de confirmation. Utilisée pour la suppression d'un commentaire
-// (remplace window.confirm()). Le brick n'embarque pas Radix → composant maison minimal.
-function ConfirmDialog({ open, title, description, confirmLabel, cancelLabel, busy, onConfirm, onCancel }: {
-  open: boolean
-  title: string
-  description?: string
-  confirmLabel: string
-  cancelLabel: string
-  busy?: boolean
-  onConfirm: () => void
-  onCancel: () => void
-}) {
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onCancel() }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [open, onCancel])
-
-  if (!open) return null
-  return (
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4"
-      role="dialog" aria-modal="true"
-      onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel() }}
-    >
-      <div className="w-full max-w-sm rounded-xl border border-border bg-background p-5 shadow-xl">
-        <div className="flex items-start gap-3">
-          <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-red-500/10 text-red-600">
-            <AlertTriangle className="size-5" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-            {description && <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{description}</p>}
-          </div>
-        </div>
-        <div className="mt-5 flex justify-end gap-2">
-          <Button variant="outline" size="sm" onClick={onCancel} disabled={busy}>{cancelLabel}</Button>
-          <Button variant="destructive" size="sm" autoFocus onClick={onConfirm} disabled={busy} className="gap-1.5">
-            {busy && <Loader2 className="size-3.5 animate-spin" />}
-            {confirmLabel}
-          </Button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 // Nombre de commentaires affichés par page dans le panneau de modération.
-const COMMENTS_PER_PAGE = 8
+const COMMENTS_PER_PAGE = 5
 
 // ─── Pager (pagination générique, client-side) ──────────────────────────────────
 // Contrôle compact « Précédent · Page x sur y · Suivant ». Masqué s'il n'y a qu'une page.
@@ -621,7 +594,7 @@ function FileSlot({ src, disabled, uploading, onPick, onRemove }: {
 
 // ─── Module-level cache ────────────────────────────────────────────────────────
 
-type NewsItemCache = { form: FormState; langId: number }
+type NewsItemCache = { form: FormState; langId: number; langTexts: Record<number, LangText> }
 const _newsCache = new Map<string, NewsItemCache>()
 
 let _langCache:  newsApi.Language[]    | null = null
@@ -674,15 +647,33 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
   const appLang = (document.documentElement.lang || 'en').slice(0, 2)
 
   const [langId, setLangId]   = useState<number>(1)
+  // Textes des langues NON affichées (cf. LangText plus haut) — alimentés au fil des bascules.
+  const [langTexts, setLangTexts] = useState<Record<number, LangText>>({})
+  // Bascule de langue en cours (chargement de la traduction depuis l'API) : pendant cet
+  // intervalle `form` porte encore les textes de l'ANCIENNE langue alors que `langId` est
+  // déjà la nouvelle → on gèle l'écriture du cache, qui mémoriserait un couple incohérent.
+  const [langBusy, setLangBusy] = useState(false)
   const [form, setForm]       = useState<FormState>(EMPTY)
   const [loading, setLoading] = useState(false)
   const [saving, setSaving]   = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
   const [errors, setErrors]   = useState<Partial<Record<string, string>>>({})
 
-  const loadNews = useCallback(async (newsId: number, targetLangId: number) => {
+  // `textOnly` : bascule de langue → on ne remplace QUE les textes, pour ne pas écraser les
+  // modifications non enregistrées des champs indépendants de la langue (statut, site, dates…).
+  const loadNews = useCallback(async (newsId: number, targetLangId: number, textOnly = false) => {
     try {
       const d = await newsApi.fetchNewsById(newsId, targetLangId)
+      if (textOnly) {
+        setForm((prev) => ({
+          ...prev,
+          title:      d.title    ?? '',
+          subtitle:   d.subtitle ?? '',
+          paragraphs: d.paragraphs && d.paragraphs.length ? d.paragraphs : [''],
+          seo:        d.seo ?? EMPTY_SEO,
+        }))
+        return
+      }
       setForm({
         title:         d.title    ?? '',
         subtitle:      d.subtitle ?? '',
@@ -740,6 +731,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
       if (cached) {
         setForm(cached.form)
         setLangId(cached.langId)
+        setLangTexts(cached.langTexts)
       } else {
         tasks.push(loadNews(Number(id), langId))
       }
@@ -751,18 +743,34 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
   }, [id, isNew])
 
   useEffect(() => {
-    if (!isNew && id && form.title) {
-      _newsCache.set(id, { form, langId })
+    if (!isNew && id && form.title && !langBusy) {
+      _newsCache.set(id, { form, langId, langTexts })
     }
-  }, [form, langId, id, isNew])
+  }, [form, langId, langTexts, langBusy, id, isNew])
 
-  useEffect(() => {
-    if (!isNew && !loading) {
-      // Recharge l'article dans la langue sélectionnée.
-      loadNews(Number(id), langId)
+  // Bascule de langue (clic sur un drapeau). Les textes de la langue quittée sont mis de côté,
+  // puis ceux de la langue demandée sont restaurés : depuis le tampon si elle a déjà été ouverte,
+  // sinon depuis l'API (article existant) ou vides (nouvel article — rien n'est encore en base).
+  // Remplace l'ancien effet sur [langId], qui rechargeait l'article en écrasant les champs
+  // communs et ne faisait RIEN sur un nouvel article (d'où « la langue ne change rien »).
+  async function switchLang(next: number) {
+    if (next === langId || loading || langBusy) return
+    const current = pickText(form)
+    setLangTexts((prev) => ({ ...prev, [langId]: current }))
+    setLangId(next)
+    setErrors({})
+
+    const buffered = langTexts[next]
+    if (buffered) { setForm((prev) => ({ ...prev, ...buffered })); return }
+    if (isNew)    { setForm((prev) => ({ ...prev, ...EMPTY_TEXT })); return }
+
+    setLangBusy(true)
+    try {
+      await loadNews(Number(id), next, true)
+    } finally {
+      setLangBusy(false)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [langId])
+  }
 
   // Catégories (module optionnel MelisCmsCategory2) : chargées ssi le module est actif, et
   // re-fetchées quand la langue du BO change (noms traduits par langue) OU quand le site de
@@ -846,10 +854,15 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
     })
   }
 
+  // Toutes les traductions saisies (langue affichée comprise), indexées par langue.
+  const allTexts = (): Record<number, LangText> => ({ ...langTexts, [langId]: pickText(form) })
+
   function validate() {
     const errs: Partial<Record<string, string>> = {}
-    if (!form.title.trim()) errs.title  = t('title_required')
-    if (!form.siteId)       errs.siteId = t('site_required')
+    // Le titre est exigé dans AU MOINS une langue, pas forcément celle affichée : on n'empêche
+    // pas d'enregistrer parce que l'utilisateur a laissé la traduction courante à traduire.
+    if (!Object.values(allTexts()).some((x) => x.title.trim())) errs.title = t('title_required')
+    if (!form.siteId) errs.siteId = t('site_required')
     setErrors(errs)
     return Object.keys(errs).length === 0
   }
@@ -858,10 +871,27 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
     if (!validate()) return
     setSaving(true); setApiError(null)
     try {
+      const texts = allTexts()
+      // Une traduction est enregistrée si elle porte du contenu OU si c'est la langue affichée
+      // (vider volontairement la traduction courante doit être persisté, pas ignoré).
+      const translations: newsApi.NewsTranslation[] = Object.entries(texts)
+        .filter(([lid, x]) => Number(lid) === langId || hasText(x))
+        .map(([lid, x]) => ({
+          langId:     Number(lid),
+          title:      x.title.trim(),
+          subtitle:   x.subtitle.trim(),
+          paragraphs: x.paragraphs,
+          seo:        x.seo,
+        }))
+      // Titre porté par l'enregistrement (validation serveur + libellé de l'onglet) : celui de la
+      // langue affichée, à défaut la première traduction titrée.
+      const mainTitle = form.title.trim() || (translations.find((x) => x.title)?.title ?? '')
+
       const payload: newsApi.NewsSavePayload = {
         id:            isNew ? null : Number(id),
         langId,
-        title:         form.title.trim(),
+        translations,
+        title:         mainTitle,
         subtitle:      form.subtitle.trim() || undefined,
         paragraphs:    form.paragraphs,
         status:        form.status === '1' ? 1 : 0,
@@ -880,7 +910,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
       okNotify(t('news_title'), t('saved_ok'))
       // Le conteneur (NewsPage) convertit l'onglet « new » en onglet de l'article créé,
       // ou met à jour le libellé d'un article existant.
-      onSaved(res.id, form.title.trim() || `Article #${res.id}`)
+      onSaved(res.id, mainTitle || `Article #${res.id}`)
     } catch (e) {
       const m = e instanceof Error ? e.message : t('err_save')
       setApiError(m)
@@ -1068,7 +1098,8 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
                   <button
                     key={lang.id}
                     type="button"
-                    onClick={() => setLangId(lang.id)}
+                    onClick={() => void switchLang(lang.id)}
+                    disabled={langBusy}
                     className={cn(
                       'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all select-none',
                       langId === lang.id
@@ -1376,7 +1407,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
               value={form.siteId}
               onChange={(e) => set('siteId', e.target.value)}
               className={cn(
-                'h-8 w-full rounded-md border border-input bg-background px-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring',
+                'h-8 w-full rounded-md border border-input bg-card px-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring',
                 errors.siteId && 'border-destructive',
               )}
             >
@@ -1395,7 +1426,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
               <select
                 value={form.authorId}
                 onChange={(e) => set('authorId', e.target.value)}
-                className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                className="h-8 w-full rounded-md border border-input bg-card px-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="">{t('choose')}</option>
                 {users.map((u) => (
@@ -1455,7 +1486,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
                     value={form.seo[key]}
                     onChange={(e) => setSeo(key, e.target.value)}
                     rows={2}
-                    className="w-full resize-none rounded-md border border-input bg-background px-2.5 py-1.5 text-xs placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring"
+                    className="w-full resize-none rounded-md border border-input bg-card px-2.5 py-1.5 text-xs placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring"
                   />
                 ) : (
                   <Input
@@ -1534,7 +1565,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
               <select
                 value={form.sliderId}
                 onChange={(e) => set('sliderId', e.target.value)}
-                className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                className="h-8 w-full rounded-md border border-input bg-card px-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="">{t('no_slider')}</option>
                 {sliders.map((s) => (
