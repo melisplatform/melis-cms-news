@@ -137,19 +137,19 @@ class MelisCmsNewsTable extends MelisGenericTable
         }
 
         if (!is_null($dateMin)) {
-            $select->where('cnews_creation_date >= "' . $dateMin . '"');
+            $select->where->greaterThanOrEqualTo('cnews_creation_date', (string) $dateMin);
         }
 
         if (!is_null($dateMax)) {
-            $select->where('cnews_creation_date <= "' . $dateMax . '"');
+            $select->where->lessThanOrEqualTo('cnews_creation_date', (string) $dateMax);
         }
 
         if (!is_null($publishDateMin)) {
-            $select->where('DATE(cnews_publish_date)>= "' . $publishDateMin . '"');
+            $select->where->greaterThanOrEqualTo(new Expression('DATE(cnews_publish_date)'), (string) $publishDateMin);
         }
 
         if (!is_null($publishDateMax)) {
-            $select->where('DATE(cnews_publish_date) <= "' . $publishDateMax . '"');
+            $select->where->lessThanOrEqualTo(new Expression('DATE(cnews_publish_date)'), (string) $publishDateMax);
         }
 
         if (!is_null($limit)) {
@@ -166,11 +166,11 @@ class MelisCmsNewsTable extends MelisGenericTable
 
         if (!is_null($orderColumn) && !is_null($order)) {
             if ($orderColumn == 'site_label') {
-                $select->order('melis_cms_site.' . $orderColumn . ' ' . $order);
+                \MelisCore\Model\Tables\MelisGenericTable::addSafeOrder($select, 'melis_cms_site.' . $orderColumn, $order);
             } elseif (in_array($orderColumn, $this->cnews_text_cols)) {
-                $select->order('melis_cms_news_texts.' . $orderColumn . ' ' . $order);
+                \MelisCore\Model\Tables\MelisGenericTable::addSafeOrder($select, 'melis_cms_news_texts.' . $orderColumn, $order);
             } else {
-                $select->order('melis_cms_news.' . $orderColumn . ' ' . $order);
+                \MelisCore\Model\Tables\MelisGenericTable::addSafeOrder($select, 'melis_cms_news.' . $orderColumn, $order);
             }
         }
 
