@@ -1,4 +1,10 @@
 <?php
+// MelisCmsTags absent: the controller returns no form, and legacy renders this child
+// zone even though the parent hides it — render nothing instead of crashing.
+if (empty($this->form)) {
+    return;
+}
+
 $id = '';
 if (!empty($this->zoneconfig['conf']['id'])) {
     $id .= $this->newsId . '_' . $this->zoneconfig['conf']['id'] . '_' . $this->entityType;;
