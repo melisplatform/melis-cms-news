@@ -216,11 +216,21 @@ class MelisCmsNewsListNewsPlugin extends MelisTemplatingPlugin
 
                 if (!isset($parameters['validate'])) {
 
-                    $form->setData($this->getFormData());
+                    $formData = $this->getFormData();
+
+                    // Site defaults to the site of the page being edited, as front() does (0011039)
+                    if (empty($formData['site_id']) && !empty($formData['pageId'])) {
+                        $site = $this->getServiceManager()->get('MelisEngineTree')->getSiteByPageId($formData['pageId']);
+                        if (!empty($site)) {
+                            $formData['site_id'] = $site->site_id;
+                        }
+                    }
+
+                    $form->setData($formData);
                     $viewModelTab = new ViewModel();
                     $viewModelTab->setTemplate($config['tab_form_layout']);
                     $viewModelTab->modalForm = $form;
-                    $viewModelTab->formData = $this->getFormData();
+                    $viewModelTab->formData = $formData;
                     $viewRender = $this->getServiceManager()->get('ViewRenderer');
                     $html = $viewRender->render($viewModelTab);
                     array_push($render, [
