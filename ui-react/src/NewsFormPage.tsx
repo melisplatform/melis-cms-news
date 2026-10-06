@@ -467,7 +467,7 @@ function ParagraphEditor({
           )}
           {t('paragraph_n', { n: index + 1 })}
         </span>
-        <div className="flex items-center gap-2">
+        <div data-melis-field-actions="" className="flex items-center gap-2">
           {extraActions}
           {canRemove && (
             <button
@@ -482,6 +482,7 @@ function ParagraphEditor({
         </div>
       </div>
       <MelisToolEditor
+        name={`cnews_paragraph${index + 1}`}
         value={value}
         onChange={onChange}
         minHeight={220}
@@ -1079,8 +1080,13 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
           content down to near-zero width, which is what caused the mangled mobile layout). */}
       <div className={narrow ? 'flex flex-col' : 'flex items-start'}>
 
-        {/* Main content */}
-        <main className={cn('flex-1 min-w-0 space-y-6', narrow ? 'px-4 py-4' : 'px-8 py-6')}>
+        {/* Main content. data-melis-form + the fields' name = the legacy form key and field
+            names: a stable way for other modules to find a field (e.g. the AI translate icon,
+            declared in melis-ai-community-extensions), with nothing here depending on them. */}
+        <main
+          data-melis-form="meliscmsnews_site_title_subtitle_form"
+          className={cn('flex-1 min-w-0 space-y-6', narrow ? 'px-4 py-4' : 'px-8 py-6')}
+        >
 
           {/* Bannière d'erreur unifiée — résumé scannable en haut du formulaire : liste les champs
               obligatoires manquants (validation client) OU l'erreur serveur d'enregistrement.
@@ -1117,28 +1123,36 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
             }
           </div>
 
-          {/* Title */}
+          {/* Title — next to it, a slot other modules' field actions go into */}
           <div>
-            <input
-              value={form.title}
-              onChange={(e) => set('title', e.target.value)}
-              placeholder={t('article_title_ph')}
-              autoFocus={isNew}
-              className={cn(
-                'w-full bg-transparent text-[1.65rem] font-bold tracking-tight leading-tight placeholder:text-muted-foreground/40 focus:outline-none border-b-2 border-transparent transition-colors pb-1',
-                errors.title ? 'border-destructive' : 'focus:border-border',
-              )}
-            />
+            <div className="flex items-center gap-2">
+              <input
+                name="cnews_title"
+                value={form.title}
+                onChange={(e) => set('title', e.target.value)}
+                placeholder={t('article_title_ph')}
+                autoFocus={isNew}
+                className={cn(
+                  'w-full bg-transparent text-[1.65rem] font-bold tracking-tight leading-tight placeholder:text-muted-foreground/40 focus:outline-none border-b-2 border-transparent transition-colors pb-1',
+                  errors.title ? 'border-destructive' : 'focus:border-border',
+                )}
+              />
+              <span data-melis-field-actions="" className="flex shrink-0 items-center gap-2" />
+            </div>
             {errors.title && <p className="mt-1 text-xs text-destructive">{errors.title}</p>}
           </div>
 
-          {/* Subtitle */}
-          <input
-            value={form.subtitle}
-            onChange={(e) => set('subtitle', e.target.value)}
-            placeholder={t('subtitle_ph')}
-            className="w-full bg-transparent text-[1.05rem] text-muted-foreground placeholder:text-muted-foreground/40 focus:outline-none border-b border-transparent focus:border-border transition-colors pb-1"
-          />
+          {/* Subtitle — in its own row, so its actions slot is its own */}
+          <div className="flex items-center gap-2">
+            <input
+              name="cnews_subtitle"
+              value={form.subtitle}
+              onChange={(e) => set('subtitle', e.target.value)}
+              placeholder={t('subtitle_ph')}
+              className="w-full bg-transparent text-[1.05rem] text-muted-foreground placeholder:text-muted-foreground/40 focus:outline-none border-b border-transparent focus:border-border transition-colors pb-1"
+            />
+            <span data-melis-field-actions="" className="flex shrink-0 items-center gap-2" />
+          </div>
 
           {/* Body */}
           <section className="space-y-4">
@@ -1471,18 +1485,20 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
           <SidebarSection title={t('seo')} icon={Search} collapsible defaultOpen={false}>
             {(
               [
-                { key: 'metaTitle',       label: t('meta_title'),       type: 'input' },
-                { key: 'metaDescription', label: t('meta_description'),  type: 'textarea' },
-                { key: 'url',             label: t('url'),               type: 'input' },
-                { key: 'urlRedirect',     label: t('url_redirect'),      type: 'input' },
-                { key: 'url301',          label: t('url_301'),           type: 'input' },
-                { key: 'canonical',       label: t('canonical_url'),     type: 'input' },
-              ] as { key: keyof newsApi.NewsSeo; label: string; type: 'input' | 'textarea' }[]
-            ).map(({ key, label, type }) => (
-              <div key={key}>
+                // name = the legacy field of meliscmsnews_seo_form (see data-melis-form below)
+                { key: 'metaTitle',       name: 'cnews_seo_meta_title',       label: t('meta_title'),       type: 'input' },
+                { key: 'metaDescription', name: 'cnews_seo_meta_description', label: t('meta_description'),  type: 'textarea' },
+                { key: 'url',             name: 'cnews_seo_url',              label: t('url'),               type: 'input' },
+                { key: 'urlRedirect',     name: 'cnews_seo_url_redirect',     label: t('url_redirect'),      type: 'input' },
+                { key: 'url301',          name: 'cnews_seo_url_301',          label: t('url_301'),           type: 'input' },
+                { key: 'canonical',       name: 'cnews_seo_canonical',        label: t('canonical_url'),     type: 'input' },
+              ] as { key: keyof newsApi.NewsSeo; name: string; label: string; type: 'input' | 'textarea' }[]
+            ).map(({ key, name, label, type }) => (
+              <div key={key} data-melis-form="meliscmsnews_seo_form">
                 <label className="mb-1 block text-[11px] text-muted-foreground">{label}</label>
                 {type === 'textarea' ? (
                   <textarea
+                    name={name}
                     value={form.seo[key]}
                     onChange={(e) => setSeo(key, e.target.value)}
                     rows={2}
@@ -1490,6 +1506,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
                   />
                 ) : (
                   <Input
+                    name={name}
                     value={form.seo[key]}
                     onChange={(e) => setSeo(key, e.target.value)}
                     className="h-7 text-xs"

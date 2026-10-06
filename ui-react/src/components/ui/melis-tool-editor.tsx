@@ -96,13 +96,15 @@ function filePickerBase64(cb: (url: string, meta?: any) => void): void {
 }
 
 interface MelisToolEditorProps {
+  /** name of the textarea: the legacy field it edits, so other modules can find it */
+  name?: string
   value: string
   onChange: (html: string) => void
   readOnly?: boolean
   minHeight?: number
 }
 
-export function MelisToolEditor({ value, onChange, readOnly, minHeight = 220 }: MelisToolEditorProps) {
+export function MelisToolEditor({ name, value, onChange, readOnly, minHeight = 220 }: MelisToolEditorProps) {
   const rawId = useId().replace(/[:]/g, '')
   const id = `mce-tool-${rawId}`
   const onChangeRef = useRef(onChange); onChangeRef.current = onChange
@@ -159,6 +161,7 @@ export function MelisToolEditor({ value, onChange, readOnly, minHeight = 220 }: 
   return (
     <textarea
       id={id}
+      name={name}
       defaultValue={value}
       readOnly={readOnly}
       // Fallback visible tant que TinyMCE n'a pas pris la main (ou s'il échoue).
