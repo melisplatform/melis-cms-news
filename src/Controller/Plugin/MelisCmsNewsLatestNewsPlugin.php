@@ -165,6 +165,15 @@ class MelisCmsNewsLatestNewsPlugin extends MelisTemplatingPlugin
     }
 
     /**
+     * The search and dates of the URL belong to a « Liste d'actualités » on the same page: with ?search=été
+     * this plugin showed « No result » too (Mantis #0011272). Its own filters come from its settings.
+     */
+    public function loadGetDataPluginConfig()
+    {
+        return array_diff_key(parent::loadGetDataPluginConfig(), array_flip(['search', 'date_min', 'date_max']));
+    }
+
+    /**
      * This function generates the form displayed when editing the parameters of the plugin
      */
     public function createOptionsForms()

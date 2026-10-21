@@ -29,6 +29,7 @@ use MelisCmsNews\Listener\MelisCmsNewsSEORouteListener;
 use MelisCmsNews\Listener\MelisCmsNewsRenderPageListener;
 use MelisCmsNews\Listener\MelisCmsNewsMetaPageListener;
 use MelisCmsNews\Listener\MelisCmsNewsSeoRedirectUrlListener;
+use MelisCmsNews\Listener\MelisCmsNewsDetail404Listener;
 
 
 class Module
@@ -79,6 +80,8 @@ class Module
             (new MelisCmsNewsRenderPageListener())->attach($eventManager);
             (new MelisCmsNewsMetaPageListener())->attach($eventManager);
             (new MelisCmsNewsSeoRedirectUrlListener())->attach($eventManager);
+            // Unknown or offline news on a detail page → site 404 page (Mantis #0011271)
+            (new MelisCmsNewsDetail404Listener())->attach($eventManager);
         }
     }
     

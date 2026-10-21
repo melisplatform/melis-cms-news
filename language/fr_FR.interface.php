@@ -44,6 +44,7 @@ return [
     'tr_meliscmsnews_save_upload_too_small' => 'Le fichier uploadé est trop petit, la taille minimale est de %s',
     'tr_meliscmsnews_save_upload_file_does_not_exists' => 'Le fichier uploadé n\'existe pas',
     'tr_meliscmsnews_save_upload_image_fileIsImageFalseType' => 'Format d\'image invalide, veuillez uploader une image valide',
+    'tr_meliscmsnews_save_upload_file_type_not_allowed' => 'Type de fichier non autorisé : choisissez une image (jpg, jpeg, png, gif, webp) ou un document d\'un type autorisé',
     'tr_meliscmsnews_save_upload_image_fileIsImageNotDetected' => 'Format d\'image inconnu, veuillez uploader une image valide',
     'tr_meliscmsnews_save_upload_image_fileIsImageNotReadable' => 'L\'image n\'existe pas ou n\'est pas lisible',
     'tr_meliscmsnews_save_upload_file_path_rights_error' => 'Vous n\'avez pas les droits pour éxécuter cette action, veuillez demander à l\'administrateur',

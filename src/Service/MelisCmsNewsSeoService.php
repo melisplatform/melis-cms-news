@@ -13,6 +13,30 @@ use MelisCore\Service\MelisGeneralService;
 
 class MelisCmsNewsSeoService extends MelisGeneralService
 {
+	/**
+	 * Cleans a SEO URL: accented letters become plain ones (« été » gave « -t- », Mantis #0011275), spaces
+	 * and special characters become hyphens, no leading slash (reference: MelisCms/PageSeoController)
+	 * @param string $url
+	 * @return string
+	 */
+	public function cleanURL(string $url = '')
+	{
+		$url = $this->getServiceManager()->get('MelisEngineTree')->cleanString($url);
+		$url = str_replace(' ', '-', $url);
+		$url = preg_replace('/[^A-Za-z0-9\/\-]+/', '-', $url);
+
+		return substr($url, 0, 1) == '/' ? preg_replace('/\//', '', $url, 1) : $url;
+	}
+
+	/**
+	 * The news SEO URL as stored by the legacy form: cleaned and lower case
+	 * @param string $url
+	 * @return string
+	 */
+	public function cleanNewsSeoUrl(string $url = '')
+	{
+		return str_replace(' ', '', mb_strtolower($this->cleanURL($url)));
+	}
 
 	/**
 	 * Returns the link of a page, MelisUrl or specific SEO

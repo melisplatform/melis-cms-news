@@ -261,21 +261,60 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
             // Enforcement capacité : créer (nouvel article) vs éditer (existant).
             if ($deny = $this->denyUnlessCan($id ? 'edit' : 'create')) { return $deny; }
 
-            if (empty($body['title'])) {
+            if (trim(strip_tags((string) ($body['title'] ?? ''))) === '') {
                 return $this->jsonResponse(['success' => false, 'error' => 'Le titre est obligatoire'], 422);
             }
             if (empty($body['siteId'])) {
                 return $this->jsonResponse(['success' => false, 'error' => 'Le site est obligatoire'], 422);
             }
 
-            $service = $this->getServiceManager()->get('MelisCmsNewsService');
+            $service    = $this->getServiceManager()->get('MelisCmsNewsService');
+            $translator = $this->getServiceManager()->get('translator');
+
+            // Dates as in the legacy form: no publish date → now (a « Publié » news without date was never
+            // shown on the site), unpublish date before the publish date refused (Mantis #0011276)
+            $publishDate   = !empty($body['publishDate'])   ? (string) $body['publishDate']   : date('Y-m-d H:i:s');
+            $unpublishDate = !empty($body['unpublishDate']) ? (string) $body['unpublishDate'] : null;
+            if ($unpublishDate && strtotime($publishDate) > strtotime($unpublishDate)) {
+                $msg = $translator->translate('tr_meliscmsnews_form_unpublish_error');
+                return $this->jsonResponse(['success' => false, 'error' => $msg, 'errors' => ['unpublishDate' => $msg]], 422);
+            }
+
+            // Translations sent by the form: all of them, or the single flat language of the old format
+            $translations = [];
+            foreach ((array) ($body['translations'] ?? []) as $translation) {
+                if (!is_array($translation) || empty($translation['langId'])) {
+                    continue;
+                }
+                $translations[(int) $translation['langId']] = $translation;
+            }
+            if (!$translations) {
+                $translations = [$langId => $body];
+            }
+
+            // SEO URL cleaned and unique like in the legacy form (MelisCmsNewsController::saveNewsSeo): a URL
+            // kept as typed, or already used, made the next legacy save fail and delete the news (Mantis #0011270)
+            foreach ($translations as $textLangId => $translation) {
+                if (empty($translation['seo']['url'])) {
+                    continue;
+                }
+                $seoUrl = $this->getServiceManager()->get('MelisCmsNewsSeoService')->cleanNewsSeoUrl((string) $translation['seo']['url']);
+                $translations[$textLangId]['seo']['url'] = $seoUrl;
+                if ($seoUrl === '') {
+                    continue;
+                }
+                if ($usedBy = $this->seoUrlUsedBy($seoUrl, (int) $body['siteId'], (int) $id, (int) $textLangId)) {
+                    $msg = $translator->translate('tr_meliscmsnews_page_tab_seo_error_duplicate_url') . ' ' . $usedBy;
+                    return $this->jsonResponse(['success' => false, 'error' => $msg, 'errors' => ['seoUrl' => $msg]], 422);
+                }
+            }
 
             // Save main news record
             $newsData = [
                 'cnews_status'         => (int) ($body['status']   ?? 0),
                 'cnews_site_id'        => (int)  $body['siteId'],
-                'cnews_publish_date'   => $body['publishDate']   ?: null,
-                'cnews_unpublish_date' => $body['unpublishDate'] ?: null,
+                'cnews_publish_date'   => $publishDate,
+                'cnews_unpublish_date' => $unpublishDate,
                 'cnews_slider_id'      => isset($body['sliderId']) && $body['sliderId']
                     ? (int) $body['sliderId']
                     : null,
@@ -312,23 +351,14 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
             // l'ordre. Les colonnes non utilisées sont vidées.
             // Le formulaire React envoie `translations` (toutes les traductions saisies, comme le
             // formulaire legacy qui poste ses N blocs de langue d'un coup). Sans cette clé on
-            // retombe sur l'ancien format « une seule langue à plat », toujours accepté.
-            $translations = [];
-            foreach ((array) ($body['translations'] ?? []) as $translation) {
-                if (!is_array($translation) || empty($translation['langId'])) {
-                    continue;
-                }
-                $translations[(int) $translation['langId']] = $translation;
-            }
-            if (!$translations) {
-                $translations = [$langId => $body];
-            }
-
+            // retombe sur l'ancien format « une seule langue à plat », toujours accepté
+            // ($translations, construit plus haut avec les URL SEO nettoyées).
             foreach ($translations as $textLangId => $translation) {
                 $paragraphs = array_values((array) ($translation['paragraphs'] ?? []));
                 $textData   = [
-                    'cnews_title'    => (string) ($translation['title']    ?? ''),
-                    'cnews_subtitle' => (string) ($translation['subtitle'] ?? ''),
+                    // No HTML in the title, as in the legacy form (Mantis #0011275)
+                    'cnews_title'    => trim(strip_tags((string) ($translation['title']    ?? ''))),
+                    'cnews_subtitle' => trim(strip_tags((string) ($translation['subtitle'] ?? ''))),
                 ];
                 $usedCols = [];
                 for ($i = 0; $i < 10; $i++) {
@@ -359,7 +389,8 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
 
             return $this->jsonResponse([
                 'success' => true,
-                'data'    => ['id' => (int) $newsId],
+                // publishDate: the date set by the server when the form left it empty (Mantis #0011276)
+                'data'    => ['id' => (int) $newsId, 'publishDate' => $publishDate],
             ]);
         } catch (\Throwable $e) {
             return $this->errorResponse($e);
@@ -379,8 +410,27 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
                 return $this->jsonResponse(['success' => false, 'error' => 'Missing id'], 400);
             }
 
+            // As the legacy delete (MelisCmsNewsListController::deleteNewsAction): its events, and the images
+            // and documents of the news are removed with their folder — they stayed online (Mantis #0011274)
+            $this->getEventManager()->trigger('meliscmsnews_delete_news_start', $this, []);
+
             $service = $this->getServiceManager()->get('MelisCmsNewsService');
             $service->deleteNewsById($id);
+            // deleteNewsById() is false for a news without texts though the news is gone
+            $deleted = empty($this->getServiceManager()->get('MelisCmsNewsTable')->getEntryById($id)->current());
+            if ($deleted) {
+                $this->deleteNewsMediaFolder($id);
+            }
+
+            $this->getEventManager()->trigger('meliscmsnews_delete_news_end', $this, [
+                'success' => $deleted ? 1 : 0,
+                'textTitle' => 'tr_meliscmsnews_list_header_title',
+                'textMessage' => $deleted ? 'tr_meliscmsnews_news_delete_success' : 'tr_meliscmsnews_news_delete_fail',
+                'errors' => [],
+                'chunk' => [],
+                'typeCode' => 'CMS_NEWS_DELETE',
+                'itemId' => $id,
+            ]);
 
             return $this->jsonResponse(['success' => true]);
         } catch (\Throwable $e) {
@@ -1090,6 +1140,59 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
             // MelisGenericTable::save($datas) with no id → INSERT
             $textsTable->save($textData);
         }
+    }
+
+    /**
+     * Removes public/media/news/<id>/ (images and documents uploaded for this news, see
+     * MelisCmsNewsController::createFolder). Only plain files, the folder holds nothing else.
+     */
+    private function deleteNewsMediaFolder(int $newsId): void
+    {
+        $dir = 'public/media/news/' . $newsId;
+        if ($newsId <= 0 || !is_dir($dir)) {
+            return;
+        }
+        foreach (scandir($dir) ?: [] as $entry) {
+            if ($entry !== '.' && $entry !== '..' && is_file($dir . '/' . $entry)) {
+                @unlink($dir . '/' . $entry);
+            }
+        }
+        @rmdir($dir);
+    }
+
+    /**
+     * Who already uses this SEO URL, as checked by the legacy form: another news of the site (or this news
+     * in another language) or a page. Returns its title / name, null when the URL is free.
+     */
+    private function seoUrlUsedBy(string $seoUrl, int $siteId, int $newsId, int $langId): ?string
+    {
+        $db = $this->getServiceManager()->get('Laminas\Db\Adapter\AdapterInterface');
+        $news = $db->query(
+            'SELECT s.cnews_id, (SELECT t.cnews_title FROM melis_cms_news_texts t WHERE t.cnews_id = s.cnews_id
+                    ORDER BY t.cnews_lang_id LIMIT 1) AS title
+               FROM melis_cms_news_seo s JOIN melis_cms_news n ON n.cnews_id = s.cnews_id
+              WHERE s.cnews_seo_url = ? AND n.cnews_site_id = ? AND NOT (s.cnews_id = ? AND s.cnews_seo_lang_id = ?)
+              LIMIT 1',
+            [$seoUrl, $siteId, $newsId, $langId]
+        )->current();
+        if ($news) {
+            $news = (array) $news;
+            return trim(($news['title'] ?? '') . ' (' . $news['cnews_id'] . ')');
+        }
+
+        $page = $db->query(
+            'SELECT s.pseo_id, COALESCE(sv.page_name, pb.page_name) AS page_name FROM melis_cms_page_seo s
+               LEFT JOIN melis_cms_page_saved sv ON sv.page_id = s.pseo_id
+               LEFT JOIN melis_cms_page_published pb ON pb.page_id = s.pseo_id
+              WHERE s.pseo_url = ? LIMIT 1',
+            [$seoUrl]
+        )->current();
+        if ($page) {
+            $page = (array) $page;
+            return trim(($page['page_name'] ?? '') . ' (' . $page['pseo_id'] . ')');
+        }
+
+        return null;
     }
 
     private function saveNewsSeo(int $newsId, int $langId, array $seo): void

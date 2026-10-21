@@ -110,7 +110,8 @@ const DICT: Record<string, { en: string; fr: string }> = {
   news_subtitle:      { en: 'Manage your news articles', fr: 'Gestion des articles' },
   total_articles:     { en: 'Total articles',     fr: 'Total articles' },
   count_published:    { en: 'Published',          fr: 'Publiés' },
-  count_drafts:       { en: 'Unpublished',        fr: 'Dépubliés' },
+  // « Non publié » as in the editor: these news may never have been published (Mantis #0011275)
+  count_drafts:       { en: 'Unpublished',        fr: 'Non publiés' },
   new_article:        { en: 'New article',        fr: 'Nouvel article' },
   view_new:           { en: 'New',                fr: 'New' },
   view_old:           { en: 'Old',                fr: 'Old' },
@@ -132,7 +133,7 @@ const DICT: Record<string, { en: string; fr: string }> = {
   col_status:         { en: 'Status',             fr: 'Statut' },
   col_actions:        { en: 'Actions',            fr: 'Actions' },
   status_published:   { en: 'Published',          fr: 'Publié' },
-  status_draft:       { en: 'Unpublished',        fr: 'Dépublié' },
+  status_draft:       { en: 'Unpublished',        fr: 'Non publié' },
   untitled:           { en: 'Untitled',           fr: 'Sans titre' },
   no_articles:        { en: 'No articles found',  fr: 'Aucun article trouvé' },
   edit:               { en: 'Edit',               fr: 'Modifier' },
