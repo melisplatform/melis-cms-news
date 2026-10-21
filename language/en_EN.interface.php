@@ -44,6 +44,7 @@ return [
     'tr_meliscmsnews_save_upload_too_small' => 'Uploaded file too small, minimum size is %s',
     'tr_meliscmsnews_save_upload_file_does_not_exists' => 'Uploaded file does not exists',
     'tr_meliscmsnews_save_upload_image_fileIsImageFalseType' => 'Invalid image format, please upload a valid image',
+    'tr_meliscmsnews_save_upload_file_type_not_allowed' => 'File type not allowed: please choose an image (jpg, jpeg, png, gif, webp) or a document of an allowed type',
     'tr_meliscmsnews_save_upload_image_fileIsImageNotDetected' => 'Unknown image format, please upload a valid image',
     'tr_meliscmsnews_save_upload_image_fileIsImageNotReadable' => 'Image does not exists, or is not readable',
     'tr_meliscmsnews_save_upload_file_path_rights_error' => 'You do not have the rights to execute this action, please contact the administrator',

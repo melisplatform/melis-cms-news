@@ -337,4 +337,45 @@ class MelisCmsNewsService extends MelisGeneralService
 
         return $arrayParameters['results'];
     }
+
+    /**
+     * Whether a news can be shown on the public site, same rule as the « Détails actualité » plugin:
+     * active, publish date set and passed, unpublish date not passed
+     * @param int $newsId
+     * @return bool
+     */
+    public function isNewsPublished($newsId)
+    {
+        $news = $this->getServiceManager()->get('MelisCmsNewsTable')->getEntryById((int) $newsId)->current();
+        if (empty($news) || empty($news->cnews_status)) {
+            return false;
+        }
+        $now = time();
+        if (empty($news->cnews_publish_date) || strtotime($news->cnews_publish_date) > $now) {
+            return false;
+        }
+        if (!empty($news->cnews_unpublish_date) && strtotime($news->cnews_unpublish_date) <= $now) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Back-office preview of a news on the site: renderMode=previewtab asked by a logged-in back-office user.
+     * The query parameter alone is not enough, any visitor can add it (Mantis #0011268).
+     * @return bool
+     */
+    public function isBackOfficePreview()
+    {
+        $request = $this->getServiceManager()->get('request');
+        if (!method_exists($request, 'getQuery') || $request->getQuery('renderMode') !== 'previewtab') {
+            return false;
+        }
+
+        // MelisCoreAuth only exists where the back-office modules are loaded (preview route): on the public site
+        // there is no back-office session to check, and asking for it gave an HTTP 500
+        return $this->getServiceManager()->has('MelisCoreAuth')
+            && $this->getServiceManager()->get('MelisCoreAuth')->hasIdentity();
+    }
 }

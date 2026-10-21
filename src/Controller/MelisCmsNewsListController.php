@@ -281,6 +281,11 @@ class MelisCmsNewsListController extends MelisAbstractActionController
 
             $tmp = $newsSvc->getNewsList(null, null, null, null, null, null, null, null, null, null,  null, $cnews_site_id, $search, true);
             $dataFiltered = count($tmp);
+            // Total before the search and site filters: the row count of the page was sent, giving
+            // « 1 to 10 of 20 entries (filtered from 10 total entries) » (Mantis #0011275)
+            $dataTotal = (empty($search) && empty($cnews_site_id))
+                ? $dataFiltered
+                : count($newsSvc->getNewsList(null, null, null, null, null, null, null, null, null, null, null, null, null, true));
 
             $news = $newsSvc->getNewsList(null, null, null, null, null, null, null, null, null, $selCol, $sortOrder, $cnews_site_id, $search);
 
@@ -341,7 +346,7 @@ class MelisCmsNewsListController extends MelisAbstractActionController
 
         return new JsonModel(array (
             'draw'              => (int) $draw,
-            'recordsTotal'      => $dataCount,
+            'recordsTotal'      => $dataTotal ?? $dataCount,
             'recordsFiltered'   => $dataFiltered,
             'data'              => $tableData,
         ));

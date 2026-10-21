@@ -92,6 +92,13 @@ class MelisCmsNewsListNewsPlugin extends MelisTemplatingPlugin
         $dateMin = empty($data['date_min']) ? null : $data['date_min'];
         $dateMax = empty($data['date_max']) ? null : $data['date_max'];
         $search = empty($data['search']) ? null : $data['search'];
+        // MelisFront encodes every GET value (several entity layers): « été » arrived as
+        // "&amp;eacute;t&amp;eacute;" and matched nothing (Mantis #0011272). The view escapes it again.
+        for ($i = 0; $search !== null && $i < 5; $i++) {
+            $decoded = html_entity_decode((string) $search, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            if ($decoded === $search) { break; }
+            $search = $decoded;
+        }
 
         // convert date formats (form sends mm/dd/yyyy, SQL needs Y-m-d H:i:s)
         $dateMin = is_null($dateMin) ? null : date('Y-m-d H:i:s', strtotime($dateMin));

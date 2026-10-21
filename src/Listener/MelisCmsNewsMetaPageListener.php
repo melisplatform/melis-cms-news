@@ -61,7 +61,12 @@ class MelisCmsNewsMetaPageListener extends MelisGeneralListener implements Liste
 
 					if (empty($newsId))
 						return;
-									
+
+					// The title of a draft or expired news was put in <title> for anyone (Mantis #0011268)
+					$newsService = $sm->get('MelisCmsNewsService');
+					if (!$newsService->isNewsPublished($newsId) && !$newsService->isBackOfficePreview())
+						return;
+
 					/**
 					 * update script tags of the page
 					 */

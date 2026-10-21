@@ -232,8 +232,8 @@ export async function fetchNewsById(id: number, langId?: number): Promise<NewsDe
   return apiFetch<NewsDetail>(`/melis/react-api/news/${id}${qs}`)
 }
 
-export async function saveNews(payload: NewsSavePayload): Promise<{ id: number }> {
-  return apiFetch<{ id: number }>('/melis/react-api/news/save', {
+export async function saveNews(payload: NewsSavePayload): Promise<{ id: number; publishDate?: string | null }> {
+  return apiFetch<{ id: number; publishDate?: string | null }>('/melis/react-api/news/save', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),

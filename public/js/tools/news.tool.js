@@ -148,6 +148,19 @@ $(function() {
                         selectedTags    = newsPage.find('select#tags_select').val()
                         ;
 
+                    // Author block of MelisCmsUserAccount: its ajaxPrefilter adds these values to this request, but
+                    // that script is not loaded everywhere (React « Old » view). Without them its save listener
+                    // cleared the author (Mantis #0011269). Same values, so a prefilter that runs changes nothing.
+                    $.each(['cnews_author_account', 'cnews_comments_require_account'], function (i, field) {
+                        var input = newsPage.find('[name=' + field + ']');
+                        if (!input.length) {
+                            input = $body.find('#' + newsId + '_' + field);
+                        }
+                        if (input.length) {
+                            dataString.push({name: field, value: input.val() || 0});
+                        }
+                    });
+
                     //newsSiteTitleSubtitleForm
                     var forms   = $('#' + newsId + '_id_meliscmsnews_content_tabs_properties_details_right_paragraphs .news-post-text-form'),
                         ctr     = 0;

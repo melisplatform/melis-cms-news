@@ -908,6 +908,8 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
       // N'envoyer le flag de modération que si le module Comments est actif (colonne présente).
       if (commentsActive) payload.validateComments = form.validateComments
       const res = await newsApi.saveNews(payload)
+      // Publish date left empty: the server set it to now, show it (Mantis #0011276)
+      if (!form.publishDate && res.publishDate) set('publishDate', toInputDate(res.publishDate))
       okNotify(t('news_title'), t('saved_ok'))
       // Le conteneur (NewsPage) convertit l'onglet « new » en onglet de l'article créé,
       // ou met à jour le libellé d'un article existant.
@@ -1002,7 +1004,8 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
     const col = newsApi.mediaColumn(kind, slot)
     setUploadingCol(col); setApiError(null)
     const res = await newsApi.uploadNewsFile(Number(id), kind, slot, file)
-    if (res.success) { await refreshMedia() } else { setApiError(res.message || t('err_upload')) }
+    // Also as a notification: the banner is at the top of the form, out of view from Médias (Mantis #0011273)
+    if (res.success) { await refreshMedia() } else { setApiError(res.message || t('err_upload')); koNotify(t('news_title'), res.message || t('err_upload')) }
     setUploadingCol(null)
   }
   async function removeMedia(kind: newsApi.MediaKind, slot: 1 | 2 | 3) {
@@ -1010,7 +1013,7 @@ export default function NewsFormPage({ newsId, onSaved, onTitleChange }: {
     const col = newsApi.mediaColumn(kind, slot)
     setUploadingCol(col); setApiError(null)
     const res = await newsApi.removeNewsFile(Number(id), kind, slot)
-    if (res.success) { await refreshMedia() } else { setApiError(res.message || t('err_delete')) }
+    if (res.success) { await refreshMedia() } else { setApiError(res.message || t('err_delete')); koNotify(t('news_title'), res.message || t('err_delete')) }
     setUploadingCol(null)
   }
 

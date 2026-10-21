@@ -114,14 +114,17 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
             }
 
             /** Return news data for Preview Tab */
-            if (!empty($data['renderMode']) && $data['renderMode'] === "previewtab") {
+            // Only for a logged-in back-office user: renderMode comes from the URL, so adding
+            // renderMode=previewtab let anyone read a draft or expired news (Mantis #0011268)
+            if (!empty($data['renderMode']) && $data['renderMode'] === "previewtab" && $newsSrv->isBackOfficePreview()) {
                 $newsData = $newsDataRes;
             }
         }
         # add user account
         $activeModules = $this->getServiceManager()->get('MelisAssetManagerModulesService')->getActiveModules();
         $userAccountModuleIsLoaded = in_array('MelisCmsUserAccount', $activeModules);
-        if ($userAccountModuleIsLoaded) {
+        // No news (unknown, offline): nothing to complete, writing a property on [] was a fatal error (Mantis #0011271)
+        if ($userAccountModuleIsLoaded && is_object($newsData)) {
             //get Author data
             $authorId = $newsData->cnews_author_account ?? null;
             $userSiteService = $this->getServiceManager()->get('FrontUserAccountService');
@@ -167,13 +170,19 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
                 }
             }
         }
-        if($renderType == 'front' && empty($finalData)) { 
-            $siteId = $this->getSiteIdByPageId($data['pageId']); 
+        if($renderType == 'front' && empty($finalData)) {
+            // Redirect set on the response, not header() + exit in the middle of the page rendering, which
+            // gave an HTTP 500 or a blank page (Mantis #0011271). Detail pages are already sent to the 404
+            // page before rendering (MelisCmsNewsDetail404Listener), this covers the other pages.
+            $siteId = $this->getSiteIdByPageId($data['pageId']);
             $siteConfigSrv = $this->getServiceManager()->get('MelisCmsSitesPropertiesService');
             $siteData = $siteConfigSrv->getSitePropAnd404BySiteId($siteId, true);
-            $page404 = $siteData->s404_page_id;  
-            header("Location: /id/".$page404);
-            exit; 
+            if (!empty($siteData->s404_page_id)) {
+                $link404 = $this->getServiceManager()->get('MelisEngineTree')->getPageLink($siteData->s404_page_id, true);
+                $response = $this->getServiceManager()->get('Application')->getResponse();
+                $response->getHeaders()->addHeaderLine('Location', $link404 ?: '/id/' . $siteData->s404_page_id);
+                $response->setStatusCode(302);
+            }
         }
  
         // Create an array with the variables that will be available in the view

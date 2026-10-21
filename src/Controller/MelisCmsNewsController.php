@@ -950,6 +950,19 @@ class MelisCmsNewsController extends MelisAbstractActionController
                 unset($newsTbl['cnews_id']);
                 $newsTbl['cnews_publish_date'] = $tool->localeDateToSql($newsTbl['cnews_publish_date']);
                 $newsTbl['cnews_unpublish_date'] = $tool->localeDateToSql($newsTbl['cnews_unpublish_date']);
+
+                // This form's date fields have no time: an unchanged day keeps the saved time instead of
+                // 00:00:00 (a time set in the React editor was dropped, Mantis #0011275)
+                if (!empty($cnews_id)) {
+                    $saved = $this->getServiceManager()->get('MelisCmsNewsTable')->getEntryById((int) $cnews_id)->current();
+                    foreach (['cnews_publish_date', 'cnews_unpublish_date'] as $dateCol) {
+                        $old = $saved ? (string) ($saved->$dateCol ?? '') : '';
+                        $new = (string) ($newsTbl[$dateCol] ?? '');
+                        if ($old !== '' && $new !== '' && substr($old, 0, 10) === substr($new, 0, 10)) {
+                            $newsTbl[$dateCol] = $old;
+                        }
+                    }
+                }
                 // user account
                 if (isset($postValues['cnews_author_account']) && !empty($postValues['cnews_author_account'])) {
                     $newsTbl['cnews_author_account'] = $postValues['cnews_author_account'];
@@ -1407,7 +1420,8 @@ class MelisCmsNewsController extends MelisAbstractActionController
                         'upload'   => false,
                         'type'     => $type,
                         'fileName' => '',
-                        'errors'   => 'tr_meliscmsnews_save_upload_file_type_not_allowed',
+                        // Translated: the raw key was shown in the editor banner (Mantis #0011273)
+                        'errors'   => $tool->getTranslation('tr_meliscmsnews_save_upload_file_type_not_allowed'),
                     ];
                 }
 
@@ -1434,7 +1448,7 @@ class MelisCmsNewsController extends MelisAbstractActionController
                                 'upload' => false,
                                 'type' => $type,
                                 'fileName' => '',
-                                'errors' => 'tr_meliscmsnews_save_upload_image_fileIsImageFalseType'
+                                'errors' => $tool->getTranslation('tr_meliscmsnews_save_upload_image_fileIsImageFalseType')
                             ];
                         }
                     }
@@ -2094,12 +2108,7 @@ class MelisCmsNewsController extends MelisAbstractActionController
      */
     private function cleanURL(string $url = '')
     {
-        $url = str_replace(' ', '-', $url);                 // Replaces all spaces with hyphens
-        $url = preg_replace('/[^A-Za-z0-9\/\-]+/', '-', $url);  // Replaces special characters with hyphens
-        // remove "/" prefix on generated URL
-        if (substr($url, 0, 1) == '/') {
-            return preg_replace('/\//', '', $url, 1);
-        }
-        return $url;
+        // Same cleaning as the React editor, accented letters kept as plain ones (Mantis #0011275)
+        return $this->getServiceManager()->get('MelisCmsNewsSeoService')->cleanURL($url);
     }
 }
