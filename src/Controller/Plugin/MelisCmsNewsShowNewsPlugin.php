@@ -174,13 +174,16 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
             // Redirect set on the response, not header() + exit in the middle of the page rendering, which
             // gave an HTTP 500 or a blank page (Mantis #0011271). Detail pages are already sent to the 404
             // page before rendering (MelisCmsNewsDetail404Listener), this covers the other pages.
+            // Front services only: MelisCmsSitesPropertiesService (back office) is not registered on the
+            // public site, asking for it was the HTTP 500. Site 404 page, else the cross-site one (as melis-front)
             $siteId = $this->getSiteIdByPageId($data['pageId']);
-            $siteConfigSrv = $this->getServiceManager()->get('MelisCmsSitesPropertiesService');
-            $siteData = $siteConfigSrv->getSitePropAnd404BySiteId($siteId, true);
-            if (!empty($siteData->s404_page_id)) {
-                $link404 = $this->getServiceManager()->get('MelisEngineTree')->getPageLink($siteData->s404_page_id, true);
+            $site404Table = $this->getServiceManager()->get('MelisEngineTableSite404');
+            $site404 = $site404Table->getEntryByField('s404_site_id', (int) $siteId)->current()
+                ?: $site404Table->getEntryByField('s404_site_id', -1)->current();
+            if (!empty($site404->s404_page_id)) {
+                $link404 = $this->getServiceManager()->get('MelisEngineTree')->getPageLink($site404->s404_page_id, true);
                 $response = $this->getServiceManager()->get('Application')->getResponse();
-                $response->getHeaders()->addHeaderLine('Location', $link404 ?: '/id/' . $siteData->s404_page_id);
+                $response->getHeaders()->addHeaderLine('Location', $link404 ?: '/id/' . $site404->s404_page_id);
                 $response->setStatusCode(302);
             }
         }
