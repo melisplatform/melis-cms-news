@@ -877,6 +877,7 @@ class MelisCmsNewsController extends MelisAbstractActionController
             $postValues = array_merge($postValues, $melisTool->sanitizePost($sanitize));
 
             $logTypeCode = !empty($postValues['cnews_id']) ? 'CMS_NEWS_UPDATE' : 'CMS_NEWS_ADD';
+            $isNewNews = empty($postValues['cnews_id']);
 
             /** Publish & Un-publish date checking */
             if (!empty($postValues['cnews_publish_date']) && !empty($postValues['cnews_unpublish_date'])) {
@@ -938,6 +939,17 @@ class MelisCmsNewsController extends MelisAbstractActionController
                 foreach ($formErrors as $fieldName => $fieldErrors) {
                     $errors[$fieldName] = $fieldErrors;
                     $errors[$fieldName]['label'] = $siteForm->get($fieldName)->getLabel();
+                }
+            }
+
+            // SEO checked before anything is written: a SEO URL already used refused the save only after
+            // the news and its texts were saved, and the rollback then deleted an existing news (Mantis #0007513)
+            if (empty($errors) && $titleExist && $form->isValid()) {
+                list('success' => $isSeoValid, 'errors' => $seoErrors) = $this->saveNewsSeo((int) ($postValues['cnews_id'] ?? 0), true);
+                if ($isSeoValid != 1) {
+                    $errors = $seoErrors;
+                    // the legacy form highlights the errors of « <newsId>_id_meliscmsnews_page »
+                    $data['cnews_id'] = (int) ($postValues['cnews_id'] ?? 0);
                 }
             }
 
@@ -1045,7 +1057,11 @@ class MelisCmsNewsController extends MelisAbstractActionController
                     //save seo tab
                     list('success' => $isSeoSuccess, 'errors' => $errors) = $this->saveNewsSeo($data['cnews_id']);
                     //rollback here when seo saving is not successful
-                    if ($isSeoSuccess != 1 || (isset($isCategorySuccess) && $isCategorySuccess != 1) || (isset($isTagsSuccess) && $isTagsSuccess != 1)) {
+                    if (!$isNewNews && ($isSeoSuccess != 1 || (isset($isCategorySuccess) && $isCategorySuccess != 1) || (isset($isTagsSuccess) && $isTagsSuccess != 1))) {
+                        // An existing news is never deleted by the rollback (Mantis #0007513): its data stays, the
+                        // error is shown
+                        $errors = $errors ?: array_merge($categoryErrors ?? [], $tagsErrors ?? []);
+                    } elseif ($isSeoSuccess != 1 || (isset($isCategorySuccess) && $isCategorySuccess != 1) || (isset($isTagsSuccess) && $isTagsSuccess != 1)) {
                         //delete news and news texts
                         $deleteNews = $this->forward()->dispatch(
                             'MelisCmsNews\Controller\MelisCmsNewsList',
@@ -1941,8 +1957,8 @@ class MelisCmsNewsController extends MelisAbstractActionController
      * This function saves the seo of the news
      * @return \Laminas\View\Model\JsonModel
      */
-    private function saveNewsSeo($cnews_id)
-    {       
+    private function saveNewsSeo($cnews_id, bool $checkOnly = false)
+    {
         $translator = $this->getServiceManager()->get('translator');        
         // Get the form properly loaded               
         $factory = new Factory();
@@ -1992,6 +2008,7 @@ class MelisCmsNewsController extends MelisAbstractActionController
                         $seoData['cnews_id'] = $cnews_id;//set the news id
                         //if at least one seo property is filled up, continue
                         if (!$allEmpty)  {
+                            // $checkOnly: validation and unicity only, nothing written (Mantis #0007513)
                             // Check for unicity of the URL declared
                             if (!empty($seoData['cnews_seo_url'])) {
                                 $newsSeo = $melisNewsSeoTable->checkSeoUrlDuplicates($seoData['cnews_seo_url'], $postValues['cnews_site_id'])->current();
@@ -2055,12 +2072,12 @@ class MelisCmsNewsController extends MelisAbstractActionController
                             $newsSeoId = $seoData['cnews_seo_id'];
                             unset($seoData['cnews_seo_id']);
 
-                            $res = $melisNewsSeoTable->save($seoData, $newsSeoId);
+                            $res = $checkOnly ? true : $melisNewsSeoTable->save($seoData, $newsSeoId);
                             if (!$res) {
                                 $success = 0;
                             }
                         } else {
-                            if (!empty($seoData['cnews_seo_id'])) {
+                            if (!$checkOnly && !empty($seoData['cnews_seo_id'])) {
                                  // All fields are empty, let's delete the entry
                                 $res = $melisNewsSeoTable->deleteById($seoData['cnews_seo_id']);
                                 if (!$res) {
