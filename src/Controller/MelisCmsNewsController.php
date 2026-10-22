@@ -24,10 +24,40 @@ use MelisCore\Controller\MelisAbstractActionController;
 
 class MelisCmsNewsController extends MelisAbstractActionController
 {
+    /**
+     * SECURITY (audit CN-M3/CN-M6): read by MelisCoreAuthorizationListener (EVENT_ROUTE) —
+     * every direct HTTP hit on this controller now requires the News tool right. Without
+     * it the gate logged UNMAPPED and let any authenticated account read every news
+     * (render* actions) or null slider links (newsSliderDeleted). Internal dispatches
+     * (MelisCoreDispatch, e.g. the slider-deleted listener) do not re-fire EVENT_ROUTE
+     * and keep working for users without the News right.
+     */
+    const MELIS_KEY = 'meliscmsnews_tools_section';
+
+    /**
+     * SECURITY (audit CN-M5): the only columns the file upload/removal actions may write.
+     */
+    private const FILE_COLUMNS = [
+        'cnews_image1', 'cnews_image2', 'cnews_image3',
+        'cnews_documents1', 'cnews_documents2', 'cnews_documents3',
+    ];
+
     /** @INFO: Tool access check (CWE-862). */
     private function hasAccess($key)
     {
         return $this->getServiceManager()->get('MelisCoreRights')->canAccess($key);
+    }
+
+    /**
+     * SECURITY (audit CN-M5): true when the path stays inside the public webroot once
+     * resolved — blocks any "../" escape before an unlink on a DB-derived path.
+     */
+    private function isDeletableUploadPath($path)
+    {
+        $real = realpath($path);
+        $publicRoot = realpath('public');
+        return $real !== false && $publicRoot !== false
+            && strpos($real, $publicRoot . DIRECTORY_SEPARATOR) === 0;
     }
 
     /**
@@ -1234,6 +1264,19 @@ class MelisCmsNewsController extends MelisAbstractActionController
         $postValues = [];
         if ($this->getRequest()->isPost()) {
             $postValues = $this->getRequest()->getPost()->toArray();
+
+            // SECURITY (audit CN-M5): 'column' is a column NAME written as-is — without
+            // this whitelist any column of melis_cms_news was writable (mass assignment:
+            // forced publication, backdating, author/site switch…).
+            if (!empty($postValues['column']) && !in_array($postValues['column'], self::FILE_COLUMNS, true)) {
+                return new JsonModel([
+                    'success' => 0,
+                    'textTitle' => $textTitle,
+                    'textMessage' => 'tr_meliscmsnews_save_file_fail',
+                    'errors' => ['column' => 'invalid column'],
+                ]);
+            }
+
             $file = $this->attachmentValidator();
 
             if ($file['type'] == 'image') {
@@ -1281,8 +1324,10 @@ class MelisCmsNewsController extends MelisAbstractActionController
                         $news = (array)$news;
                         if (!empty($news[$postValues['column']])) {
                             // if the file exists, delete the file after update
-                            if (file_exists('public' . $news[$postValues['column']])) {
-                                unlink('public' . $news[$postValues['column']]);
+                            // SECURITY (audit CN-M5): containment check before unlink
+                            $oldFile = 'public' . $news[$postValues['column']];
+                            if (file_exists($oldFile) && $this->isDeletableUploadPath($oldFile)) {
+                                unlink($oldFile);
                             }
                         }
 
@@ -1546,6 +1591,17 @@ class MelisCmsNewsController extends MelisAbstractActionController
             $id = $postValues['newsId'];
             $type = $postValues['type'];
 
+            // SECURITY (audit CN-M5): same whitelist as saveFileForm — 'column' is written
+            // (emptied) as-is, any other column of melis_cms_news could be wiped.
+            if (empty($postValues['column']) || !in_array($postValues['column'], self::FILE_COLUMNS, true)) {
+                return new JsonModel([
+                    'success' => 0,
+                    'textTitle' => $textTitle,
+                    'textMessage' => $textMessage,
+                    'errors' => ['column' => 'invalid column'],
+                ]);
+            }
+
             if (in_array($type, ['file', 'image'])) {
                 $logTypeCode = 'CMS_NEWS_' . strtoupper($type) . '_DELETE';
                 $textTitle = 'tr_meliscmsnews_delete_' . $type . '_title';
@@ -1570,7 +1626,10 @@ class MelisCmsNewsController extends MelisAbstractActionController
 
                 $col = $postValues['column'];
                 $fileUploadPath = 'public' . $tmp->$col;
-                $this->deleteFileFromDirectory($fileUploadPath);
+                // SECURITY (audit CN-M5): containment check before deletion
+                if (!empty($tmp->$col) && $this->isDeletableUploadPath($fileUploadPath)) {
+                    $this->deleteFileFromDirectory($fileUploadPath);
+                }
             }
         }
 
@@ -1804,6 +1863,13 @@ class MelisCmsNewsController extends MelisAbstractActionController
         $melisKey = $this->params()->fromRoute('melisKey', '');
         $newsId = (int)$this->params()->fromQuery('newsId', '');
         $newsURI = $this->params()->fromQuery('newsUri', '');
+
+        // SECURITY (audit CN-H3): only accept the site-relative preview URI this tab
+        // builds itself — blocks javascript:, protocol-relative URLs and attribute
+        // breakouts from a forged link (the value ends up in an iframe src).
+        if (!is_string($newsURI) || !preg_match('#^/(?!/)[^:"\'<>\\\\\s]*$#', $newsURI)) {
+            $newsURI = '';
+        }
 
         $noPageDetails = false;
         $tool = $this->getTool();

@@ -114,8 +114,22 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
             }
 
             /** Return news data for Preview Tab */
+            // SECURITY (audit CN-H1): "previewtab" bypasses the publish/status gate above,
+            // and renderMode is overridable from the query string (GET→config merge).
+            // Only honour it for an authenticated back-office user — never for anonymous
+            // front visitors (fail closed when the auth service is unavailable).
             if (!empty($data['renderMode']) && $data['renderMode'] === "previewtab") {
-                $newsData = $newsDataRes;
+                $hasBoIdentity = false;
+                if ($this->getServiceManager()->has('MelisCoreAuth')) {
+                    try {
+                        $hasBoIdentity = $this->getServiceManager()->get('MelisCoreAuth')->hasIdentity();
+                    } catch (\Throwable $ex) {
+                        $hasBoIdentity = false;
+                    }
+                }
+                if ($hasBoIdentity) {
+                    $newsData = $newsDataRes;
+                }
             }
         }
         # add user account
@@ -342,16 +356,31 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
 
         // template_path is mendatory for all plugins
         if (!empty($parameters['template_path']))
-            $xmlValueFormatted .= "\t\t" . '<template_path><![CDATA[' . $parameters['template_path'] . ']]></template_path>';
+            $xmlValueFormatted .= "\t\t" . '<template_path>' . $this->xmlCdata($parameters['template_path']) . '</template_path>';
         if (!empty($parameters['newsId']))
-            $xmlValueFormatted .= "\t\t" . '<newsId><![CDATA[' . $parameters['newsId'] . ']]></newsId>';
+            $xmlValueFormatted .= "\t\t" . '<newsId>' . $this->xmlCdata($parameters['newsId']) . '</newsId>';
 
         // Something has been saved, let's generate an XML for DB
-        $xmlValueFormatted = "\t" . '<' . $this->pluginXmlDbKey . ' id="' . $parameters['melisPluginId'] . '">' .
+        $xmlValueFormatted = "\t" . '<' . $this->pluginXmlDbKey . ' id="' . $this->xmlAttr($parameters['melisPluginId']) . '">' .
             $xmlValueFormatted .
             "\t" . '</' . $this->pluginXmlDbKey . '>' . "\n";
 
         return $xmlValueFormatted;
+    }
+
+    /**
+     * SECURITY (audit CN-M7): a literal "]]>" in a parameter closed the CDATA section
+     * and injected arbitrary XML nodes into the page document.
+     */
+    private function xmlCdata($value)
+    {
+        return '<![CDATA[' . str_replace(']]>', ']]]]><![CDATA[>', (string) $value) . ']]>';
+    }
+
+    /** SECURITY (audit CN-M7): escape for an XML attribute context. */
+    private function xmlAttr($value)
+    {
+        return htmlspecialchars((string) $value, ENT_QUOTES | ENT_XML1, 'UTF-8');
     }
 
     /**

@@ -353,38 +353,37 @@ class MelisCmsNewsListNewsPlugin extends MelisTemplatingPlugin
     public function savePluginConfigToXml($parameters)
     {
  
-        $xmlValueFormatted = '';    
+        $xmlValueFormatted = '';
         // template_path is mendatory for all plugins
-        if (!empty($parameters['template_path']))
-            $xmlValueFormatted .= "\t\t" . '<template_path><![CDATA[' . $parameters['template_path'] . ']]></template_path>';
-        if (!empty($parameters['site_id']))
-            $xmlValueFormatted .= "\t\t" . '<site_id><![CDATA[' . $parameters['site_id'] . ']]></site_id>';
-        if (!empty($parameters['pageIdNews']))
-            $xmlValueFormatted .= "\t\t" . '<pageIdNews><![CDATA[' . $parameters['pageIdNews'] . ']]></pageIdNews>';
-        if (!empty($parameters['categoryIdNews']))
-            $xmlValueFormatted .= "\t\t" . '<categoryIdNews><![CDATA[' . $parameters['categoryIdNews'] . ']]></categoryIdNews>';
-        if (!empty($parameters['current']))
-            $xmlValueFormatted .= "\t\t" . '<current><![CDATA[' . $parameters['current'] . ']]></current>';
-        if (!empty($parameters['nbPerPage']))
-            $xmlValueFormatted .= "\t\t" . '<nbPerPage><![CDATA[' . $parameters['nbPerPage'] . ']]></nbPerPage>';
-        if (!empty($parameters['nbPageBeforeAfter']))
-            $xmlValueFormatted .= "\t\t" . '<nbPageBeforeAfter><![CDATA[' . $parameters['nbPageBeforeAfter'] . ']]></nbPageBeforeAfter>';
-        if (!empty($parameters['column']))
-            $xmlValueFormatted .= "\t\t" . '<column><![CDATA[' . $parameters['column'] . ']]></column>';
-        if (!empty($parameters['order']))
-            $xmlValueFormatted .= "\t\t" . '<order><![CDATA[' . $parameters['order'] . ']]></order>';
-        if (!empty($parameters['date_min']))
-            $xmlValueFormatted .= "\t\t" . '<date_min><![CDATA[' . $parameters['date_min'] . ']]></date_min>';
-        if (!empty($parameters['date_max']))
-            $xmlValueFormatted .= "\t\t" . '<date_max><![CDATA[' . $parameters['date_max'] . ']]></date_max>';
-        if (!empty($parameters['search']))
-            $xmlValueFormatted .= "\t\t" . '<search><![CDATA[' . $parameters['search'] . ']]></search>';
+        $cdataKeys = [
+            'template_path', 'site_id', 'pageIdNews', 'categoryIdNews', 'current',
+            'nbPerPage', 'nbPageBeforeAfter', 'column', 'order', 'date_min', 'date_max', 'search',
+        ];
+        foreach ($cdataKeys as $key) {
+            if (!empty($parameters[$key]))
+                $xmlValueFormatted .= "\t\t" . '<' . $key . '>' . $this->xmlCdata($parameters[$key]) . '</' . $key . '>';
+        }
 
         // Something has been saved, let's generate an XML for DB
-        $xmlValueFormatted = "\t" . '<' . $this->pluginXmlDbKey . ' id="' . $parameters['melisPluginId'] . '">' .
+        $xmlValueFormatted = "\t" . '<' . $this->pluginXmlDbKey . ' id="' . $this->xmlAttr($parameters['melisPluginId']) . '">' .
             $xmlValueFormatted .
             "\t" . '</' . $this->pluginXmlDbKey . '>' . "\n";
 
         return $xmlValueFormatted;
+    }
+
+    /**
+     * SECURITY (audit CN-M7): a literal "]]>" in a parameter closed the CDATA section
+     * and injected arbitrary XML nodes into the page document.
+     */
+    private function xmlCdata($value)
+    {
+        return '<![CDATA[' . str_replace(']]>', ']]]]><![CDATA[>', (string) $value) . ']]>';
+    }
+
+    /** SECURITY (audit CN-M7): escape for an XML attribute context. */
+    private function xmlAttr($value)
+    {
+        return htmlspecialchars((string) $value, ENT_QUOTES | ENT_XML1, 'UTF-8');
     }
 }
