@@ -41,10 +41,17 @@ class MelisCmsNewsSeoRedirectUrlListener extends MelisFrontSEODispatchRouterAbst
                     return;
                 } else {
 
-                    //get first the redirect url if there are any            
+                    //get first the redirect url if there are any
                     $newsSeoService = $sm->get('MelisCmsNewsSeoService');
                     $newsSeoData = $newsSeoService->getSeoData($newsId, $idPage)->current();
-                      
+
+                    // SECURITY (audit CN-M9): don't fire the 301 of an embargoed news for
+                    // an anonymous visitor (?newsId is attacker-controlled on any page —
+                    // this was an enumeration oracle on unpublished news redirects).
+                    if (!empty($newsSeoData) && !$newsSeoService->isNewsVisibleForRequest($newsId)) {
+                        $newsSeoData = null;
+                    }
+
                     if (!empty($newsSeoData)) {
                         if (!empty($newsSeoData->cnews_seo_url_redirect)) {
                             $params['301_type'] = 'seoURL';

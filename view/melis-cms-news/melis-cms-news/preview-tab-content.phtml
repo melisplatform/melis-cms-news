@@ -4,10 +4,10 @@ if (!empty($this->zoneconfig['conf']['id'])) {
     $id .= $this->newsId . '_' . $this->zoneconfig['conf']['id'];
 }
 ?>
-<div class="news-preview-tab" id="<?= $id ?>" data-melisKey="<?= $this->melisKey; ?>">
+<div class="news-preview-tab" id="<?= $this->escapeHtmlAttr($id) ?>" data-melisKey="<?= $this->escapeHtmlAttr($this->melisKey); ?>">
     <div class="row">
         <div class="col-md-6 col-xs-12 news-preview-title">
-            <div class="col-md-12"><h4><?= $this->labels['newsTitlePrefix']; ?> <em>"<?= $this->labels['newsTitle']; ?>"</em></h4></div>
+            <div class="col-md-12"><h4><?= $this->labels['newsTitlePrefix']; ?> <em>"<?= $this->escapeHtml($this->labels['newsTitle']); ?>"</em></h4></div>
             <div class="col-md-12">
                 <?php
                 if (!empty($this->newsDetailPageSelector)):
@@ -34,7 +34,7 @@ if (!empty($this->zoneconfig['conf']['id'])) {
             <?php if (!empty($this->newsDetailPageSelector)): ?>
             <div class="col-md-12">
                 <a id="<?= $this->newsId; ?>-see-below" class="btn btn-info float-right preview-tab-see-below" title="<?= $this->labels['seeInTab']; ?>"
-                    <?= empty($this->newsURI) ? 'disabled' : ' data-uri="' . $this->newsURI . '"'; ?>>
+                    <?= empty($this->newsURI) ? 'disabled' : ' data-uri="' . $this->escapeHtmlAttr($this->newsURI) . '"'; ?>>
                     <?= $this->labels['seeInTab']; ?>
                 </a>
             </div>
@@ -43,7 +43,7 @@ if (!empty($this->zoneconfig['conf']['id'])) {
             if ($this->detailPagesCount): ?>
             <div class="col-md-12">
                 <a id="<?= $this->newsId; ?>-see-in-new-tab" class="btn btn-info float-right" title="<?= $this->labels['seeInNewTab']; ?>" target="_blank"
-                    <?= empty($this->newsURI) ? 'disabled' : ' href="' . $this->newsURI . '"'; ?>>
+                    <?= empty($this->newsURI) ? 'disabled' : ' href="' . $this->escapeHtmlAttr($this->newsURI) . '"'; ?>>
                     <?= $this->labels['seeInNewTab']; ?>
                 </a>
             </div>

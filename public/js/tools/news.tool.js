@@ -538,13 +538,17 @@ $(function() {
                 if ( $this.attr('disabled') == undefined ) {
                     melisCoreTool.pending('.news-workflow');
                     var news    = $this.closest('tr'),
-                        newsId  = news.attr('id');
+                        // SECURITY (audit CN-H5): the row id and title feed a JS snippet
+                        // (wfOpeningJs) evaluated later — force the id numeric and build
+                        // the title as a safe JS string literal (.text() decodes the
+                        // server-side escaping of the datatable cell).
+                        newsId  = parseInt(news.attr('id'), 10) || 0;
                         MelisCmsNewsId = newsId;
                         var newsTitle = news.find("td:eq(2)").text();
                         var pageData = {
                             wfDetails: newsTitle + ' (' + newsId + ')',
                             wfId: newsId,
-                            wfOpeningJs: "melisHelper.tabOpen('" + newsTitle + "', 'fa fa-rss fa-2x',  '"+newsId+"_id_meliscmsnews_page', 'meliscmsnews_page', { newsId: " + newsId + " });",
+                            wfOpeningJs: "melisHelper.tabOpen(" + JSON.stringify(String(newsTitle)) + ", 'fa fa-rss fa-2x',  '"+newsId+"_id_meliscmsnews_page', 'meliscmsnews_page', { newsId: " + newsId + " });",
                             wfType: 'NEWS'
                         };
                         renderNewsWorkFlowModal(pageData, ".news-workflow");                        
@@ -1045,4 +1049,4 @@ window.initNewsCategoryList = function(newsId, langLocale) {
                 ]
             });
     }
-}
+}

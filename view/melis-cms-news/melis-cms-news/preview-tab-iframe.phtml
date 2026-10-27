@@ -4,14 +4,14 @@ if (!empty($this->zoneconfig['conf']['id'])) {
     $id .= $this->newsId . '_' . $this->zoneconfig['conf']['id'];
 }
 ?>
-<div id="<?= $id ?>" data-melisKey="<?= $this->melisKey; ?>" class="mcn-width-100">
+<div id="<?= $this->escapeHtmlAttr($id) ?>" data-melisKey="<?= $this->escapeHtmlAttr($this->melisKey); ?>" class="mcn-width-100">
 <?php if (!empty($this->newsURI)): ?>
     <div id="<?= $this->newsId; ?>_news-preview-iframe-container" class="col-md-12">
         <div id="loadingZone" class="overlay-loader">
             <img class="loader-icon spinning-cog" src="/MelisCore/assets/images/cog12.svg" data-cog="cog12">
         </div>
         <iframe style="min-height: 800px; width: 100%; min-width: 100%;" class="news-prev-iframe"
-                src="<?= $this->newsURI; ?>"
+                src="<?= $this->escapeHtmlAttr($this->newsURI); ?>"
                 scrolling="no"
                 onload="(function() {
                     // Fixes height issue of the iFrame

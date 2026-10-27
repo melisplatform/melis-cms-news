@@ -1,6 +1,11 @@
-<a class="btn btn-info news-details-workflow" title="<?= $this->label; ?>"
-   data-wf-id="<?= $this->newsId; ?>"
+<?php
+// SECURITY (audit CN-H5): cnews_title is editor-controlled — escape it for the
+// attribute context, and JS-string-escape it inside the tabOpen('…') snippet.
+$wfNewsId = (int) $this->newsId;
+?>
+<a class="btn btn-info news-details-workflow" title="<?= $this->escapeHtmlAttr($this->label); ?>"
+   data-wf-id="<?= $wfNewsId; ?>"
    data-wf-type="NEWS"
-   data-wf-details="<?= $this->newsTitle; ?> (<?= $this->newsId; ?>)"
-   data-wf-opening-js="melisHelper.tabOpen('<?= $this->newsTitle; ?>', 'fa fa-rss fa-2x', '<?= $this->newsId; ?>_id_meliscmsnews_page', 'meliscmsnews_page', { newsId: <?= $this->newsId; ?> });"
+   data-wf-details="<?= $this->escapeHtmlAttr($this->newsTitle); ?> (<?= $wfNewsId; ?>)"
+   data-wf-opening-js="melisHelper.tabOpen('<?= $this->escapeHtmlAttr($this->escapeJs($this->newsTitle)); ?>', 'fa fa-rss fa-2x', '<?= $wfNewsId; ?>_id_meliscmsnews_page', 'meliscmsnews_page', { newsId: <?= $wfNewsId; ?> });"
 ><i class="fa fa-thumbs-o-up"></i> <?= $this->label; ?></a>

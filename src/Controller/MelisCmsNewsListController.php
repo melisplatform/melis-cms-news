@@ -16,6 +16,13 @@ use MelisCore\Controller\MelisAbstractActionController;
 
 class MelisCmsNewsListController extends MelisAbstractActionController
 {
+    /**
+     * SECURITY (audit CN-M3): read by MelisCoreAuthorizationListener — every direct HTTP
+     * hit on this controller requires the News tool right (same as the WorkflowComments
+     * controller). Without it, any authenticated account could render the news list data.
+     */
+    const MELIS_KEY = 'meliscmsnews_tools_section';
+
     /** @INFO: Tool access check (CWE-862). */
     private function hasAccess($key)
     {
@@ -458,4 +465,4 @@ class MelisCmsNewsListController extends MelisAbstractActionController
         return $melisTool;
 
     }
-}
+}

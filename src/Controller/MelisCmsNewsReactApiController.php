@@ -249,6 +249,7 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
 
     public function saveAction(): HttpResponse
     {
+        if ($deny = $this->denyUnlessVerb(['POST'])) { return $deny; }
         if ($deny = $this->denyUnlessAccess()) { return $deny; }
 
         try {
@@ -401,6 +402,7 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
 
     public function deleteAction(): HttpResponse
     {
+        if ($deny = $this->denyUnlessVerb(['POST', 'DELETE'])) { return $deny; }
         if ($deny = $this->denyUnlessAccess()) { return $deny; }
         if ($deny = $this->denyUnlessCan('delete')) { return $deny; }
 
@@ -778,6 +780,7 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
     /** POST /news/comments/save — créer/éditer un commentaire (BO → approuvé d'office). */
     public function commentSaveAction(): HttpResponse
     {
+        if ($deny = $this->denyUnlessVerb(['POST'])) { return $deny; }
         if ($deny = $this->denyUnlessAccess()) { return $deny; }
         if ($deny = $this->denyUnlessCan('edit')) { return $deny; }
 
@@ -830,6 +833,8 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
     /** Facteur commun approve/refuse/delete (même garde + résolution service). */
     private function commentModerate(string $op): HttpResponse
     {
+        // SECURITY (audit CN-M2): mutation — never in GET (CSRF listener exempts safe verbs).
+        if ($deny = $this->denyUnlessVerb($op === 'delete' ? ['POST', 'DELETE'] : ['POST'])) { return $deny; }
         if ($deny = $this->denyUnlessAccess()) { return $deny; }
         if ($deny = $this->denyUnlessCan($op === 'delete' ? 'delete' : 'edit')) { return $deny; }
 
@@ -842,6 +847,14 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
             $cid = (int) $this->params('cid');
             if (!$cid) {
                 return $this->jsonResponse(['success' => false, 'error' => 'Missing id'], 400);
+            }
+
+            // SECURITY (audit CN-M4): the News tool may only moderate NEWS comments —
+            // without this check any comment of the platform (blog, other post types)
+            // could be approved/refused/deleted by enumerating :cid (cross-tool IDOR).
+            $comment = $svc->getCommentById($cid);
+            if (empty($comment) || (($comment['mccom_type'] ?? '') !== 'NEWS')) {
+                return $this->jsonResponse(['success' => false, 'error' => 'Not a NEWS comment'], 404);
             }
 
             switch ($op) {
@@ -1349,6 +1362,23 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
                 return $this->jsonResponse(['success' => false, 'error' => 'Forbidden'], 403);
             }
         } catch (\Throwable) {}
+        return null;
+    }
+
+    /**
+     * SECURITY (audit CN-M2): mutating endpoints must not be reachable in GET — the core
+     * CSRF listener exempts safe verbs, so a GET write would bypass CSRF entirely
+     * (same pattern as melis-core audit H2). Returns the 405 response or null.
+     */
+    private function denyUnlessVerb(array $verbs): ?HttpResponse
+    {
+        $method = strtoupper($this->getRequest()->getMethod());
+        if (!in_array($method, $verbs, true)) {
+            return $this->jsonResponse(
+                ['success' => false, 'error' => implode(' or ', $verbs) . ' required'],
+                405
+            );
+        }
         return null;
     }
 }
