@@ -88,7 +88,7 @@ class MelisCmsNewsTable extends MelisGenericTable
         }
 
         if (!is_null($where['search'])) {
-            $search = '%' . $where['search'] . '%';
+            $search = '%' . addcslashes((string) $where['search'], '%_\\') . '%'; // « % » / « _ » searched as characters (Mantis #0011370)
             $select->where->NEST->like('melis_cms_news.cnews_id', $search)
                 ->or->like('melis_cms_news_texts.cnews_title', $search);
         }
@@ -119,7 +119,9 @@ class MelisCmsNewsTable extends MelisGenericTable
         $select->join('melis_cms_news_texts', 'melis_cms_news_texts.cnews_id = melis_cms_news.cnews_id', '*', $select::JOIN_LEFT);
 
         if (!is_null($search)) {
-            $search = '%' . $search . '%';
+            // « % » and « _ » searched as characters, not LIKE wildcards: « % » listed every news and « A_tu »
+            // matched « Actu » in the front News list / Latest news search (Mantis #0011370, as #0011287 for the blog)
+            $search = '%' . addcslashes((string) $search, '%_\\') . '%';
             $select->where->NEST->like('melis_cms_news.cnews_id', $search)
                 ->or->like('melis_cms_news_texts.cnews_title', $search);
         }
@@ -346,33 +348,29 @@ class MelisCmsNewsTable extends MelisGenericTable
     }
 
     /**
-     * get tags of news by news id
-     * @return Object
+     * Tags of a news (one row per tag), each with its title in $langId or, when that text is missing or
+     * empty, the first non-empty title of another language — same rule as the React API (tagsAction).
+     *
+     * The old query kept only the tags having a text row in $langId: a tag named in another language only
+     * was left out and one with an empty text came back nameless, so the legacy Tags field dropped it and
+     * the next legacy save deleted it from the news (Mantis #0011368).
+     *
+     * @return \Laminas\Db\ResultSet\ResultSetInterface rows: cnews_id, id, tag_id, entity_id, entity_type, tag_title
      */
     public function getNewsTags($newsId, $langId = 1, $where = [])
     {
-        $select = $this->tableGateway->getSql()->select();
-        $select->columns(['cnews_id']);
-        $select->where(['cnews_id' => $newsId]);
-        $select->join(
-            'melis_cms_tag_entity', 
-            'melis_cms_tag_entity.entity_id = melis_cms_news.cnews_id', 
-            ['id', 'tag_id', 'entity_id', 'entity_type'], 
-            $select::JOIN_LEFT
-        );
-
-        $select->join(
-            'melis_cms_tag_texts',
-            'melis_cms_tag_texts.tag_id = melis_cms_tag_entity.tag_id',
-            ['tag_text_id', 'tag_title', 'tag_lang_id'],
-            $select::JOIN_LEFT
-        )->where(['tag_lang_id' => $langId]);
-        
-        $select->where(['melis_cms_tag_entity.entity_type' => 'NEWS']);
-        if(!empty($where)) {
-            $select->where($where);
-        }
-
-        return $this->tableGateway->selectWith($select);
+        $sql = "SELECT e.entity_id AS cnews_id, e.id, e.tag_id, e.entity_id, e.entity_type,
+                       COALESCE(NULLIF(tx.tag_title, ''),
+                           (SELECT tx2.tag_title FROM melis_cms_tag_texts tx2
+                             WHERE tx2.tag_id = e.tag_id
+                               AND tx2.tag_title IS NOT NULL AND tx2.tag_title <> ''
+                             ORDER BY tx2.tag_lang_id LIMIT 1),
+                           CONCAT('#', e.tag_id)) AS tag_title
+                  FROM melis_cms_tag_entity e
+                  LEFT JOIN melis_cms_tag_texts tx ON tx.tag_id = e.tag_id AND tx.tag_lang_id = ?
+                 WHERE e.entity_type = 'NEWS' AND e.entity_id = ?
+                 ORDER BY e.id";
+        // $where is no longer used (its only caller never passed it); kept in the signature for BC.
+        return $this->tableGateway->getAdapter()->query($sql, [(int) $langId, (int) $newsId]);
     }
 }

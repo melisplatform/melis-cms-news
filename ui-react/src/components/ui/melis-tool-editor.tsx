@@ -129,8 +129,11 @@ export function MelisToolEditor({ name, value, onChange, readOnly, minHeight = 2
       cfg.min_height = minHeight
       cfg.file_picker_callback = (cb: any) => filePickerBase64(cb)
       cfg.setup = (editor: any) => {
-        editor.on('init', () => { try { editor.setContent(valueRef.current || '') } catch { /* ignore */ } })
-        const push = () => { try { onChangeRef.current(editor.getContent()) } catch { /* ignore */ } }
+        // Nothing pushed before 'init': TinyMCE first loads the textarea, mounted before the news was
+        // fetched, and its SetContent pushed '' over the paragraph (Mantis #0011367, as #0011278 for the blog)
+        let ready = false
+        editor.on('init', () => { try { editor.setContent(valueRef.current || '') } catch { /* ignore */ } ready = true })
+        const push = () => { if (!ready) return; try { onChangeRef.current(editor.getContent()) } catch { /* ignore */ } }
         editor.on('change keyup input undo redo SetContent', push)
         editor.on('blur', push)
       }
@@ -142,8 +145,11 @@ export function MelisToolEditor({ name, value, onChange, readOnly, minHeight = 2
     return () => {
       disposed = true
       try {
+        // No onChange on the way out: the content is already pushed on every change/keyup/blur. An editor
+        // removed because the paragraph list changed (language switch, paragraph removed) pushed its OLD
+        // content into the new state — English paragraphs 2 to N saved in French (Mantis #0011367).
         const ed = window.tinymce?.get(id)
-        if (ed) { try { onChangeRef.current(ed.getContent()) } catch { /* ignore */ } ed.remove() }
+        if (ed) ed.remove()
       } catch { /* ignore */ }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
