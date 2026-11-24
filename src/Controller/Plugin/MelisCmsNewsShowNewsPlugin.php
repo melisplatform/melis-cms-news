@@ -114,10 +114,7 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
             }
 
             /** Return news data for Preview Tab */
-            // SECURITY (audit CN-H1): "previewtab" bypasses the publish/status gate above,
-            // and renderMode is overridable from the query string (GET→config merge).
-            // Only honour it for an authenticated back-office user — never for anonymous
-            // front visitors (fail closed when the auth service is unavailable).
+            // 'previewtab' requires a back-office identity.
             if (!empty($data['renderMode']) && $data['renderMode'] === "previewtab") {
                 $hasBoIdentity = false;
                 if ($this->getServiceManager()->has('MelisCoreAuth')) {
@@ -369,15 +366,14 @@ class MelisCmsNewsShowNewsPlugin extends MelisTemplatingPlugin
     }
 
     /**
-     * SECURITY (audit CN-M7): a literal "]]>" in a parameter closed the CDATA section
-     * and injected arbitrary XML nodes into the page document.
+     * Neutralises ']]>' in content placed in a CDATA section.
      */
     private function xmlCdata($value)
     {
         return '<![CDATA[' . str_replace(']]>', ']]]]><![CDATA[>', (string) $value) . ']]>';
     }
 
-    /** SECURITY (audit CN-M7): escape for an XML attribute context. */
+    /** Escape for an XML attribute context. */
     private function xmlAttr($value)
     {
         return htmlspecialchars((string) $value, ENT_QUOTES | ENT_XML1, 'UTF-8');

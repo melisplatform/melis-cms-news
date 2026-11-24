@@ -373,15 +373,14 @@ class MelisCmsNewsListNewsPlugin extends MelisTemplatingPlugin
     }
 
     /**
-     * SECURITY (audit CN-M7): a literal "]]>" in a parameter closed the CDATA section
-     * and injected arbitrary XML nodes into the page document.
+     * Neutralises ']]>' in content placed in a CDATA section.
      */
     private function xmlCdata($value)
     {
         return '<![CDATA[' . str_replace(']]>', ']]]]><![CDATA[>', (string) $value) . ']]>';
     }
 
-    /** SECURITY (audit CN-M7): escape for an XML attribute context. */
+    /** Escape for an XML attribute context. */
     private function xmlAttr($value)
     {
         return htmlspecialchars((string) $value, ENT_QUOTES | ENT_XML1, 'UTF-8');

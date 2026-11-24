@@ -182,10 +182,8 @@ class MelisCmsNewsSeoService extends MelisGeneralService
 	}
 
 	/**
-	 * SECURITY (audit CN-M8/CN-M9): true when the news is publicly visible (active,
-	 * publish date reached, not unpublished) OR the caller has a back-office identity.
-	 * The SEO listeners react to a visitor-controlled ?newsId on ANY front page, so
-	 * without this gate they leaked titles/metas (and fired 301s) of embargoed news.
+	 * True when the news is publicly visible (active, publish date reached, not
+	 * unpublished) OR the caller has a back-office identity.
 	 */
 	public function isNewsVisibleForRequest($newsId)
 	{
@@ -226,8 +224,7 @@ class MelisCmsNewsSeoService extends MelisGeneralService
 	{
 		$newContent = $contentGenerated;
 
-		// SECURITY (audit CN-M8): never leak the title/meta/canonical of an embargoed
-		// news to an anonymous visitor.
+		// Title/meta/canonical only for publicly visible news (or back-office users).
 		if (!$this->isNewsVisibleForRequest($newsId)) {
 			return $contentGenerated;
 		}
@@ -242,8 +239,7 @@ class MelisCmsNewsSeoService extends MelisGeneralService
 			 * Description tag
 			 */
 			if (!empty($newsDetailSeo->cnews_seo_meta_description)) {
-				// SECURITY (audit CN-H2): HTML-escape — addslashes does not protect an
-				// HTML attribute context (a raw " still closed the attribute).
+				// HTML-escaped for the content attribute context.
 				$metaDescription = htmlspecialchars($newsDetailSeo->cnews_seo_meta_description, ENT_QUOTES, 'UTF-8');
 
 				$descriptionTag = "\n\t<meta name=\"description\" content=\"$metaDescription\" />\n";
@@ -277,8 +273,7 @@ class MelisCmsNewsSeoService extends MelisGeneralService
 			}
 
 			if ($metaTitle != '') {
-				// SECURITY (audit CN-H2): HTML-escape — addslashes left < and > intact,
-				// so "</title><script>…" broke out of the title tag.
+				// HTML-escaped.
 				$metaTitle = htmlspecialchars($metaTitle, ENT_QUOTES, 'UTF-8');
 
 				$titleTag = "<title>$metaTitle</title>";
@@ -303,7 +298,7 @@ class MelisCmsNewsSeoService extends MelisGeneralService
 			 * Canonical Tag
 			 */
 			if (!empty($newsDetailSeo->cnews_seo_canonical)) {
-				// SECURITY (audit CN-H2): HTML-escape for the href attribute context.
+				// HTML-escaped for the href attribute context.
 				$canonicalUrl = htmlspecialchars($newsDetailSeo->cnews_seo_canonical, ENT_QUOTES, 'UTF-8');
 
 				$canonicalUrlTag = "\n\t<link rel=\"canonical\" href=\"$canonicalUrl\" />\n";

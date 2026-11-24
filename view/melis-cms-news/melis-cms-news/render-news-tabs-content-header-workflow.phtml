@@ -1,6 +1,6 @@
 <?php
-// SECURITY (audit CN-H5): cnews_title is editor-controlled — escape it for the
-// attribute context, and JS-string-escape it inside the tabOpen('…') snippet.
+// cnews_title escaped for the attribute context, and JS-string-escaped inside
+// the tabOpen('…') snippet.
 $wfNewsId = (int) $this->newsId;
 ?>
 <a class="btn btn-info news-details-workflow" title="<?= $this->escapeHtmlAttr($this->label); ?>"

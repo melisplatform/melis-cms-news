@@ -17,9 +17,8 @@ use MelisCore\Controller\MelisAbstractActionController;
 class MelisCmsNewsListController extends MelisAbstractActionController
 {
     /**
-     * SECURITY (audit CN-M3): read by MelisCoreAuthorizationListener — every direct HTTP
-     * hit on this controller requires the News tool right (same as the WorkflowComments
-     * controller). Without it, any authenticated account could render the news list data.
+     * Read by MelisCoreAuthorizationListener: direct HTTP requests to this controller
+     * require the News tool right (same as the WorkflowComments controller).
      */
     const MELIS_KEY = 'meliscmsnews_tools_section';
 

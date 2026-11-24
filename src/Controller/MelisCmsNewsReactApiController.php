@@ -783,7 +783,7 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
     /** Facteur commun approve/refuse/delete (même garde + résolution service). */
     private function commentModerate(string $op): HttpResponse
     {
-        // SECURITY (audit CN-M2): mutation — never in GET (CSRF listener exempts safe verbs).
+        // Mutation: POST/DELETE only (405 otherwise).
         if ($deny = $this->denyUnlessVerb($op === 'delete' ? ['POST', 'DELETE'] : ['POST'])) { return $deny; }
         if ($deny = $this->denyUnlessAccess()) { return $deny; }
         if ($deny = $this->denyUnlessCan($op === 'delete' ? 'delete' : 'edit')) { return $deny; }
@@ -799,9 +799,7 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
                 return $this->jsonResponse(['success' => false, 'error' => 'Missing id'], 400);
             }
 
-            // SECURITY (audit CN-M4): the News tool may only moderate NEWS comments —
-            // without this check any comment of the platform (blog, other post types)
-            // could be approved/refused/deleted by enumerating :cid (cross-tool IDOR).
+            // Only News comments can be moderated from the News tool.
             $comment = $svc->getCommentById($cid);
             if (empty($comment) || (($comment['mccom_type'] ?? '') !== 'NEWS')) {
                 return $this->jsonResponse(['success' => false, 'error' => 'Not a NEWS comment'], 404);
@@ -1263,9 +1261,7 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
     }
 
     /**
-     * SECURITY (audit CN-M2): mutating endpoints must not be reachable in GET — the core
-     * CSRF listener exempts safe verbs, so a GET write would bypass CSRF entirely
-     * (same pattern as melis-core audit H2). Returns the 405 response or null.
+     * Restricts a mutating endpoint to the given HTTP verbs. Returns the 405 response or null.
      */
     private function denyUnlessVerb(array $verbs): ?HttpResponse
     {
