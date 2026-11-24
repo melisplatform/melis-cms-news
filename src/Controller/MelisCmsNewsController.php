@@ -42,7 +42,7 @@ class MelisCmsNewsController extends MelisAbstractActionController
         'cnews_documents1', 'cnews_documents2', 'cnews_documents3',
     ];
 
-    /** @INFO: Tool access check (CWE-862). */
+    /** @INFO: Tool access check. */
     private function hasAccess($key)
     {
         return $this->getServiceManager()->get('MelisCoreRights')->canAccess($key);
@@ -525,7 +525,7 @@ class MelisCmsNewsController extends MelisAbstractActionController
 
     public function getNewsCategoryLastOrderNumAction()
     {
-        /** @INFO: Access check (tool right) — CWE-862 */
+        /** @INFO: Access check (tool right) */
         if (! $this->hasAccess('meliscmsnews_tools_section')) {
             return new JsonModel(['success' => 0, 'textTitle' => '', 'textMessage' => 'tr_meliscore_microservice_api_key_no_access', 'errors' => [], 'datas' => []]);
         }
@@ -572,7 +572,7 @@ class MelisCmsNewsController extends MelisAbstractActionController
      */
     public function getCategoryTreeViewAction()
     {
-        /** @INFO: Access check (tool right) — CWE-862 */
+        /** @INFO: Access check (tool right) */
         if (! $this->hasAccess('meliscmsnews_tools_section')) {
             return new JsonModel([]);
         }
@@ -878,7 +878,7 @@ class MelisCmsNewsController extends MelisAbstractActionController
      */
     public function saveNewsLetterAction()
     {
-        /** @INFO: Access check (tool right) — CWE-862 */
+        /** @INFO: Access check (tool right) */
         if (! $this->hasAccess('meliscmsnews_tools_section')) {
             return new JsonModel(['success' => 0, 'textTitle' => '', 'textMessage' => 'tr_meliscore_microservice_api_key_no_access', 'errors' => [], 'datas' => []]);
         }
@@ -1248,7 +1248,7 @@ class MelisCmsNewsController extends MelisAbstractActionController
 
     public function saveFileFormAction()
     {
-        /** @INFO: Access check (tool right) — CWE-862 */
+        /** @INFO: Access check (tool right) */
         if (! $this->hasAccess('meliscmsnews_tools_section')) {
             return new JsonModel(['success' => 0, 'textTitle' => '', 'textMessage' => 'tr_meliscore_microservice_api_key_no_access', 'errors' => [], 'datas' => []]);
         }
@@ -1389,9 +1389,8 @@ class MelisCmsNewsController extends MelisAbstractActionController
             ]);
 
             /**
-             * Strict server-side allow-lists. These are enforced on EVERY branch, regardless of the
-             * client-supplied "type", to prevent an unrestricted file upload leading to RCE
-             * (e.g. dropping .php/.phtml/.phar/.svg/.htaccess into a web-served directory).
+             * Strict server-side allow-lists, enforced on every branch regardless of the
+             * client-supplied "type".
              */
             $allowedImageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
             $allowedDocExtensions   = ['pdf', 'docx', 'xlsx', 'csv', 'txt'];
@@ -1443,8 +1442,8 @@ class MelisCmsNewsController extends MelisAbstractActionController
                 //format name
                 $fileName = $uploadedFile['name'];
 
-                // Reject dangerous extensions explicitly, on top of the allow-list, and neutralise
-                // any path traversal / double-extension tricks by keeping only a sanitized basename.
+                // Forbidden extensions are rejected on top of the allow-list; only a sanitized
+                // basename is kept.
                 $rawExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
                 $forbiddenExtensions = ['php', 'phtml', 'phar', 'pht', 'php3', 'php4', 'php5', 'php7', 'phps', 'svg', 'html', 'htm', 'xhtml', 'htaccess', 'js', 'exe', 'sh'];
                 if (!in_array($rawExtension, $allowedExtensions, true) || in_array($rawExtension, $forbiddenExtensions, true)) {
@@ -1570,7 +1569,7 @@ class MelisCmsNewsController extends MelisAbstractActionController
 
     public function removeAttachFileAction()
     {
-        /** @INFO: Access check (tool right) — CWE-862 */
+        /** @INFO: Access check (tool right) */
         if (! $this->hasAccess('meliscmsnews_tools_section')) {
             return new JsonModel(['success' => 0, 'textTitle' => '', 'textMessage' => 'tr_meliscore_microservice_api_key_no_access', 'errors' => [], 'datas' => []]);
         }
