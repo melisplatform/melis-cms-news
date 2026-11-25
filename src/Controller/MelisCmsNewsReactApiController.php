@@ -747,7 +747,7 @@ class MelisCmsNewsReactApiController extends MelisAbstractActionController
                 return $this->jsonResponse(['success' => false, 'error' => 'Missing text or postId'], 422);
             }
 
-            // XSS : purifier le HTML comme le fait l'onglet legacy avant sauvegarde.
+            // HTML purifié avant sauvegarde, comme l'onglet legacy.
             $text = $this->purifyCommentHtml($text);
 
             // renderMode 'BACK' → le commentaire ajouté depuis le BO est validé immédiatement.

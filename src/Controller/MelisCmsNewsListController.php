@@ -16,7 +16,7 @@ use MelisCore\Controller\MelisAbstractActionController;
 
 class MelisCmsNewsListController extends MelisAbstractActionController
 {
-    /** @INFO: Tool access check (CWE-862). */
+    /** @INFO: Tool access check. */
     private function hasAccess($key)
     {
         return $this->getServiceManager()->get('MelisCoreRights')->canAccess($key);
@@ -247,7 +247,7 @@ class MelisCmsNewsListController extends MelisAbstractActionController
 
             $sortOrder = $this->getRequest()->getPost('order');
             $sortOrder = $sortOrder[0]['dir'];
-            // Whitelist the sort direction to prevent SQL injection through the ORDER BY clause
+            // Sort direction: ASC or DESC only.
             $sortOrder = (strtoupper((string) $sortOrder) === 'ASC') ? 'ASC' : 'DESC';
 
             $selCol = $this->getRequest()->getPost('order');
@@ -353,7 +353,7 @@ class MelisCmsNewsListController extends MelisAbstractActionController
      */
     public function deleteNewsAction()
     {
-        /** @INFO: Access check (tool right) — CWE-862 */
+        /** @INFO: Access check (tool right) */
         if (! $this->hasAccess('meliscmsnews_tools_section')) {
             return new JsonModel(['success' => 0, 'textTitle' => '', 'textMessage' => 'tr_meliscore_microservice_api_key_no_access', 'errors' => [], 'datas' => []]);
         }

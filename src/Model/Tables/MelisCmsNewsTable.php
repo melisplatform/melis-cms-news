@@ -202,7 +202,7 @@ class MelisCmsNewsTable extends MelisGenericTable
         select cnews_image3 as Number from melis_cms_news WHERE cnews_image3 LIKE ?
         ) myTab";
 
-        // Parameterize the query with bound placeholders to prevent SQL injection
+        // Parameterized query with bound placeholders.
         $adapter = $this->tableGateway->getAdapter();
         $statement = $adapter->createStatement($sql);
         $resultData = $statement->execute([$search, $search, $search, $search, $search, $search]);
